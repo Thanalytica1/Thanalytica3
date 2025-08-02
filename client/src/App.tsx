@@ -9,6 +9,7 @@ import Assessment from "@/pages/assessment";
 import Dashboard from "@/pages/dashboard";
 import Recommendations from "@/pages/recommendations";
 import Simulator from "@/pages/simulator";
+import About from "@/pages/about";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/recommendations" component={Recommendations} />
       <Route path="/simulator" component={Simulator} />
+      <Route path="/about" component={About} />
       <Route component={NotFound} />
     </Switch>
   );

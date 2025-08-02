@@ -6,8 +6,14 @@ import {
   type HealthMetrics,
   type InsertHealthMetrics,
   type Recommendation,
-  type InsertRecommendation
+  type InsertRecommendation,
+  users,
+  healthAssessments,
+  healthMetrics,
+  recommendations
 } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -29,82 +35,65 @@ export interface IStorage {
   createRecommendation(recommendation: InsertRecommendation): Promise<Recommendation>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private healthAssessments: Map<string, HealthAssessment>;
-  private healthMetrics: Map<string, HealthMetrics>;
-  private recommendations: Map<string, Recommendation>;
-
-  constructor() {
-    this.users = new Map();
-    this.healthAssessments = new Map();
-    this.healthMetrics = new Map();
-    this.recommendations = new Map();
-  }
-
-  // User methods
+export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.firebaseUid === firebaseUid,
-    );
+    const [user] = await db.select().from(users).where(eq(users.firebaseUid, firebaseUid));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { 
-      ...insertUser,
-      id,
-      displayName: insertUser.displayName || null,
-      photoURL: insertUser.photoURL || null,
-      createdAt: new Date()
-    };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...insertUser,
+        displayName: insertUser.displayName || null,
+        photoURL: insertUser.photoURL || null,
+      })
+      .returning();
     return user;
   }
 
-  // Health Assessment methods
   async getHealthAssessment(userId: string): Promise<HealthAssessment | undefined> {
-    return Array.from(this.healthAssessments.values()).find(
-      (assessment) => assessment.userId === userId
-    );
+    const [assessment] = await db
+      .select()
+      .from(healthAssessments)
+      .where(eq(healthAssessments.userId, userId));
+    return assessment || undefined;
   }
 
   async createHealthAssessment(data: InsertHealthAssessment & { userId: string }): Promise<HealthAssessment> {
-    const id = randomUUID();
-    
     // Simple AI analysis simulation
     const biologicalAge = this.calculateBiologicalAge(data);
     const vitalityScore = this.calculateVitalityScore(data);
     const riskAssessment = this.calculateRiskAssessment(data);
     const trajectoryRating = this.calculateTrajectoryRating(vitalityScore);
     
-    const assessment: HealthAssessment = {
-      ...data,
-      id,
-      height: data.height || null,
-      weight: data.weight || null,
-      chronicConditions: data.chronicConditions || null,
-      medications: data.medications || null,
-      familyHistory: data.familyHistory || null,
-      biologicalAge,
-      vitalityScore,
-      riskAssessment,
-      trajectoryRating,
-      completedAt: new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    
-    this.healthAssessments.set(id, assessment);
+    const [assessment] = await db
+      .insert(healthAssessments)
+      .values({
+        ...data,
+        height: data.height || null,
+        weight: data.weight || null,
+        chronicConditions: data.chronicConditions || null,
+        medications: data.medications || null,
+        familyHistory: data.familyHistory || null,
+        biologicalAge,
+        vitalityScore,
+        riskAssessment,
+        trajectoryRating,
+        completedAt: new Date(),
+      })
+      .returning();
     
     // Create corresponding health metrics
     await this.createHealthMetrics({
       userId: data.userId,
-      assessmentId: id,
+      assessmentId: assessment.id,
       sleepScore: this.calculateSleepScore(data),
       exerciseScore: this.calculateExerciseScore(data),
       nutritionScore: this.calculateNutritionScore(data),
@@ -118,58 +107,57 @@ export class MemStorage implements IStorage {
     });
     
     // Generate recommendations
-    await this.generateRecommendations(data.userId, id, assessment);
+    await this.generateRecommendations(data.userId, assessment.id, assessment);
     
     return assessment;
   }
 
-  // Health Metrics methods
   async getHealthMetrics(userId: string): Promise<HealthMetrics | undefined> {
-    return Array.from(this.healthMetrics.values()).find(
-      (metrics) => metrics.userId === userId
-    );
+    const [metrics] = await db
+      .select()
+      .from(healthMetrics)
+      .where(eq(healthMetrics.userId, userId));
+    return metrics || undefined;
   }
 
   async createHealthMetrics(data: InsertHealthMetrics): Promise<HealthMetrics> {
-    const id = randomUUID();
-    const metrics: HealthMetrics = {
-      ...data,
-      id,
-      assessmentId: data.assessmentId || null,
-      sleepScore: data.sleepScore || null,
-      exerciseScore: data.exerciseScore || null,
-      nutritionScore: data.nutritionScore || null,
-      stressScore: data.stressScore || null,
-      cognitiveScore: data.cognitiveScore || null,
-      cardiovascularRisk: data.cardiovascularRisk || null,
-      metabolicRisk: data.metabolicRisk || null,
-      cognitiveRisk: data.cognitiveRisk || null,
-      projectedLifespan: data.projectedLifespan || null,
-      optimizationPotential: data.optimizationPotential || null,
-      createdAt: new Date(),
-    };
-    this.healthMetrics.set(id, metrics);
+    const [metrics] = await db
+      .insert(healthMetrics)
+      .values({
+        ...data,
+        assessmentId: data.assessmentId || null,
+        sleepScore: data.sleepScore || null,
+        exerciseScore: data.exerciseScore || null,
+        nutritionScore: data.nutritionScore || null,
+        stressScore: data.stressScore || null,
+        cognitiveScore: data.cognitiveScore || null,
+        cardiovascularRisk: data.cardiovascularRisk || null,
+        metabolicRisk: data.metabolicRisk || null,
+        cognitiveRisk: data.cognitiveRisk || null,
+        projectedLifespan: data.projectedLifespan || null,
+        optimizationPotential: data.optimizationPotential || null,
+      })
+      .returning();
     return metrics;
   }
 
-  // Recommendations methods
   async getRecommendations(userId: string): Promise<Recommendation[]> {
-    return Array.from(this.recommendations.values()).filter(
-      (rec) => rec.userId === userId
-    );
+    return await db
+      .select()
+      .from(recommendations)
+      .where(eq(recommendations.userId, userId));
   }
 
   async createRecommendation(data: InsertRecommendation): Promise<Recommendation> {
-    const id = randomUUID();
-    const recommendation: Recommendation = {
-      ...data,
-      id,
-      estimatedImpact: data.estimatedImpact || null,
-      implemented: data.implemented || false,
-      implementedAt: data.implementedAt || null,
-      createdAt: new Date(),
-    };
-    this.recommendations.set(id, recommendation);
+    const [recommendation] = await db
+      .insert(recommendations)
+      .values({
+        ...data,
+        estimatedImpact: data.estimatedImpact || null,
+        implemented: data.implemented || false,
+        implementedAt: data.implementedAt || null,
+      })
+      .returning();
     return recommendation;
   }
 
@@ -381,4 +369,4 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

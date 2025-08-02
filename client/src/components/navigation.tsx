@@ -1,12 +1,12 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Heart, User } from "lucide-react";
+import { Heart, User, Info } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { signInWithGoogle, signOutUser } from "@/lib/firebase";
 
 export function Navigation() {
   const [location] = useLocation();
-  const { user, loading } = useAuth();
+  const { firebaseUser, user, loading } = useAuth();
 
   const handleSignIn = () => {
     signInWithGoogle();
@@ -27,7 +27,19 @@ export function Navigation() {
             </Link>
           </div>
           
-          {user && (
+          <div className="flex items-center space-x-4">
+            <Link href="/about">
+              <Button 
+                variant={location === "/about" ? "default" : "ghost"}
+                className="text-professional-slate hover:text-medical-green"
+              >
+                <Info className="w-4 h-4 mr-2" />
+                About
+              </Button>
+            </Link>
+          </div>
+          
+          {firebaseUser && (
             <div className="flex items-center space-x-4">
               <Link href="/dashboard">
                 <Button 
@@ -67,11 +79,11 @@ export function Navigation() {
           <div className="flex items-center">
             {loading ? (
               <div className="w-8 h-8 animate-pulse bg-gray-200 rounded-full" />
-            ) : user ? (
+            ) : firebaseUser ? (
               <div className="flex items-center space-x-3">
                 <img 
-                  src={user.photoURL || undefined} 
-                  alt={user.displayName || "User"}
+                  src={firebaseUser.photoURL || undefined} 
+                  alt={firebaseUser.displayName || "User"}
                   className="w-8 h-8 rounded-full"
                 />
                 <Button 
