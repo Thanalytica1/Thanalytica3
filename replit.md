@@ -1,0 +1,97 @@
+# Thanalytica - AI-Powered Longevity Health Assessment Platform
+
+## Overview
+
+Thanalytica is a comprehensive health assessment and longevity optimization platform that evaluates users' health trajectories and provides personalized recommendations for extended vitality. The application combines detailed health assessments with AI-powered analysis to calculate biological age, vitality scores, and provide actionable insights for improving longevity outcomes.
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## System Architecture
+
+### Frontend Architecture
+
+**React Single Page Application**: Built with React 18 using TypeScript, featuring a component-based architecture with modern hooks and functional components. The frontend uses Wouter for lightweight client-side routing without the overhead of React Router.
+
+**UI Component System**: Implements shadcn/ui component library built on Radix UI primitives, providing accessible and customizable components with consistent design patterns. Uses Tailwind CSS for utility-first styling with custom CSS variables for theming.
+
+**State Management**: Leverages TanStack Query (React Query) for server state management, providing caching, synchronization, and background updates. Local component state is managed with React hooks.
+
+**Form Handling**: Uses React Hook Form with Zod schema validation for type-safe form management, particularly in the multi-step health assessment flow.
+
+**Styling Approach**: Tailwind CSS with custom design tokens for medical/clinical theming, including custom colors for medical-green, trust-blue, vitality-gold, and clinical-white to establish professional healthcare aesthetics.
+
+### Backend Architecture
+
+**Express.js REST API**: Node.js server using Express with TypeScript, providing RESTful endpoints for user management, health assessments, metrics, and recommendations.
+
+**Route Organization**: Centralized route registration with middleware for request logging, error handling, and JSON parsing. API endpoints follow REST conventions with proper HTTP status codes.
+
+**Data Storage Strategy**: Currently implements in-memory storage with an interface-based design (IStorage) that allows easy migration to persistent database solutions. The storage layer abstracts CRUD operations for users, health assessments, metrics, and recommendations.
+
+**Development Environment**: Vite-powered development server with hot module replacement, TypeScript compilation, and error overlay for enhanced developer experience.
+
+### Database Design
+
+**Schema Architecture**: Uses Drizzle ORM with PostgreSQL dialect for type-safe database operations. Schema includes:
+- Users table with Firebase authentication integration
+- Health assessments with comprehensive health data (lifestyle, medical history, goals)
+- Health metrics for calculated values (biological age, vitality scores)
+- Recommendations system for personalized advice
+
+**Data Validation**: Employs Zod schemas for runtime type checking and validation, with drizzle-zod integration for seamless database schema validation.
+
+### Authentication System
+
+**Firebase Authentication**: Integrates Firebase Auth for user management with Google OAuth sign-in. Uses Firebase UID as the primary user identifier with redirect-based authentication flow suitable for web applications.
+
+**Session Management**: Handles authentication state with React hooks and Firebase's onAuthStateChanged listener for real-time auth status updates.
+
+### Development and Build Process
+
+**TypeScript Configuration**: Strict TypeScript setup with path mapping for clean imports (@/ for client, @shared for shared types).
+
+**Build Pipeline**: Vite for frontend bundling and esbuild for server compilation, optimized for both development and production environments.
+
+**Code Organization**: Monorepo structure with clear separation between client, server, and shared code, enabling type sharing between frontend and backend.
+
+## External Dependencies
+
+### Core Framework Dependencies
+- **React 18** with TypeScript for frontend development
+- **Express.js** for backend API server
+- **Vite** for development server and build tooling
+- **Node.js** runtime environment
+
+### UI and Styling
+- **shadcn/ui** component library built on Radix UI primitives
+- **Tailwind CSS** for utility-first styling
+- **Radix UI** for accessible component primitives
+- **Lucide React** for consistent iconography
+
+### Database and ORM
+- **Drizzle ORM** for type-safe database operations
+- **PostgreSQL** as the target database (configured for Neon)
+- **@neondatabase/serverless** for serverless database connections
+
+### Authentication
+- **Firebase Authentication** for user management and OAuth
+- **Google OAuth** integration for sign-in
+
+### State Management and Data Fetching
+- **TanStack Query (React Query)** for server state management
+- **React Hook Form** for form state management
+- **Zod** for schema validation and type safety
+
+### Development Tools
+- **TypeScript** for static type checking
+- **ESBuild** for server-side bundling
+- **PostCSS** with Autoprefixer for CSS processing
+- **@replit/vite-plugin-runtime-error-modal** for development error handling
+
+### Utility Libraries
+- **date-fns** for date manipulation
+- **clsx** and **tailwind-merge** for conditional CSS classes
+- **nanoid** for unique ID generation
+- **class-variance-authority** for component variant management
