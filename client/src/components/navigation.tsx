@@ -45,6 +45,22 @@ export function Navigation() {
                   Assessment
                 </Button>
               </Link>
+              <Link href="/simulator">
+                <Button 
+                  variant={location === "/simulator" ? "default" : "ghost"}
+                  className="text-professional-slate hover:text-medical-green"
+                >
+                  Simulator
+                </Button>
+              </Link>
+              <Link href="/recommendations">
+                <Button 
+                  variant={location === "/recommendations" ? "default" : "ghost"}
+                  className="text-professional-slate hover:text-medical-green"
+                >
+                  Recommendations
+                </Button>
+              </Link>
             </div>
           )}
           

@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import Assessment from "@/pages/assessment";
 import Dashboard from "@/pages/dashboard";
 import Recommendations from "@/pages/recommendations";
+import Simulator from "@/pages/simulator";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/assessment" component={Assessment} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/recommendations" component={Recommendations} />
+      <Route path="/simulator" component={Simulator} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Brain, TrendingUp, Target, Play, Info } from "lucide-react";
+import { Brain, TrendingUp, Target, Play, Sliders } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -32,16 +32,18 @@ export default function Home() {
                 Sign In to Start Assessment
               </Button>
             )}
-            <Button variant="outline" className="border-2 border-trust-blue text-trust-blue px-8 py-4 text-lg font-semibold hover:bg-trust-blue hover:text-white">
-              <Info className="w-5 h-5 mr-3" />
-              Learn More
-            </Button>
+            <Link href="/simulator">
+              <Button variant="outline" className="border-2 border-trust-blue text-trust-blue px-8 py-4 text-lg font-semibold hover:bg-trust-blue hover:text-white">
+                <TrendingUp className="w-5 h-5 mr-3" />
+                Try Health Simulator
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
 
       {/* Feature Cards */}
-      <div className="grid md:grid-cols-3 gap-8 mb-16">
+      <div className="grid md:grid-cols-4 gap-6 mb-16">
         <Card className="bg-white shadow-md hover:shadow-lg transition-shadow border border-gray-100">
           <CardContent className="p-6">
             <div className="w-12 h-12 bg-medical-green bg-opacity-10 rounded-lg flex items-center justify-center mb-4">
@@ -74,6 +76,18 @@ export default function Home() {
             <h3 className="text-xl font-semibold mb-3">Personalized Optimization</h3>
             <p className="text-gray-600">
               Custom recommendations for diet, exercise, sleep, and lifestyle modifications to maximize your longevity potential.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white shadow-md hover:shadow-lg transition-shadow border border-gray-100">
+          <CardContent className="p-6">
+            <div className="w-12 h-12 bg-gentle-coral bg-opacity-10 rounded-lg flex items-center justify-center mb-4">
+              <Sliders className="text-gentle-coral text-xl" />
+            </div>
+            <h3 className="text-xl font-semibold mb-3">Health Decision Simulator</h3>
+            <p className="text-gray-600">
+              Interactive tool to explore how lifestyle changes affect your longevity trajectory in real-time with instant feedback.
             </p>
           </CardContent>
         </Card>
