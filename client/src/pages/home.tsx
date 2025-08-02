@@ -3,9 +3,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Brain, TrendingUp, Target, Play, Sliders } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { signInWithGoogle } from "@/lib/firebase";
 
 export default function Home() {
-  const { user } = useAuth();
+  const { firebaseUser, loading } = useAuth();
+  
+  const handleSignIn = () => {
+    signInWithGoogle();
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -19,7 +24,7 @@ export default function Home() {
             AI-powered health forecasting platform that evaluates your longevity trajectory and provides personalized optimization strategies for extended vitality.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {user ? (
+            {firebaseUser ? (
               <Link href="/assessment">
                 <Button className="bg-medical-green text-white px-8 py-4 text-lg font-semibold hover:bg-medical-green/90 shadow-lg">
                   <Play className="w-5 h-5 mr-3" />
@@ -27,9 +32,13 @@ export default function Home() {
                 </Button>
               </Link>
             ) : (
-              <Button className="bg-medical-green text-white px-8 py-4 text-lg font-semibold hover:bg-medical-green/90 shadow-lg">
+              <Button 
+                onClick={handleSignIn}
+                disabled={loading}
+                className="bg-medical-green text-white px-8 py-4 text-lg font-semibold hover:bg-medical-green/90 shadow-lg disabled:opacity-50"
+              >
                 <Play className="w-5 h-5 mr-3" />
-                Sign In to Start Assessment
+                {loading ? "Signing In..." : "Sign In to Start Assessment"}
               </Button>
             )}
             <Link href="/simulator">
