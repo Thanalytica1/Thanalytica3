@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Heart, User, Info } from "lucide-react";
+import { Heart, User, Info, Watch } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { signInWithGoogle, signOutUser } from "@/lib/firebase";
 
@@ -71,6 +71,15 @@ export function Navigation() {
                   className="text-professional-slate hover:text-medical-green"
                 >
                   Recommendations
+                </Button>
+              </Link>
+              <Link href="/wearables">
+                <Button 
+                  variant={location === "/wearables" ? "default" : "ghost"}
+                  className="text-professional-slate hover:text-medical-green"
+                >
+                  <Watch className="w-4 h-4 mr-2" />
+                  Wearables
                 </Button>
               </Link>
             </div>

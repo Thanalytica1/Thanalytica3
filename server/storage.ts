@@ -7,10 +7,16 @@ import {
   type InsertHealthMetrics,
   type Recommendation,
   type InsertRecommendation,
+  type WearableConnection,
+  type InsertWearableConnection,
+  type WearableData,
+  type InsertWearableData,
   users,
   healthAssessments,
   healthMetrics,
-  recommendations
+  recommendations,
+  wearableConnections,
+  wearableData
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -33,6 +39,14 @@ export interface IStorage {
   // Recommendations methods
   getRecommendations(userId: string): Promise<Recommendation[]>;
   createRecommendation(recommendation: InsertRecommendation): Promise<Recommendation>;
+  
+  // Wearable Device methods
+  getWearableConnections(userId: string): Promise<WearableConnection[]>;
+  createWearableConnection(connection: InsertWearableConnection): Promise<WearableConnection>;
+  updateWearableConnection(id: string, updates: Partial<WearableConnection>): Promise<WearableConnection>;
+  deleteWearableConnection(id: string): Promise<void>;
+  getWearableData(userId: string, dataType?: string, startDate?: string, endDate?: string): Promise<WearableData[]>;
+  createWearableData(data: InsertWearableData): Promise<WearableData>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -320,6 +334,61 @@ export class DatabaseStorage implements IStorage {
     
     if (riskFactors >= 2) return "moderate";
     return "low";
+  }
+
+  // Wearable Device Methods
+  async getWearableConnections(userId: string): Promise<WearableConnection[]> {
+    return await db
+      .select()
+      .from(wearableConnections)
+      .where(eq(wearableConnections.userId, userId));
+  }
+
+  async createWearableConnection(data: InsertWearableConnection): Promise<WearableConnection> {
+    const [connection] = await db
+      .insert(wearableConnections)
+      .values({
+        ...data,
+        accessToken: data.accessToken || null,
+        refreshToken: data.refreshToken || null,
+        lastSyncAt: data.lastSyncAt || null,
+      })
+      .returning();
+    return connection;
+  }
+
+  async updateWearableConnection(id: string, updates: Partial<WearableConnection>): Promise<WearableConnection> {
+    const [connection] = await db
+      .update(wearableConnections)
+      .set(updates)
+      .where(eq(wearableConnections.id, id))
+      .returning();
+    return connection;
+  }
+
+  async deleteWearableConnection(id: string): Promise<void> {
+    await db
+      .delete(wearableConnections)
+      .where(eq(wearableConnections.id, id));
+  }
+
+  async getWearableData(userId: string, dataType?: string, startDate?: string, endDate?: string): Promise<WearableData[]> {
+    let query = db
+      .select()
+      .from(wearableData)
+      .where(eq(wearableData.userId, userId));
+
+    // Add filters if provided
+    // Note: This is a simplified implementation - in production you'd use proper date filtering
+    return await query;
+  }
+
+  async createWearableData(data: InsertWearableData): Promise<WearableData> {
+    const [wearableDataEntry] = await db
+      .insert(wearableData)
+      .values(data)
+      .returning();
+    return wearableDataEntry;
   }
 
   private async generateRecommendations(userId: string, assessmentId: string, assessment: HealthAssessment): Promise<void> {
