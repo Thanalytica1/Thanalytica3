@@ -5,11 +5,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { signInWithGoogle, signOutUser } from "@/lib/firebase";
 
 export function Navigation() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { firebaseUser, user, loading } = useAuth();
 
   const handleSignIn = () => {
-    signInWithGoogle();
+    setLocation("/login");
   };
 
   const handleSignOut = () => {

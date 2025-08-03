@@ -8,6 +8,25 @@ Thanalytica is a comprehensive health assessment and longevity optimization plat
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (January 2025)
+
+**Authentication & Routing System (Latest):**
+- Created dedicated `/login` page with Firebase email/password and Google OAuth
+- Added route protection for `/dashboard`, `/assessment`, and `/recommendations` 
+- Fixed login flow: login buttons now redirect to `/login` instead of immediate Firebase calls
+- Auto-redirect authenticated users from `/login` to `/dashboard`
+- Auto-redirect unauthenticated users from protected routes to `/login`
+
+**Database Migration:**
+- Migrated from in-memory storage to PostgreSQL database
+- Updated authentication to properly handle user creation in database
+- All user data, assessments, and recommendations now persist in database
+
+**Branding Updates:**
+- Updated all references to use "Thanalytica" consistently
+- Added comprehensive meta tags and SEO optimization
+- Updated page title to "Thanalytica - Your Journey to 150 Years"
+
 ## System Architecture
 
 ### Frontend Architecture

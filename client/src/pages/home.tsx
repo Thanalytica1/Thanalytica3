@@ -3,13 +3,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Brain, TrendingUp, Target, Play, Sliders } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { signInWithGoogle } from "@/lib/firebase";
+import { useLocation } from "wouter";
 
 export default function Home() {
   const { firebaseUser, loading } = useAuth();
+  const [location, setLocation] = useLocation();
   
   const handleSignIn = () => {
-    signInWithGoogle();
+    setLocation("/login");
   };
 
   return (

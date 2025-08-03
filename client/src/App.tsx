@@ -10,15 +10,30 @@ import Dashboard from "@/pages/dashboard";
 import Recommendations from "@/pages/recommendations";
 import Simulator from "@/pages/simulator";
 import About from "@/pages/about";
+import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
+import { ProtectedRoute } from "@/components/protected-route";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/assessment" component={Assessment} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/recommendations" component={Recommendations} />
+      <Route path="/login" component={Login} />
+      <Route path="/assessment">
+        <ProtectedRoute>
+          <Assessment />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/dashboard">
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/recommendations">
+        <ProtectedRoute>
+          <Recommendations />
+        </ProtectedRoute>
+      </Route>
       <Route path="/simulator" component={Simulator} />
       <Route path="/about" component={About} />
       <Route component={NotFound} />
