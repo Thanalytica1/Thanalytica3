@@ -1,21 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ProgressBar } from "@/components/progress-bar";
-import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, AlertCircle, RefreshCw, Save } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateHealthAssessment } from "@/hooks/use-health-data";
 import { insertHealthAssessmentSchema } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { ApiError, NetworkTimeoutError } from "@/lib/queryClient";
 
 const steps = ["Basic Info", "Lifestyle", "Medical History", "Exercise", "Goals", "Review"];
 
@@ -32,6 +34,10 @@ export default function Assessment() {
   const { firebaseUser, user } = useAuth();
   const { toast } = useToast();
   const createAssessment = useCreateHealthAssessment();
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [lastSubmissionData, setLastSubmissionData] = useState<FormData | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -54,6 +60,44 @@ export default function Assessment() {
     },
   });
 
+  // Auto-save form data to localStorage periodically
+  useEffect(() => {
+    const formData = form.getValues();
+    const hasData = Object.keys(formData).some(key => {
+      const value = formData[key as keyof FormData];
+      return Array.isArray(value) ? value.length > 0 : value !== "" && value !== 35; // 35 is default age
+    });
+
+    if (hasData) {
+      localStorage.setItem('thanalytica-assessment-draft', JSON.stringify({
+        formData,
+        currentStep,
+        timestamp: Date.now()
+      }));
+    }
+  }, [form.watch(), currentStep]);
+
+  // Restore form data from localStorage on component mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('thanalytica-assessment-draft');
+    if (savedDraft) {
+      try {
+        const { formData, currentStep: savedStep, timestamp } = JSON.parse(savedDraft);
+        // Only restore if draft is less than 24 hours old
+        if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+          form.reset(formData);
+          setCurrentStep(savedStep);
+          toast({
+            title: "Draft Restored",
+            description: "Your previous assessment progress has been restored.",
+          });
+        }
+      } catch (error) {
+        console.error('Error restoring draft:', error);
+      }
+    }
+  }, []);
+
   if (!user) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 text-center">
@@ -75,12 +119,58 @@ export default function Assessment() {
     }
   };
 
+  const getErrorMessage = (error: unknown): string => {
+    if (error instanceof NetworkTimeoutError) {
+      return "Connection timeout. Please check your internet connection and try again.";
+    }
+    
+    if (error instanceof ApiError) {
+      switch (error.status) {
+        case 400:
+          return "Some assessment data is invalid. Please check your responses and try again.";
+        case 401:
+          return "Your session has expired. Please sign in again to continue.";
+        case 403:
+          return "You don't have permission to submit assessments. Please contact support.";
+        case 413:
+          return "Assessment data is too large. Please reduce the amount of text in your responses.";
+        case 422:
+          return "Assessment data validation failed. Please check all required fields are filled correctly.";
+        case 429:
+          return "Too many attempts. Please wait a moment before trying again.";
+        case 500:
+          return "Server error occurred while processing your assessment. Our team has been notified.";
+        case 503:
+          return "Service temporarily unavailable. Please try again in a few minutes.";
+        default:
+          return `Server error (${error.status}). Please try again or contact support if this persists.`;
+      }
+    }
+    
+    if (error instanceof Error) {
+      if (error.message.toLowerCase().includes('network')) {
+        return "Network error. Please check your connection and try again.";
+      }
+      if (error.message.toLowerCase().includes('timeout')) {
+        return "Request timed out. Please try again with a stable connection.";
+      }
+    }
+    
+    return "An unexpected error occurred. Please try again or contact support if this continues.";
+  };
+
   const onSubmit = async (data: FormData) => {
+    setSubmissionError(null);
+    setLastSubmissionData(data);
+    
     try {
       await createAssessment.mutateAsync({
         ...data,
         userId: user?.id || "",
       });
+      
+      // Clear saved draft on successful submission
+      localStorage.removeItem('thanalytica-assessment-draft');
       
       toast({
         title: "Assessment Complete!",
@@ -91,13 +181,48 @@ export default function Assessment() {
       setTimeout(() => {
         setLocation("/dashboard");
       }, 3000);
+      
     } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      setSubmissionError(errorMessage);
+      setRetryCount(prev => prev + 1);
+      
       toast({
-        title: "Error",
-        description: "Failed to save assessment. Please try again.",
+        title: "Submission Failed",
+        description: errorMessage,
         variant: "destructive",
       });
+      
+      console.error('Assessment submission error:', error);
     }
+  };
+
+  const handleRetry = async () => {
+    if (!lastSubmissionData) return;
+    
+    setIsRetrying(true);
+    setSubmissionError(null);
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Brief delay
+      await onSubmit(lastSubmissionData);
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  const handleSaveDraft = () => {
+    const formData = form.getValues();
+    localStorage.setItem('thanalytica-assessment-draft', JSON.stringify({
+      formData,
+      currentStep,
+      timestamp: Date.now()
+    }));
+    
+    toast({
+      title: "Draft Saved",
+      description: "Your progress has been saved locally. You can continue later from where you left off.",
+    });
   };
 
   const renderStepContent = () => {
@@ -512,6 +637,9 @@ export default function Assessment() {
         );
 
       case 6:
+        const formErrors = Object.keys(form.formState.errors);
+        const hasFormErrors = formErrors.length > 0;
+        
         return (
           <div className="space-y-6">
             <div>
@@ -519,9 +647,29 @@ export default function Assessment() {
               <p className="text-gray-600">Please review your information before submitting.</p>
             </div>
 
+            {hasFormErrors && (
+              <Alert className="border-amber-200 bg-amber-50">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800">
+                  <p className="font-medium mb-2">Please complete all required fields:</p>
+                  <ul className="text-sm space-y-1">
+                    {formErrors.map(field => (
+                      <li key={field} className="flex items-center">
+                        • {field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-sm mt-2">Use the Previous button to go back and complete missing information.</p>
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="bg-gray-50 rounded-lg p-6 space-y-4">
               <div>
                 <strong>Age:</strong> {form.getValues("age")}
+              </div>
+              <div>
+                <strong>Gender:</strong> {form.getValues("gender") || "Not specified"}
               </div>
               <div>
                 <strong>Sleep:</strong> {form.getValues("sleepDuration")} ({form.getValues("sleepQuality")} quality)
@@ -530,27 +678,45 @@ export default function Assessment() {
                 <strong>Diet:</strong> {form.getValues("dietPattern")}
               </div>
               <div>
-                <strong>Exercise:</strong> {form.getValues("exerciseFrequency")}
+                <strong>Exercise:</strong> {form.getValues("exerciseFrequency")} ({form.getValues("exerciseIntensity")} intensity)
+              </div>
+              <div>
+                <strong>Exercise Types:</strong> {form.getValues("exerciseTypes").join(", ") || "None selected"}
               </div>
               <div>
                 <strong>Goal:</strong> {form.getValues("longevityGoals")}
               </div>
+              <div>
+                <strong>Health Priorities:</strong> {form.getValues("healthPriorities").join(", ") || "None selected"}
+              </div>
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full bg-medical-green text-white hover:bg-medical-green/90"
-              disabled={createAssessment.isPending}
-            >
-              {createAssessment.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Analyzing your health data...
-                </>
-              ) : (
-                "Complete Assessment"
-              )}
-            </Button>
+            <div className="flex items-center justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={previousStep}
+                disabled={createAssessment.isPending}
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Previous
+              </Button>
+              
+              <Button 
+                type="submit" 
+                className="bg-medical-green text-white hover:bg-medical-green/90 px-8"
+                disabled={createAssessment.isPending || hasFormErrors}
+              >
+                {createAssessment.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Analyzing your health data...
+                  </>
+                ) : (
+                  "Complete Assessment"
+                )}
+              </Button>
+            </div>
           </div>
         );
 
@@ -569,17 +735,82 @@ export default function Assessment() {
             <form onSubmit={form.handleSubmit(onSubmit)}>
               {renderStepContent()}
 
+              {/* Error Display with Retry Options */}
+              {submissionError && (
+                <Alert className="mt-6 border-red-200 bg-red-50">
+                  <AlertCircle className="h-4 w-4 text-red-600" />
+                  <AlertDescription className="text-red-800">
+                    <div className="space-y-3">
+                      <p className="font-medium">Submission Failed</p>
+                      <p className="text-sm">{submissionError}</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleRetry}
+                          disabled={isRetrying || createAssessment.isPending}
+                          className="bg-red-600 hover:bg-red-700 text-white"
+                        >
+                          {isRetrying ? (
+                            <>
+                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                              Retrying...
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="w-3 h-3 mr-1" />
+                              Try Again
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={handleSaveDraft}
+                          className="border-red-300 text-red-700 hover:bg-red-50"
+                        >
+                          <Save className="w-3 h-3 mr-1" />
+                          Save Draft
+                        </Button>
+                      </div>
+                      {retryCount > 0 && (
+                        <p className="text-xs text-red-600">
+                          Attempt {retryCount + 1} - Your form data is preserved and will not be lost.
+                        </p>
+                      )}
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {currentStep < 6 && (
-                <div className="flex justify-between pt-8 border-t border-gray-200 mt-8">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={previousStep}
-                    disabled={currentStep === 1 || createAssessment.isPending}
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Previous
-                  </Button>
+                <div className="flex justify-between items-center pt-8 border-t border-gray-200 mt-8">
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={previousStep}
+                      disabled={currentStep === 1 || createAssessment.isPending}
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      Previous
+                    </Button>
+                    
+                    {/* Save Draft Button */}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSaveDraft}
+                      className="text-gray-500 hover:text-gray-700"
+                      disabled={createAssessment.isPending}
+                    >
+                      <Save className="w-3 h-3 mr-1" />
+                      Save Draft
+                    </Button>
+                  </div>
+                  
                   <Button
                     type="button"
                     onClick={nextStep}
