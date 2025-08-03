@@ -35,7 +35,7 @@ export function useAnalytics() {
   // Track event mutation
   const trackEventMutation = useMutation({
     mutationFn: async (eventPayload: InsertAnalyticsEvent) => {
-      return apiRequest("/api/analytics/event", "POST", eventPayload);
+      return apiRequest("POST", "/api/analytics/event", eventPayload);
     },
     onError: (error) => {
       console.warn("Failed to track analytics event:", error);
