@@ -775,24 +775,24 @@ export class DatabaseStorage implements IStorage {
     eventName?: string;
     limit?: number;
   } = {}): Promise<AnalyticsEvent[]> {
-    let query = db
-      .select()
-      .from(analyticsEvents)
-      .where(eq(analyticsEvents.userId, userId));
+    const conditions = [eq(analyticsEvents.userId, userId)];
 
     if (options.eventName) {
-      query = query.where(eq(analyticsEvents.eventName, options.eventName));
+      conditions.push(eq(analyticsEvents.eventName, options.eventName));
     }
 
     if (options.startDate) {
-      query = query.where(gte(analyticsEvents.timestamp, new Date(options.startDate)));
+      conditions.push(gte(analyticsEvents.timestamp, new Date(options.startDate)));
     }
 
     if (options.endDate) {
-      query = query.where(lte(analyticsEvents.timestamp, new Date(options.endDate)));
+      conditions.push(lte(analyticsEvents.timestamp, new Date(options.endDate)));
     }
 
-    return await query
+    return await db
+      .select()
+      .from(analyticsEvents)
+      .where(and(...conditions))
       .orderBy(desc(analyticsEvents.timestamp))
       .limit(options.limit || 100);
   }
@@ -859,19 +859,19 @@ export class DatabaseStorage implements IStorage {
     const totalUsersResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(users);
-    const totalUsers = parseInt(totalUsersResult[0]?.count as string) || 0;
+    const totalUsers = Number(totalUsersResult[0]?.count) || 0;
 
     // Get total assessments
     const totalAssessmentsResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(healthAssessments);
-    const totalAssessments = parseInt(totalAssessmentsResult[0]?.count as string) || 0;
+    const totalAssessments = Number(totalAssessmentsResult[0]?.count) || 0;
 
     // Get total events
     const totalEventsResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(analyticsEvents);
-    const totalEvents = parseInt(totalEventsResult[0]?.count as string) || 0;
+    const totalEvents = Number(totalEventsResult[0]?.count) || 0;
 
     // Get top events by type
     const topEventsResult = await db
@@ -888,11 +888,11 @@ export class DatabaseStorage implements IStorage {
     const recentActivityResult = await db
       .select({
         eventType: analyticsEvents.eventName,
-        createdAt: analyticsEvents.createdAt,
+        createdAt: analyticsEvents.timestamp,
         userId: analyticsEvents.userId
       })
       .from(analyticsEvents)
-      .orderBy(desc(analyticsEvents.createdAt))
+      .orderBy(desc(analyticsEvents.timestamp))
       .limit(20);
 
     // Get user growth (simplified - users by creation day for last 30 days)
@@ -905,7 +905,7 @@ export class DatabaseStorage implements IStorage {
         count: sql<number>`count(*)`
       })
       .from(users)
-      .where(gte(users.createdAt, thirtyDaysAgo.toISOString()))
+      .where(gte(users.createdAt, thirtyDaysAgo))
       .groupBy(sql`date(${users.createdAt})`)
       .orderBy(sql`date(${users.createdAt})`);
 
@@ -915,7 +915,7 @@ export class DatabaseStorage implements IStorage {
       totalEvents,
       topEvents: topEventsResult.map(event => ({
         eventType: event.eventType || 'unknown',
-        count: parseInt(event.count as string) || 0
+        count: Number(event.count) || 0
       })),
       recentActivity: recentActivityResult.map(activity => ({
         eventType: activity.eventType || 'unknown',
@@ -924,7 +924,7 @@ export class DatabaseStorage implements IStorage {
       })),
       userGrowth: userGrowthResult.map(growth => ({
         period: growth.period || 'unknown',
-        count: parseInt(growth.count as string) || 0
+        count: Number(growth.count) || 0
       }))
     };
   }
