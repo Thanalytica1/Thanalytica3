@@ -146,6 +146,20 @@ export function HealthSimulator() {
         projectedLifespanDelta,
         trajectoryRating,
       });
+      
+      // Track simulator usage after calculation
+      analytics.simulatorUsed("health_trajectory", {
+        sleepHours: inputs.sleepHours,
+        exerciseFrequency: inputs.exerciseFrequency,
+        alcoholDrinks: inputs.alcoholDrinks,
+        smokingStatus: inputs.smokingStatus,
+        dietQuality: inputs.dietQuality,
+        stressLevel: inputs.stressLevel,
+        biologicalAgeDelta,
+        vitalityScoreDelta,
+        projectedLifespanDelta,
+        trajectoryRating
+      });
     };
 
     // Add a small delay to simulate calculation time and show loading state
@@ -155,7 +169,7 @@ export function HealthSimulator() {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [inputs]);
+  }, [inputs, analytics]);
 
   const getDeltaDisplay = (value: number, suffix: string = "") => {
     if (value > 0) {

@@ -87,8 +87,11 @@ export default function Assessment() {
     }
   }, [form.watch(), currentStep]);
 
-  // Restore form data from localStorage on component mount
+  // Track assessment start and restore form data from localStorage on component mount
   useEffect(() => {
+    // Track assessment start when component mounts
+    analytics.assessmentStarted();
+    
     const savedDraft = localStorage.getItem('thanalytica-assessment-draft');
     if (savedDraft) {
       try {
@@ -106,7 +109,7 @@ export default function Assessment() {
         console.error('Error restoring draft:', error);
       }
     }
-  }, []);
+  }, [analytics]);
 
   if (!user) {
     return (
@@ -119,6 +122,12 @@ export default function Assessment() {
 
   const nextStep = () => {
     if (currentStep < steps.length) {
+      // Track step completion
+      analytics.assessmentStepCompleted(steps[currentStep - 1], {
+        stepNumber: currentStep,
+        formProgress: Math.round((currentStep / steps.length) * 100)
+      });
+      
       setCurrentStep(currentStep + 1);
     }
   };
