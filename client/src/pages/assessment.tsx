@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ProgressBar } from "@/components/progress-bar";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateHealthAssessment } from "@/hooks/use-health-data";
 import { insertHealthAssessmentSchema } from "@shared/schema";
@@ -84,12 +84,13 @@ export default function Assessment() {
       
       toast({
         title: "Assessment Complete!",
-        description: "Your health assessment has been saved. Redirecting to dashboard...",
+        description: "Your comprehensive health assessment has been analyzed. Redirecting to your personalized dashboard...",
       });
       
+      // Add a brief delay to show the success state
       setTimeout(() => {
         setLocation("/dashboard");
-      }, 2000);
+      }, 3000);
     } catch (error) {
       toast({
         title: "Error",
@@ -541,7 +542,14 @@ export default function Assessment() {
               className="w-full bg-medical-green text-white hover:bg-medical-green/90"
               disabled={createAssessment.isPending}
             >
-              {createAssessment.isPending ? "Analyzing..." : "Complete Assessment"}
+              {createAssessment.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Analyzing your health data...
+                </>
+              ) : (
+                "Complete Assessment"
+              )}
             </Button>
           </div>
         );
@@ -552,7 +560,7 @@ export default function Assessment() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-8 relative">
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} steps={steps} />
 
       <Card className="bg-white shadow-lg border border-gray-100">
@@ -567,7 +575,7 @@ export default function Assessment() {
                     type="button"
                     variant="outline"
                     onClick={previousStep}
-                    disabled={currentStep === 1}
+                    disabled={currentStep === 1 || createAssessment.isPending}
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Previous
@@ -576,6 +584,7 @@ export default function Assessment() {
                     type="button"
                     onClick={nextStep}
                     className="bg-medical-green text-white hover:bg-medical-green/90"
+                    disabled={createAssessment.isPending}
                   >
                     Next
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -586,6 +595,31 @@ export default function Assessment() {
           </Form>
         </CardContent>
       </Card>
+
+      {/* Full Screen Loading Overlay */}
+      {createAssessment.isPending && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 shadow-xl max-w-md mx-4 text-center">
+            <div className="flex justify-center mb-4">
+              <Loader2 className="w-12 h-12 animate-spin text-medical-green" />
+            </div>
+            <h3 className="text-xl font-semibold text-professional-slate mb-2">
+              Analyzing Your Health Data
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Our AI is processing your comprehensive health assessment and calculating your personalized longevity trajectory. This may take a moment.
+            </p>
+            <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-medical-green rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-medical-green rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
+                <div className="w-2 h-2 bg-medical-green rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+              </div>
+              <span>Processing data...</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
