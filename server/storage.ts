@@ -30,9 +30,61 @@ import {
   healthTrends,
   analyticsEvents
 } from "@shared/schema";
-import { db } from "./db";
+import { db, retryDatabaseOperation } from "./db";
 import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
+
+/**
+ * Safe number conversion utility
+ */
+function safeNumber(value: unknown, fallback: number = 0): number {
+  if (typeof value === 'number' && !isNaN(value) && isFinite(value)) {
+    return value;
+  }
+  
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (!isNaN(parsed) && isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  
+  return fallback;
+}
+
+/**
+ * Safe integer conversion utility
+ */
+function safeInteger(value: unknown, fallback: number = 0): number {
+  const num = safeNumber(value, fallback);
+  return Math.floor(num);
+}
+
+/**
+ * Type guard for database query results
+ */
+function isDefined<T>(value: T | undefined | null): value is T {
+  return value !== null && value !== undefined;
+}
+
+/**
+ * Safe database operation wrapper
+ */
+async function safeDbOperation<T>(
+  operation: () => Promise<T>,
+  context: string
+): Promise<T> {
+  try {
+    return await retryDatabaseOperation(operation);
+  } catch (error) {
+    console.error(`Database operation failed in ${context}:`, {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      context,
+      timestamp: new Date().toISOString(),
+    });
+    throw error;
+  }
+}
 
 export interface IStorage {
   // User methods
@@ -97,25 +149,36 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    return safeDbOperation(async () => {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user || undefined;
+    }, 'getUser');
   }
 
   async getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.firebaseUid, firebaseUid));
-    return user || undefined;
+    return safeDbOperation(async () => {
+      const [user] = await db.select().from(users).where(eq(users.firebaseUid, firebaseUid));
+      return user || undefined;
+    }, 'getUserByFirebaseUid');
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values({
-        ...insertUser,
-        displayName: insertUser.displayName || null,
-        photoURL: insertUser.photoURL || null,
-      })
-      .returning();
-    return user;
+    return safeDbOperation(async () => {
+      const [user] = await db
+        .insert(users)
+        .values({
+          ...insertUser,
+          displayName: insertUser.displayName || null,
+          photoURL: insertUser.photoURL || null,
+        })
+        .returning();
+      
+      if (!isDefined(user)) {
+        throw new Error('Failed to create user: No data returned from database');
+      }
+      
+      return user;
+    }, 'createUser');
   }
 
   async getHealthAssessment(userId: string): Promise<HealthAssessment | undefined> {
@@ -832,7 +895,7 @@ export class DatabaseStorage implements IStorage {
       .from(analyticsEvents)
       .where(eq(analyticsEvents.userId, userId));
     
-    const totalEvents = parseInt(totalEventsResult[0]?.count as string) || 0;
+    const totalEvents = safeInteger(totalEventsResult[0]?.count, 0);
 
     // Get unique sessions
     const uniqueSessionsResult = await db
@@ -840,7 +903,7 @@ export class DatabaseStorage implements IStorage {
       .from(analyticsEvents)
       .where(eq(analyticsEvents.userId, userId));
     
-    const uniqueSessions = parseInt(uniqueSessionsResult[0]?.count as string) || 0;
+    const uniqueSessions = safeInteger(uniqueSessionsResult[0]?.count, 0);
 
     // Get top events
     const topEventsResult = await db
@@ -856,7 +919,7 @@ export class DatabaseStorage implements IStorage {
 
     const topEvents = topEventsResult.map(row => ({
       eventName: row.eventName,
-      count: parseInt(row.count as string)
+      count: safeInteger(row.count)
     }));
 
     // Get last activity

@@ -65,40 +65,70 @@ export default function Assessment() {
     },
   });
 
-  // Auto-save form data to localStorage periodically
+  // Auto-save form data to localStorage periodically with error handling
   useEffect(() => {
-    const formData = form.getValues();
-    const hasData = Object.keys(formData).some(key => {
-      const value = formData[key as keyof FormData];
-      return Array.isArray(value) ? value.length > 0 : value !== "" && value !== 35; // 35 is default age
-    });
+    try {
+      const formData = form.getValues();
+      const hasData = Object.keys(formData).some(key => {
+        const value = formData[key as keyof FormData];
+        return Array.isArray(value) ? value.length > 0 : value !== "" && value !== 35; // 35 is default age
+      });
 
-    if (hasData) {
-      localStorage.setItem('thanalytica-assessment-draft', JSON.stringify({
-        formData,
-        currentStep,
-        timestamp: Date.now()
-      }));
+      if (hasData) {
+        const draftData = {
+          formData,
+          currentStep,
+          timestamp: Date.now()
+        };
+        localStorage.setItem('thanalytica-assessment-draft', JSON.stringify(draftData));
+      }
+    } catch (error) {
+      console.warn('Failed to save assessment draft:', error);
+      // Continue silently - local storage issues shouldn't block the user
     }
   }, [form.watch(), currentStep]);
 
-  // Restore form data from localStorage on component mount
+  // Restore form data from localStorage on component mount with comprehensive error handling
   useEffect(() => {
-    const savedDraft = localStorage.getItem('thanalytica-assessment-draft');
-    if (savedDraft) {
-      try {
-        const { formData, currentStep: savedStep, timestamp } = JSON.parse(savedDraft);
-        // Only restore if draft is less than 24 hours old
-        if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+    try {
+      const savedDraft = localStorage.getItem('thanalytica-assessment-draft');
+      if (!savedDraft) return;
+
+      const parsedDraft = JSON.parse(savedDraft);
+      
+      // Validate draft structure
+      if (!parsedDraft.formData || !parsedDraft.timestamp || typeof parsedDraft.currentStep !== 'number') {
+        console.warn('Invalid draft format, removing');
+        localStorage.removeItem('thanalytica-assessment-draft');
+        return;
+      }
+
+      // Only restore if draft is less than 24 hours old
+      if (Date.now() - parsedDraft.timestamp < 24 * 60 * 60 * 1000) {
+        // Validate form data structure before restoring
+        const { formData, currentStep: savedStep } = parsedDraft;
+        
+        // Basic validation of required fields
+        if (typeof formData === 'object' && formData !== null) {
           form.reset(formData);
-          setCurrentStep(savedStep);
+          setCurrentStep(Math.min(Math.max(savedStep, 1), steps.length)); // Ensure valid step range
+          
           toast({
             title: "Draft Restored",
             description: "Your previous assessment progress has been restored.",
           });
         }
-      } catch (error) {
-        console.error('Error restoring draft:', error);
+      } else {
+        // Remove expired draft
+        localStorage.removeItem('thanalytica-assessment-draft');
+      }
+    } catch (error) {
+      console.warn('Failed to restore assessment draft:', error);
+      // Clean up potentially corrupted data
+      try {
+        localStorage.removeItem('thanalytica-assessment-draft');
+      } catch (removeError) {
+        console.warn('Failed to remove corrupted draft:', removeError);
       }
     }
   }, [form, toast]);

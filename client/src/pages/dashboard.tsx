@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { HealthMetricsCard } from "@/components/health-metrics-card";
 import { Progress } from "@/components/ui/progress";
 import { DashboardLoadingSkeleton, HealthMetricsCardSkeleton } from "@/components/health-metrics-skeleton";
@@ -20,8 +21,8 @@ import { useHealthAssessment, useHealthMetrics } from "@/hooks/use-health-data";
 
 export default function Dashboard() {
   const { firebaseUser, user } = useAuth();
-  const { data: assessment, isLoading: assessmentLoading } = useHealthAssessment(user?.id || "");
-  const { data: metrics, isLoading: metricsLoading } = useHealthMetrics(user?.id || "");
+  const { data: assessment, isLoading: assessmentLoading, error: assessmentError } = useHealthAssessment(user?.id || "");
+  const { data: metrics, isLoading: metricsLoading, error: metricsError } = useHealthMetrics(user?.id || "");
   
   // Page tracking removed for resource optimization
 
@@ -38,19 +39,41 @@ export default function Dashboard() {
     return <DashboardLoadingSkeleton />;
   }
 
-  if (!assessment) {
+  // Handle errors gracefully
+  if (assessmentError || metricsError) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 text-center">
-        <h2 className="text-2xl font-bold text-professional-slate mb-4">No Assessment Found</h2>
-        <p className="text-gray-600">Please complete your health assessment first.</p>
+        <h2 className="text-2xl font-bold text-professional-slate mb-4">Unable to Load Dashboard</h2>
+        <p className="text-gray-600 mb-4">
+          We're having trouble loading your health data. Please try refreshing the page.
+        </p>
+        <Button onClick={() => window.location.reload()} className="bg-medical-green hover:bg-medical-green/90">
+          Refresh Page
+        </Button>
       </div>
     );
   }
 
-  const trajectoryRating = assessment.trajectoryRating || "OPTIMAL";
-  const biologicalAge = assessment.biologicalAge || 28.5;
-  const vitalityScore = assessment.vitalityScore || 87;
-  const projectedLifespan = metrics?.projectedLifespan || 150;
+  if (!assessment) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8 text-center">
+        <h2 className="text-2xl font-bold text-professional-slate mb-4">No Assessment Found</h2>
+        <p className="text-gray-600 mb-4">Please complete your health assessment first to see your dashboard.</p>
+        <Button 
+          onClick={() => window.location.href = '/assessment'} 
+          className="bg-medical-green hover:bg-medical-green/90"
+        >
+          Start Assessment
+        </Button>
+      </div>
+    );
+  }
+
+  // Safe data access with fallbacks
+  const trajectoryRating = assessment?.trajectoryRating || "MODERATE";
+  const biologicalAge = assessment?.biologicalAge || assessment?.age || 35;
+  const vitalityScore = assessment?.vitalityScore || 75;
+  const projectedLifespan = metrics?.projectedLifespan || 120;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">

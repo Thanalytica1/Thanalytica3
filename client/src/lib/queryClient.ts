@@ -1,22 +1,23 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
+import { NetworkError, getUserFriendlyMessage, logError, retryWithBackoff } from "@/utils/errorHandling";
 
-// Custom error class for API errors
-class ApiError extends Error {
+// Custom error class for API errors extending NetworkError for consistency
+export class ApiError extends NetworkError {
   constructor(
     public status: number,
     public statusText: string,
     public data?: unknown,
     message?: string
   ) {
-    super(message || `${status}: ${statusText}`);
+    super(message || `${status}: ${statusText}`, { status, statusText, data });
     this.name = "ApiError";
   }
 }
 
-// Network timeout error
-class NetworkTimeoutError extends Error {
-  constructor(message = "Request timed out") {
+// Network timeout error extending NetworkError for consistency
+export class NetworkTimeoutError extends NetworkError {
+  constructor(message = "Request timed out after 30 seconds") {
     super(message);
     this.name = "NetworkTimeoutError";
   }
@@ -53,7 +54,8 @@ function handleApiError(error: unknown, context: "query" | "mutation" = "query")
     return;
   }
   
-  console.error(`API ${context} error:`, error);
+  // Use centralized error logging
+  logError(error instanceof Error ? error : new Error(String(error)), { context });
   
   // Don't show toasts for authentication errors in queries (handled by auth system)
   if (error instanceof ApiError && error.status === 401 && context === "query") {
@@ -258,5 +260,4 @@ export const queryClient = new QueryClient({
   },
 });
 
-// Export error classes for use in components
-export { ApiError, NetworkTimeoutError };
+// Error classes are already exported at the top of their class declarations
