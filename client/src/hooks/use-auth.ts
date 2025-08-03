@@ -23,31 +23,54 @@ export function useAuth() {
       
       if (user) {
         // Use a more robust approach to ensure user exists in database
-        try {
-          // Small delay to prevent race conditions
-          await new Promise(resolve => setTimeout(resolve, 100));
-          
-          if (!isMountedRef.current) return;
-          
-          const userResponse = await refetchUser();
-          
-          if (!isMountedRef.current) return;
-          
-          // Only create user if we don't have one and we're not already creating
-          if (!userResponse.data && !createUser.isPending) {
-            createUser.mutate({
-              firebaseUid: user.uid,
-              email: user.email!,
-              displayName: user.displayName,
-              photoURL: user.photoURL,
-            });
-          }
-        } catch (error) {
-          // Ignore AbortError and other race condition errors
-          if (error instanceof Error && !error.message.includes('aborted')) {
+        const handleUserCreation = async () => {
+          try {
+            // Small delay to prevent race conditions
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            if (!isMountedRef.current) return;
+            
+            // Wrap refetchUser in a try-catch to handle abort errors specifically
+            let userResponse;
+            try {
+              userResponse = await refetchUser();
+            } catch (refetchError) {
+              // If it's an abort error, silently return - this is normal
+              if (refetchError instanceof Error && 
+                  (refetchError.name === 'AbortError' || 
+                   refetchError.message.includes('aborted') ||
+                   refetchError.message.includes('signal is aborted'))) {
+                return;
+              }
+              // Re-throw other errors
+              throw refetchError;
+            }
+            
+            if (!isMountedRef.current) return;
+            
+            // Only create user if we don't have one and we're not already creating
+            if (!userResponse.data && !createUser.isPending) {
+              createUser.mutate({
+                firebaseUid: user.uid,
+                email: user.email!,
+                displayName: user.displayName,
+                photoURL: user.photoURL,
+              });
+            }
+          } catch (error) {
+            // Silently ignore abort-related errors
+            if (error instanceof Error && 
+                (error.name === 'AbortError' || 
+                 error.message.includes('aborted') ||
+                 error.message.includes('signal is aborted'))) {
+              return;
+            }
             console.error("Auth error:", error);
           }
-        }
+        };
+        
+        // Execute the user creation handler
+        handleUserCreation();
       }
       
       if (isMountedRef.current) {
