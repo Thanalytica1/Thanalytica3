@@ -48,6 +48,11 @@ async function throwIfResNotOk(res: Response) {
 
 // Enhanced error handler with user-friendly messages
 function handleApiError(error: unknown, context: "query" | "mutation" = "query"): void {
+  // Skip logging and toasts for aborted requests
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return;
+  }
+  
   console.error(`API ${context} error:`, error);
   
   // Don't show toasts for authentication errors in queries (handled by auth system)
@@ -194,12 +199,7 @@ export const getQueryFn: <T>(options: {
       clearTimeout(timeoutId);
       
       if (error instanceof DOMException && error.name === "AbortError") {
-        // Don't show timeout errors for queries that are cancelled by React Query
-        if (!signal?.aborted) {
-          const timeoutError = new NetworkTimeoutError();
-          handleApiError(timeoutError, "query");
-          throw timeoutError;
-        }
+        // Don't show any errors for aborted queries - this is normal React Query behavior
         throw error;
       }
       
@@ -221,6 +221,10 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       staleTime: Infinity,
       retry: (failureCount, error) => {
+        // Don't retry on aborted requests
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return false;
+        }
         // Don't retry on auth errors or client errors (4xx)
         if (error instanceof ApiError && (error.status === 401 || error.status < 500)) {
           return false;
