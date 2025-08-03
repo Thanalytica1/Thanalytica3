@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, TrendingDown, Minus, Zap, Calendar } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, Zap, Calendar, Loader2 } from "lucide-react";
 
 interface SimulatorInputs {
   sleepHours: number;
@@ -40,8 +40,12 @@ export function HealthSimulator() {
     trajectoryRating: "MODERATE",
   });
 
+  const [isCalculating, setIsCalculating] = useState(false);
+
   // Simulate health impact calculations
   useEffect(() => {
+    setIsCalculating(true);
+    
     const calculateImpact = () => {
       let biologicalAgeDelta = 0;
       let vitalityScoreDelta = 0;
@@ -141,7 +145,13 @@ export function HealthSimulator() {
       });
     };
 
-    calculateImpact();
+    // Add a small delay to simulate calculation time and show loading state
+    const timeoutId = setTimeout(() => {
+      calculateImpact();
+      setIsCalculating(false);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
   }, [inputs]);
 
   const getDeltaDisplay = (value: number, suffix: string = "") => {
@@ -193,7 +203,15 @@ export function HealthSimulator() {
         {/* Input Controls */}
         <Card className="bg-white shadow-md border border-gray-100">
           <CardHeader>
-            <CardTitle className="text-medical-green">Lifestyle Inputs</CardTitle>
+            <CardTitle className="text-medical-green flex items-center">
+              Lifestyle Inputs
+              {isCalculating && (
+                <div className="ml-2 flex items-center space-x-1">
+                  <Loader2 className="w-4 h-4 animate-spin text-medical-green" />
+                  <span className="text-sm text-gray-500">Recalculating...</span>
+                </div>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Sleep Hours */}
@@ -315,9 +333,16 @@ export function HealthSimulator() {
             <CardContent className="p-6">
               <div className="text-center">
                 <h3 className="text-lg font-semibold mb-3">Simulated Trajectory</h3>
-                <Badge className={`text-lg px-4 py-2 ${getTrajectoryColor(results.trajectoryRating)}`}>
-                  {results.trajectoryRating.replace("_", " ")}
-                </Badge>
+                {isCalculating ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <Loader2 className="w-5 h-5 animate-spin text-medical-green" />
+                    <span className="text-gray-600">Calculating...</span>
+                  </div>
+                ) : (
+                  <Badge className={`text-lg px-4 py-2 ${getTrajectoryColor(results.trajectoryRating)}`}>
+                    {results.trajectoryRating.replace("_", " ")}
+                  </Badge>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -328,29 +353,48 @@ export function HealthSimulator() {
               <CardTitle className="text-trust-blue">Impact Analysis</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <Zap className="text-medical-green mr-3 h-5 w-5" />
-                  <span className="font-medium">Vitality Score</span>
+              {isCalculating ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center">
+                        <div className="w-5 h-5 bg-gray-300 rounded mr-3 animate-pulse"></div>
+                        <div className="w-24 h-4 bg-gray-300 rounded animate-pulse"></div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+                        <div className="w-16 h-4 bg-gray-300 rounded animate-pulse"></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                {getDeltaDisplay(results.vitalityScoreDelta, " pts")}
-              </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center">
+                      <Zap className="text-medical-green mr-3 h-5 w-5" />
+                      <span className="font-medium">Vitality Score</span>
+                    </div>
+                    {getDeltaDisplay(results.vitalityScoreDelta, " pts")}
+                  </div>
 
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <Calendar className="text-trust-blue mr-3 h-5 w-5" />
-                  <span className="font-medium">Biological Age</span>
-                </div>
-                {getDeltaDisplay(-results.biologicalAgeDelta, " yrs")}
-              </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center">
+                      <Calendar className="text-trust-blue mr-3 h-5 w-5" />
+                      <span className="font-medium">Biological Age</span>
+                    </div>
+                    {getDeltaDisplay(-results.biologicalAgeDelta, " yrs")}
+                  </div>
 
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center">
-                  <TrendingUp className="text-vitality-gold mr-3 h-5 w-5" />
-                  <span className="font-medium">Projected Lifespan</span>
-                </div>
-                {getDeltaDisplay(results.projectedLifespanDelta, " yrs")}
-              </div>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center">
+                      <TrendingUp className="text-vitality-gold mr-3 h-5 w-5" />
+                      <span className="font-medium">Projected Lifespan</span>
+                    </div>
+                    {getDeltaDisplay(results.projectedLifespanDelta, " yrs")}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -358,23 +402,37 @@ export function HealthSimulator() {
           <Card className="bg-gradient-to-r from-medical-green to-trust-blue text-white">
             <CardContent className="p-6">
               <h3 className="text-lg font-semibold mb-3">Key Insights</h3>
-              <div className="space-y-2 text-sm">
-                {inputs.sleepHours < 7 && (
-                  <div>• Improving sleep to 7-9 hours could add up to 8 years to your lifespan</div>
-                )}
-                {inputs.exerciseFrequency < 3 && (
-                  <div>• Regular exercise (3-5x/week) is one of the most powerful longevity interventions</div>
-                )}
-                {inputs.smokingStatus === "current" && (
-                  <div>• Quitting smoking could add 10-15 years and dramatically improve your trajectory</div>
-                )}
-                {inputs.stressLevel > 7 && (
-                  <div>• Stress management techniques could reduce biological aging by 2-3 years</div>
-                )}
-                {results.vitalityScoreDelta > 0 && (
-                  <div>• Your current lifestyle choices are supporting optimal longevity</div>
-                )}
-              </div>
+              {isCalculating ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></div>
+                      <div className="w-full h-4 bg-white/20 rounded animate-pulse"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2 text-sm">
+                  {inputs.sleepHours < 7 && (
+                    <div>• Improving sleep to 7-9 hours could add up to 8 years to your lifespan</div>
+                  )}
+                  {inputs.exerciseFrequency < 3 && (
+                    <div>• Regular exercise (3-5x/week) is one of the most powerful longevity interventions</div>
+                  )}
+                  {inputs.smokingStatus === "current" && (
+                    <div>• Quitting smoking could add 10-15 years and dramatically improve your trajectory</div>
+                  )}
+                  {inputs.stressLevel > 7 && (
+                    <div>• Stress management techniques could reduce biological aging by 2-3 years</div>
+                  )}
+                  {results.vitalityScoreDelta > 0 && (
+                    <div>• Your current lifestyle choices are supporting optimal longevity</div>
+                  )}
+                  {!inputs.sleepHours || inputs.sleepHours >= 7 && inputs.exerciseFrequency >= 3 && inputs.smokingStatus !== "current" && inputs.stressLevel <= 7 && results.vitalityScoreDelta <= 0 && (
+                    <div>• Adjust the sliders above to see personalized longevity insights</div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
