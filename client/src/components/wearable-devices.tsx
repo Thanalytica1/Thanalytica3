@@ -212,6 +212,17 @@ export default function WearableDevices() {
     try {
       if (deviceType === 'oura') {
         const authUrl = getOuraAuthUrl(user.id);
+        
+        // Check if it's demo mode
+        if (authUrl.includes('demo=oura')) {
+          toast({
+            title: "Demo Mode",
+            description: "Oura Ring integration will be available once developer credentials are configured. This shows how the connection interface will work.",
+            variant: "default",
+          });
+          return;
+        }
+        
         window.location.href = authUrl;
       } else if (deviceType === 'apple_health') {
         const success = await initiateAppleHealthConnect();
@@ -310,8 +321,13 @@ export default function WearableDevices() {
             <p className="text-gray-600 mb-4">
               Connect your wearable devices to automatically track your health metrics and get personalized insights.
             </p>
-            <div className="text-sm text-gray-500">
-              Supported devices: Oura Ring, Apple Health (coming soon)
+            <div className="text-sm text-gray-500 mb-4">
+              Supported devices: Oura Ring, Apple Health
+            </div>
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-sm text-blue-700">
+                <strong>Integration Status:</strong> Oura Ring integration is ready for deployment once developer credentials are available. Apple Health integration is in development.
+              </p>
             </div>
           </CardContent>
         </Card>

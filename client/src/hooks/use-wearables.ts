@@ -46,6 +46,12 @@ export function useDeleteWearableConnection() {
 // Helper functions for device authorization
 export function getOuraAuthUrl(userId: string): string {
   const clientId = import.meta.env.VITE_OURA_CLIENT_ID;
+  
+  // If no client ID is available, return a demo message
+  if (!clientId) {
+    return '/wearables?demo=oura';
+  }
+  
   const baseUrl = window.location.origin;
   const redirectUri = `${baseUrl}/api/auth/oura/callback`;
   
