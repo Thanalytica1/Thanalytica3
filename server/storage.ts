@@ -83,6 +83,16 @@ export interface IStorage {
     topEvents: { eventName: string; count: number }[];
     lastActivity: string;
   }>;
+  
+  // Admin analytics methods
+  getAdminAnalytics(): Promise<{
+    totalUsers: number;
+    totalAssessments: number;
+    totalEvents: number;
+    topEvents: { eventType: string; count: number }[];
+    recentActivity: { eventType: string; createdAt: string; userId: string }[];
+    userGrowth: { period: string; count: number }[];
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -841,6 +851,81 @@ export class DatabaseStorage implements IStorage {
       uniqueSessions,
       topEvents,
       lastActivity
+    };
+  }
+
+  async getAdminAnalytics() {
+    // Get total users
+    const totalUsersResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users);
+    const totalUsers = parseInt(totalUsersResult[0]?.count as string) || 0;
+
+    // Get total assessments
+    const totalAssessmentsResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(healthAssessments);
+    const totalAssessments = parseInt(totalAssessmentsResult[0]?.count as string) || 0;
+
+    // Get total events
+    const totalEventsResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(analyticsEvents);
+    const totalEvents = parseInt(totalEventsResult[0]?.count as string) || 0;
+
+    // Get top events by type
+    const topEventsResult = await db
+      .select({
+        eventType: analyticsEvents.eventName,
+        count: sql<number>`count(*)`
+      })
+      .from(analyticsEvents)
+      .groupBy(analyticsEvents.eventName)
+      .orderBy(sql`count(*) desc`)
+      .limit(10);
+
+    // Get recent activity
+    const recentActivityResult = await db
+      .select({
+        eventType: analyticsEvents.eventName,
+        createdAt: analyticsEvents.createdAt,
+        userId: analyticsEvents.userId
+      })
+      .from(analyticsEvents)
+      .orderBy(desc(analyticsEvents.createdAt))
+      .limit(20);
+
+    // Get user growth (simplified - users by creation day for last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const userGrowthResult = await db
+      .select({
+        period: sql<string>`date(${users.createdAt})`,
+        count: sql<number>`count(*)`
+      })
+      .from(users)
+      .where(gte(users.createdAt, thirtyDaysAgo.toISOString()))
+      .groupBy(sql`date(${users.createdAt})`)
+      .orderBy(sql`date(${users.createdAt})`);
+
+    return {
+      totalUsers,
+      totalAssessments,
+      totalEvents,
+      topEvents: topEventsResult.map(event => ({
+        eventType: event.eventType || 'unknown',
+        count: parseInt(event.count as string) || 0
+      })),
+      recentActivity: recentActivityResult.map(activity => ({
+        eventType: activity.eventType || 'unknown',
+        createdAt: activity.createdAt?.toISOString() || new Date().toISOString(),
+        userId: activity.userId || 'unknown'
+      })),
+      userGrowth: userGrowthResult.map(growth => ({
+        period: growth.period || 'unknown',
+        count: parseInt(growth.count as string) || 0
+      }))
     };
   }
 }

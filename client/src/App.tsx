@@ -14,6 +14,7 @@ import HealthAI from "@/pages/health-ai";
 import Simulator from "@/pages/simulator";
 import About from "@/pages/about";
 import Login from "@/pages/login";
+import AdminAnalytics from "@/pages/admin-analytics";
 import NotFound from "@/pages/not-found";
 import { ProtectedRoute } from "@/components/protected-route";
 
@@ -65,6 +66,13 @@ function Router() {
       <Route path="/about">
         <ErrorBoundary>
           <About />
+        </ErrorBoundary>
+      </Route>
+      <Route path="/admin/analytics">
+        <ErrorBoundary>
+          <ProtectedRoute>
+            <AdminAnalytics />
+          </ProtectedRoute>
         </ErrorBoundary>
       </Route>
       <Route component={NotFound} />

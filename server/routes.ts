@@ -444,6 +444,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin analytics route
+  app.get("/api/admin/analytics", async (req, res) => {
+    try {
+      const adminAnalytics = await storage.getAdminAnalytics();
+      res.json(adminAnalytics);
+    } catch (error) {
+      console.error("Error fetching admin analytics:", error);
+      res.status(500).json({ error: "Failed to fetch admin analytics" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
