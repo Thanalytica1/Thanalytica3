@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertHealthAssessmentSchema } from "@shared/schema";
+import { insertUserSchema, insertHealthAssessmentSchema, insertAnalyticsEventSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -401,6 +401,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     return "Based on your health profile, I recommend focusing on the fundamentals: consistent sleep, regular movement, stress management, and nutritious eating. Your personalized recommendations in the dashboard provide specific, actionable steps tailored to your current health status and goals.";
   }
+
+  // Analytics routes
+  app.post("/api/analytics/event", async (req, res) => {
+    try {
+      const eventData = insertAnalyticsEventSchema.parse(req.body);
+      const event = await storage.createAnalyticsEvent(eventData);
+      res.status(201).json(event);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid event data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to track event" });
+    }
+  });
+
+  app.get("/api/analytics/events/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { startDate, endDate, eventName, limit = 100 } = req.query;
+      
+      const events = await storage.getAnalyticsEvents(userId, {
+        startDate: startDate as string,
+        endDate: endDate as string,
+        eventName: eventName as string,
+        limit: parseInt(limit as string),
+      });
+      
+      res.json(events);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get analytics events" });
+    }
+  });
+
+  app.get("/api/analytics/summary/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const summary = await storage.getAnalyticsSummary(userId);
+      res.json(summary);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get analytics summary" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

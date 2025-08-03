@@ -233,6 +233,30 @@ export type InsertHealthInsight = z.infer<typeof insertHealthInsightSchema>;
 export type HealthTrend = typeof healthTrends.$inferSelect;
 export type InsertHealthTrend = z.infer<typeof insertHealthTrendSchema>;
 
+// Analytics Events Table
+export const analyticsEvents = pgTable("analytics_events", {
+  id: varchar("id", { length: 255 }).primaryKey().$defaultFn(() => nanoid()),
+  userId: varchar("user_id", { length: 255 }).references(() => users.id), // nullable for anonymous events
+  sessionId: varchar("session_id", { length: 255 }).notNull(), // Browser session identifier
+  eventName: varchar("event_name", { length: 100 }).notNull(), // e.g., "assessment_started", "dashboard_viewed"
+  eventCategory: varchar("event_category", { length: 50 }).notNull(), // e.g., "user_action", "page_view", "form_interaction"
+  eventData: jsonb("event_data"), // Additional event properties
+  userAgent: text("user_agent"), // Browser/device info
+  referrer: text("referrer"), // Where user came from
+  pathname: varchar("pathname", { length: 500 }).notNull(), // Current page path
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+// Analytics schema
+export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({
+  id: true,
+  timestamp: true,
+});
+
+// Analytics types
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
+
 // Advanced Health Interfaces
 export interface HealthModelPredictions {
   biologicalAge: number;

@@ -16,11 +16,15 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useHealthAssessment, useHealthMetrics } from "@/hooks/use-health-data";
+import { usePageTracking } from "@/hooks/use-analytics";
 
 export default function Dashboard() {
   const { firebaseUser, user } = useAuth();
   const { data: assessment, isLoading: assessmentLoading } = useHealthAssessment(user?.id || "");
   const { data: metrics, isLoading: metricsLoading } = useHealthMetrics(user?.id || "");
+  
+  // Track page view
+  usePageTracking("dashboard", { hasAssessment: !!assessment });
 
   if (!user) {
     return (

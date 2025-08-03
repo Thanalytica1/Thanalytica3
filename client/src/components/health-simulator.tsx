@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TrendingUp, TrendingDown, Minus, Zap, Calendar, Loader2 } from "lucide-react";
+import { useAnalytics } from "@/hooks/use-analytics";
 
 interface SimulatorInputs {
   sleepHours: number;
@@ -24,6 +25,8 @@ interface SimulationResults {
 }
 
 export function HealthSimulator() {
+  const analytics = useAnalytics();
+  
   const [inputs, setInputs] = useState<SimulatorInputs>({
     sleepHours: 7.5,
     exerciseFrequency: 3,

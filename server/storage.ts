@@ -17,6 +17,8 @@ import {
   type InsertHealthInsight,
   type HealthTrend,
   type InsertHealthTrend,
+  type AnalyticsEvent,
+  type InsertAnalyticsEvent,
   users,
   healthAssessments,
   healthMetrics,
@@ -25,10 +27,11 @@ import {
   wearableData,
   healthModels,
   healthInsights,
-  healthTrends
+  healthTrends,
+  analyticsEvents
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, gte, lte } from "drizzle-orm";
+import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -65,6 +68,21 @@ export interface IStorage {
   createHealthTrend(trend: InsertHealthTrend): Promise<HealthTrend>;
   getHealthTrends(userId: string, metricType?: string, limit?: number): Promise<HealthTrend[]>;
   generateAdvancedMetrics(userId: string): Promise<any>;
+  
+  // Analytics methods
+  createAnalyticsEvent(event: InsertAnalyticsEvent): Promise<AnalyticsEvent>;
+  getAnalyticsEvents(userId: string, options?: {
+    startDate?: string;
+    endDate?: string;
+    eventName?: string;
+    limit?: number;
+  }): Promise<AnalyticsEvent[]>;
+  getAnalyticsSummary(userId: string): Promise<{
+    totalEvents: number;
+    uniqueSessions: number;
+    topEvents: { eventName: string; count: number }[];
+    lastActivity: string;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -730,6 +748,100 @@ export class DatabaseStorage implements IStorage {
     for (const rec of recommendations) {
       await this.createRecommendation(rec);
     }
+  }
+
+  // Analytics Methods
+  async createAnalyticsEvent(event: InsertAnalyticsEvent): Promise<AnalyticsEvent> {
+    const [analyticsEvent] = await db
+      .insert(analyticsEvents)
+      .values(event)
+      .returning();
+    return analyticsEvent;
+  }
+
+  async getAnalyticsEvents(userId: string, options: {
+    startDate?: string;
+    endDate?: string;
+    eventName?: string;
+    limit?: number;
+  } = {}): Promise<AnalyticsEvent[]> {
+    let query = db
+      .select()
+      .from(analyticsEvents)
+      .where(eq(analyticsEvents.userId, userId));
+
+    if (options.eventName) {
+      query = query.where(eq(analyticsEvents.eventName, options.eventName));
+    }
+
+    if (options.startDate) {
+      query = query.where(gte(analyticsEvents.timestamp, new Date(options.startDate)));
+    }
+
+    if (options.endDate) {
+      query = query.where(lte(analyticsEvents.timestamp, new Date(options.endDate)));
+    }
+
+    return await query
+      .orderBy(desc(analyticsEvents.timestamp))
+      .limit(options.limit || 100);
+  }
+
+  async getAnalyticsSummary(userId: string): Promise<{
+    totalEvents: number;
+    uniqueSessions: number;
+    topEvents: { eventName: string; count: number }[];
+    lastActivity: string;
+  }> {
+    // Get total events
+    const totalEventsResult = await db
+      .select({ count: sql`count(*)` })
+      .from(analyticsEvents)
+      .where(eq(analyticsEvents.userId, userId));
+    
+    const totalEvents = parseInt(totalEventsResult[0]?.count as string) || 0;
+
+    // Get unique sessions
+    const uniqueSessionsResult = await db
+      .select({ count: sql`count(distinct ${analyticsEvents.sessionId})` })
+      .from(analyticsEvents)
+      .where(eq(analyticsEvents.userId, userId));
+    
+    const uniqueSessions = parseInt(uniqueSessionsResult[0]?.count as string) || 0;
+
+    // Get top events
+    const topEventsResult = await db
+      .select({
+        eventName: analyticsEvents.eventName,
+        count: sql`count(*)`
+      })
+      .from(analyticsEvents)
+      .where(eq(analyticsEvents.userId, userId))
+      .groupBy(analyticsEvents.eventName)
+      .orderBy(desc(sql`count(*)`))
+      .limit(5);
+
+    const topEvents = topEventsResult.map(row => ({
+      eventName: row.eventName,
+      count: parseInt(row.count as string)
+    }));
+
+    // Get last activity
+    const lastActivityResult = await db
+      .select({ timestamp: analyticsEvents.timestamp })
+      .from(analyticsEvents)
+      .where(eq(analyticsEvents.userId, userId))
+      .orderBy(desc(analyticsEvents.timestamp))
+      .limit(1);
+
+    const lastActivity = lastActivityResult[0]?.timestamp?.toISOString() || '';
+
+    return {
+      totalEvents,
+      uniqueSessions,
+      topEvents,
+      lastActivity
+    };
   }
 }
 

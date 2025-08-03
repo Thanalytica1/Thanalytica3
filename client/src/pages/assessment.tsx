@@ -18,6 +18,7 @@ import { insertHealthAssessmentSchema } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { ApiError, NetworkTimeoutError } from "@/lib/queryClient";
+import { useAnalytics, usePageTracking } from "@/hooks/use-analytics";
 
 const steps = ["Basic Info", "Lifestyle", "Medical History", "Exercise", "Goals", "Review"];
 
@@ -38,6 +39,15 @@ export default function Assessment() {
   const [isRetrying, setIsRetrying] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [lastSubmissionData, setLastSubmissionData] = useState<FormData | null>(null);
+  
+  // Analytics tracking
+  const analytics = useAnalytics();
+  usePageTracking("assessment", { step: currentStep, totalSteps: steps.length });
+
+  // Track assessment started on component mount
+  useEffect(() => {
+    analytics.assessmentStarted(`step_${currentStep}`);
+  }, []); // Run only once on mount
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -164,10 +174,17 @@ export default function Assessment() {
     setLastSubmissionData(data);
     
     try {
+      const startTime = Date.now();
+      
       await createAssessment.mutateAsync({
         ...data,
         userId: user?.id || "",
       });
+      
+      const duration = Date.now() - startTime;
+      
+      // Track successful assessment completion
+      analytics.assessmentCompleted(duration, data.age);
       
       // Clear saved draft on successful submission
       localStorage.removeItem('thanalytica-assessment-draft');
@@ -186,6 +203,9 @@ export default function Assessment() {
       const errorMessage = getErrorMessage(error);
       setSubmissionError(errorMessage);
       setRetryCount(prev => prev + 1);
+      
+      // Track assessment submission error
+      analytics.errorOccurred("assessment_submission", errorMessage, "assessment_form");
       
       toast({
         title: "Submission Failed",
