@@ -34,44 +34,12 @@ export function useOptimizedUserData(userId: string) {
   });
 }
 
-// Health Trends with Intelligent Caching
-export function useHealthTrends(userId: string, metricType?: string) {
-  return useQuery<HealthTrend[]>({
-    queryKey: ['health-trends', userId, metricType],
-    enabled: !!userId,
-    // Optimize polling intervals for resource efficiency
-    refetchInterval: 10 * 60 * 1000, // 10 minutes - trends don't change frequently
-    staleTime: 5 * 60 * 1000, // 5 minutes - longer staleness for trend data
-    gcTime: 20 * 60 * 1000, // 20 minutes - keep trend data cached longer
-    refetchOnWindowFocus: false,
-    select: (data) => {
-      // Client-side data processing to reduce server load
-      return data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    },
-  });
-}
+// Health trends functionality removed for resource optimization
+// Use basic health data queries instead
 
 // AI Insights with Smart Prefetching
-export function useHealthInsights(userId: string, type?: string) {
-  const queryClient = useQueryClient();
-  
-  const query = useQuery<HealthInsight[]>({
-    queryKey: ['health-insights', userId, type],
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 20 * 60 * 1000,
-  });
-
-  // Prefetch related data when insights are loaded
-  if (query.data?.some((insight: HealthInsight) => insight.type === 'symptom_analysis')) {
-    queryClient.prefetchQuery({
-      queryKey: ['health-recommendations', userId],
-      staleTime: 10 * 60 * 1000,
-    });
-  }
-
-  return query;
-}
+// Health insights functionality removed for resource optimization
+// Use basic health data queries instead
 
 // Wearable Data with Batch Loading
 export function useWearableDataOptimized(userId: string, dataType?: string) {
@@ -126,26 +94,7 @@ export function useBatchHealthData(userId: string) {
 }
 
 // AI Model Generation with Progress Tracking
-export function useGenerateHealthModel() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (userId: string) => {
-      const response = await apiRequest('POST', `/api/health-ai/generate-model/${userId}`);
-      return response.json();
-    },
-    onSuccess: (data, userId) => {
-      // Invalidate related queries to trigger refresh
-      queryClient.invalidateQueries({ queryKey: ['health-metrics', userId] });
-      queryClient.invalidateQueries({ queryKey: ['health-trends', userId] });
-      queryClient.invalidateQueries({ queryKey: ['health-insights', userId] });
-      
-      // Set fresh data in cache
-      queryClient.setQueryData(['advanced-metrics', userId], data);
-    },
-    retry: 1,
-  });
-}
+// Health AI model generation removed for resource optimization
 
 // Smart Assessment Submission with Optimistic Updates
 export function useSubmitAssessmentOptimized() {

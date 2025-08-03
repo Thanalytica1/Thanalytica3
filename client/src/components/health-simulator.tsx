@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TrendingUp, TrendingDown, Minus, Zap, Calendar, Loader2 } from "lucide-react";
-import { useAnalytics } from "@/hooks/use-analytics";
+// Analytics removed for resource optimization
 
 interface SimulatorInputs {
   sleepHours: number;
@@ -25,7 +25,7 @@ interface SimulationResults {
 }
 
 export function HealthSimulator() {
-  const analytics = useAnalytics();
+  // Analytics tracking removed for resource optimization
   
   const [inputs, setInputs] = useState<SimulatorInputs>({
     sleepHours: 7.5,
@@ -147,19 +147,7 @@ export function HealthSimulator() {
         trajectoryRating,
       });
       
-      // Track simulator usage after calculation
-      analytics.simulatorUsed("health_trajectory", {
-        sleepHours: inputs.sleepHours,
-        exerciseFrequency: inputs.exerciseFrequency,
-        alcoholDrinks: inputs.alcoholDrinks,
-        smokingStatus: inputs.smokingStatus,
-        dietQuality: inputs.dietQuality,
-        stressLevel: inputs.stressLevel,
-        biologicalAgeDelta,
-        vitalityScoreDelta,
-        projectedLifespanDelta,
-        trajectoryRating
-      });
+      // Simulator tracking removed for resource optimization
     };
 
     // Add a small delay to simulate calculation time and show loading state
@@ -169,7 +157,7 @@ export function HealthSimulator() {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [inputs, analytics]);
+  }, [inputs]);
 
   const getDeltaDisplay = (value: number, suffix: string = "") => {
     if (value > 0) {

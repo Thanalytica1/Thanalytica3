@@ -3,18 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Brain, Dumbbell, Leaf, Moon, Clock, Thermometer, Utensils } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRecommendations } from "@/hooks/use-health-data";
-import { useAnalytics, usePageTracking } from "@/hooks/use-analytics";
+// Analytics removed for resource optimization
 
 export default function Recommendations() {
   const { firebaseUser, user } = useAuth();
   const { data: recommendations, isLoading } = useRecommendations(user?.id || "");
-  const analytics = useAnalytics();
-  
-  // Track page view and count of recommendations
-  usePageTracking("recommendations", { 
-    hasRecommendations: !!recommendations?.length,
-    recommendationCount: recommendations?.length || 0 
-  });
+  // Analytics tracking removed for resource optimization
 
   if (!user) {
     return (
@@ -92,8 +86,7 @@ export default function Recommendations() {
               key={rec.id} 
               className={`bg-white shadow-md border-l-4 ${rec.borderColor} border border-gray-100 cursor-pointer hover:opacity-80 transition-opacity`}
               onClick={() => {
-                // Track recommendation interaction
-                analytics.recommendationViewed(rec.id);
+                // Recommendation tracking removed for resource optimization
               }}
             >
               <CardContent className="p-6">

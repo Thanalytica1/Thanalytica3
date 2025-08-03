@@ -14,7 +14,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { usePageTracking } from "@/hooks/use-analytics";
+// Analytics removed for resource optimization
 
 interface AnalyticsData {
   totalUsers: number;
@@ -28,8 +28,7 @@ interface AnalyticsData {
 export default function AdminAnalytics() {
   const { user } = useAuth();
   
-  // Track admin page access
-  usePageTracking("admin_analytics", { userId: user?.id });
+  // Admin page tracking removed for resource optimization
 
   // Fetch analytics data
   const { data: analytics, isLoading, error } = useQuery<AnalyticsData>({

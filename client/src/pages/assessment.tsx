@@ -18,7 +18,7 @@ import { insertHealthAssessmentSchema } from "@shared/schema";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { ApiError, NetworkTimeoutError } from "@/lib/queryClient";
-import { useAnalytics, usePageTracking } from "@/hooks/use-analytics";
+// Analytics removed for resource optimization
 
 const steps = ["Basic Info", "Lifestyle", "Medical History", "Exercise", "Goals", "Review"];
 
@@ -40,14 +40,9 @@ export default function Assessment() {
   const [retryCount, setRetryCount] = useState(0);
   const [lastSubmissionData, setLastSubmissionData] = useState<FormData | null>(null);
   
-  // Analytics tracking
-  const analytics = useAnalytics();
-  usePageTracking("assessment", { step: currentStep, totalSteps: steps.length });
+  // Analytics tracking removed for resource optimization
 
-  // Track assessment started on component mount
-  useEffect(() => {
-    analytics.assessmentStarted(`step_${currentStep}`);
-  }, []); // Run only once on mount
+  // Assessment tracking removed for resource optimization
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -87,11 +82,8 @@ export default function Assessment() {
     }
   }, [form.watch(), currentStep]);
 
-  // Track assessment start and restore form data from localStorage on component mount
+  // Restore form data from localStorage on component mount
   useEffect(() => {
-    // Track assessment start when component mounts
-    analytics.assessmentStarted();
-    
     const savedDraft = localStorage.getItem('thanalytica-assessment-draft');
     if (savedDraft) {
       try {
@@ -109,7 +101,7 @@ export default function Assessment() {
         console.error('Error restoring draft:', error);
       }
     }
-  }, [analytics]);
+  }, [form, toast]);
 
   if (!user) {
     return (
@@ -122,11 +114,7 @@ export default function Assessment() {
 
   const nextStep = () => {
     if (currentStep < steps.length) {
-      // Track step completion
-      analytics.assessmentStepCompleted(steps[currentStep - 1], {
-        stepNumber: currentStep,
-        formProgress: Math.round((currentStep / steps.length) * 100)
-      });
+      // Step tracking removed for resource optimization
       
       setCurrentStep(currentStep + 1);
     }
@@ -192,8 +180,7 @@ export default function Assessment() {
       
       const duration = Date.now() - startTime;
       
-      // Track successful assessment completion
-      analytics.assessmentCompleted(duration, data.age);
+      // Assessment completion tracking removed for resource optimization
       
       // Clear saved draft on successful submission
       localStorage.removeItem('thanalytica-assessment-draft');
@@ -213,8 +200,7 @@ export default function Assessment() {
       setSubmissionError(errorMessage);
       setRetryCount(prev => prev + 1);
       
-      // Track assessment submission error
-      analytics.errorOccurred("assessment_submission", errorMessage, "assessment_form");
+      // Error tracking removed for resource optimization
       
       toast({
         title: "Submission Failed",
