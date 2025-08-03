@@ -4,7 +4,7 @@ import { Brain, TrendingUp, Target, Play, Sliders } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { ErrorTest } from "@/components/error-test";
+
 
 export default function Home() {
   const { firebaseUser, loading } = useAuth();
@@ -104,8 +104,7 @@ export default function Home() {
         </Card>
       </div>
 
-      {/* Error Boundary Test (Development Only) */}
-      <ErrorTest />
+
     </div>
   );
 }
