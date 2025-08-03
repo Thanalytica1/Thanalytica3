@@ -11,15 +11,24 @@ import {
   type InsertWearableConnection,
   type WearableData,
   type InsertWearableData,
+  type HealthModel,
+  type InsertHealthModel,
+  type HealthInsight,
+  type InsertHealthInsight,
+  type HealthTrend,
+  type InsertHealthTrend,
   users,
   healthAssessments,
   healthMetrics,
   recommendations,
   wearableConnections,
-  wearableData
+  wearableData,
+  healthModels,
+  healthInsights,
+  healthTrends
 } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc, and, gte, lte } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -47,6 +56,15 @@ export interface IStorage {
   deleteWearableConnection(id: string): Promise<void>;
   getWearableData(userId: string, dataType?: string, startDate?: string, endDate?: string): Promise<WearableData[]>;
   createWearableData(data: InsertWearableData): Promise<WearableData>;
+  
+  // AI and Advanced Analytics methods
+  createHealthModel(model: InsertHealthModel): Promise<HealthModel>;
+  getLatestHealthModel(userId: string): Promise<HealthModel | undefined>;
+  createHealthInsight(insight: InsertHealthInsight): Promise<HealthInsight>;
+  getHealthInsights(userId: string, type?: string): Promise<HealthInsight[]>;
+  createHealthTrend(trend: InsertHealthTrend): Promise<HealthTrend>;
+  getHealthTrends(userId: string, metricType?: string, limit?: number): Promise<HealthTrend[]>;
+  generateAdvancedMetrics(userId: string): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -389,6 +407,283 @@ export class DatabaseStorage implements IStorage {
       .values(data)
       .returning();
     return wearableDataEntry;
+  }
+
+  // AI and Advanced Analytics Methods
+  async createHealthModel(data: InsertHealthModel): Promise<HealthModel> {
+    const [model] = await db
+      .insert(healthModels)
+      .values(data)
+      .returning();
+    return model;
+  }
+
+  async getLatestHealthModel(userId: string): Promise<HealthModel | undefined> {
+    const [model] = await db
+      .select()
+      .from(healthModels)
+      .where(eq(healthModels.userId, userId))
+      .orderBy(desc(healthModels.createdAt))
+      .limit(1);
+    return model || undefined;
+  }
+
+  async createHealthInsight(data: InsertHealthInsight): Promise<HealthInsight> {
+    const [insight] = await db
+      .insert(healthInsights)
+      .values(data)
+      .returning();
+    return insight;
+  }
+
+  async getHealthInsights(userId: string, type?: string): Promise<HealthInsight[]> {
+    const whereConditions = type 
+      ? and(eq(healthInsights.userId, userId), eq(healthInsights.type, type))
+      : eq(healthInsights.userId, userId);
+
+    return await db
+      .select()
+      .from(healthInsights)
+      .where(whereConditions)
+      .orderBy(desc(healthInsights.createdAt))
+      .limit(20);
+  }
+
+  async createHealthTrend(data: InsertHealthTrend): Promise<HealthTrend> {
+    const [trend] = await db
+      .insert(healthTrends)
+      .values(data)
+      .returning();
+    return trend;
+  }
+
+  async getHealthTrends(userId: string, metricType?: string, limit: number = 50): Promise<HealthTrend[]> {
+    const whereConditions = metricType 
+      ? and(eq(healthTrends.userId, userId), eq(healthTrends.metricType, metricType))
+      : eq(healthTrends.userId, userId);
+
+    return await db
+      .select()
+      .from(healthTrends)
+      .where(whereConditions)
+      .orderBy(desc(healthTrends.date))
+      .limit(limit);
+  }
+
+  async generateAdvancedMetrics(userId: string): Promise<any> {
+    // Get all user data for comprehensive analysis
+    const user = await this.getUser(userId);
+    const assessment = await this.getHealthAssessment(userId);
+    const metrics = await this.getHealthMetrics(userId);
+    const wearableData = await this.getWearableData(userId);
+    const trends = await this.getHealthTrends(userId);
+
+    if (!assessment || !metrics) {
+      throw new Error("Insufficient data for advanced metrics generation");
+    }
+
+    // Create comprehensive data object for AI analysis
+    const comprehensiveData = {
+      chronologicalAge: assessment.age,
+      sleepScore: metrics.sleepScore || 70,
+      exerciseScore: metrics.exerciseScore || 60,
+      nutritionScore: metrics.nutritionScore || 65,
+      stressScore: metrics.stressScore || 60,
+      cognitiveScore: metrics.cognitiveScore || 75,
+      wearableData: wearableData || [],
+      historicalTrends: trends || []
+    };
+
+    // Generate advanced biological age with confidence
+    const biologicalAgeResult = this.calculateAdvancedBiologicalAge(comprehensiveData);
+    
+    // Calculate disease risks
+    const diseaseRisks = this.calculateAdvancedDiseaseRisks(comprehensiveData);
+    
+    // Calculate intervention impacts
+    const interventionImpact = this.calculateAdvancedInterventionImpact(
+      comprehensiveData, 
+      ['strength training', 'meditation', 'sleep optimization', 'nutrition coaching']
+    );
+
+    // Create health model entry
+    const modelData = {
+      userId,
+      modelVersion: "v2.1",
+      inputFeatures: comprehensiveData,
+      predictions: {
+        biologicalAge: biologicalAgeResult.age,
+        diseaseRisks,
+        interventionImpact,
+        lifeExpectancy: this.calculateLifeExpectancy(biologicalAgeResult.age, diseaseRisks),
+        optimalInterventions: Object.entries(interventionImpact)
+          .sort(([,a], [,b]) => (b as number) - (a as number))
+          .slice(0, 3)
+          .map(([intervention]) => intervention)
+      },
+      confidence: biologicalAgeResult.confidence
+    };
+
+    await this.createHealthModel(modelData);
+
+    // Create trend entries for tracking
+    const today = new Date().toISOString().split('T')[0];
+    
+    await this.createHealthTrend({
+      userId,
+      metricType: 'biological_age',
+      date: today,
+      value: biologicalAgeResult.age,
+      trend: this.determineTrend(biologicalAgeResult.age, trends, 'biological_age'),
+      dataSource: 'ai_model'
+    });
+
+    await this.createHealthTrend({
+      userId,
+      metricType: 'vitality_score',
+      date: today,
+      value: metrics.sleepScore || 70,
+      trend: this.determineTrend(metrics.sleepScore || 70, trends, 'vitality_score'),
+      dataSource: 'assessment'
+    });
+
+    return modelData.predictions;
+  }
+
+  private calculateLifeExpectancy(biologicalAge: number, diseaseRisks: Record<string, number>): number {
+    let baseExpectancy = 150; // Optimistic longevity assumption
+    
+    // Adjust based on biological age
+    const ageDifference = biologicalAge - 35; // Assuming 35 as baseline optimal age
+    baseExpectancy -= ageDifference * 0.5;
+    
+    // Adjust based on disease risks
+    const avgRisk = Object.values(diseaseRisks).reduce((sum, risk) => sum + risk, 0) / Object.values(diseaseRisks).length;
+    baseExpectancy -= avgRisk * 20;
+    
+    return Math.max(baseExpectancy, 85); // Minimum reasonable expectancy
+  }
+
+  private determineTrend(currentValue: number, historicalTrends: HealthTrend[], metricType: string): string {
+    const relevantTrends = historicalTrends
+      .filter(t => t.metricType === metricType)
+      .slice(0, 5); // Last 5 data points
+    
+    if (relevantTrends.length < 2) return 'stable';
+    
+    const previousValue = relevantTrends[1].value;
+    const change = currentValue - previousValue;
+    
+    if (Math.abs(change) < 2) return 'stable';
+    return change > 0 ? 'improving' : 'declining';
+  }
+
+  private calculateAdvancedBiologicalAge(metrics: any): { age: number; confidence: number } {
+    let biologicalAge = metrics.chronologicalAge || 35;
+    let confidenceScore = 0.7;
+
+    // Enhanced sleep analysis
+    if (metrics.sleepScore) {
+      const sleepImpact = (metrics.sleepScore - 70) * 0.1;
+      biologicalAge -= sleepImpact;
+      confidenceScore += 0.1;
+    }
+
+    // Exercise with intensity weighting
+    if (metrics.exerciseScore) {
+      const exerciseImpact = (metrics.exerciseScore - 60) * 0.15;
+      biologicalAge -= exerciseImpact;
+      confidenceScore += 0.1;
+    }
+
+    // Nutrition and lifestyle factors
+    if (metrics.nutritionScore) {
+      const nutritionImpact = (metrics.nutritionScore - 65) * 0.12;
+      biologicalAge -= nutritionImpact;
+      confidenceScore += 0.05;
+    }
+
+    // Stress management impact
+    if (metrics.stressScore) {
+      const stressImpact = (70 - metrics.stressScore) * 0.08;
+      biologicalAge += stressImpact;
+      confidenceScore += 0.05;
+    }
+
+    // Wearable data integration for higher accuracy
+    if (metrics.wearableData && metrics.wearableData.length > 0) {
+      confidenceScore += 0.2;
+      // HRV-based age adjustment
+      const avgHRV = metrics.wearableData
+        .filter((d: any) => d.dataType === 'hrv')
+        .reduce((sum: number, d: any) => sum + (d.metrics?.value || 0), 0) / 
+        Math.max(metrics.wearableData.filter((d: any) => d.dataType === 'hrv').length, 1);
+      
+      if (avgHRV > 0) {
+        // Higher HRV generally indicates better health
+        const hrvImpact = (avgHRV - 30) * 0.1;
+        biologicalAge -= hrvImpact;
+      }
+    }
+
+    return {
+      age: Math.max(biologicalAge, metrics.chronologicalAge * 0.7),
+      confidence: Math.min(confidenceScore, 0.95)
+    };
+  }
+
+  private calculateAdvancedDiseaseRisks(metrics: any): Record<string, number> {
+    const risks: Record<string, number> = {};
+
+    // Cardiovascular risk calculation
+    let cardioRisk = 0.1; // Base risk
+    if (metrics.exerciseScore < 50) cardioRisk += 0.2;
+    if (metrics.stressScore > 70) cardioRisk += 0.15;
+    if (metrics.sleepScore < 60) cardioRisk += 0.1;
+    risks.cardiovascular = Math.min(cardioRisk, 0.8);
+
+    // Metabolic syndrome risk
+    let metabolicRisk = 0.08;
+    if (metrics.exerciseScore < 40) metabolicRisk += 0.25;
+    if (metrics.nutritionScore < 50) metabolicRisk += 0.2;
+    risks.metabolic = Math.min(metabolicRisk, 0.7);
+
+    // Cognitive decline risk
+    let cognitiveRisk = 0.05;
+    if (metrics.sleepScore < 50) cognitiveRisk += 0.15;
+    if (metrics.exerciseScore < 45) cognitiveRisk += 0.1;
+    if (metrics.stressScore > 75) cognitiveRisk += 0.1;
+    risks.cognitive = Math.min(cognitiveRisk, 0.6);
+
+    return risks;
+  }
+
+  private calculateAdvancedInterventionImpact(currentMetrics: any, interventions: string[]): Record<string, number> {
+    const impacts: Record<string, number> = {};
+
+    interventions.forEach(intervention => {
+      switch (intervention.toLowerCase()) {
+        case 'strength training':
+          impacts[intervention] = currentMetrics.exerciseScore < 70 ? 3.2 : 1.8;
+          break;
+        case 'meditation':
+          impacts[intervention] = currentMetrics.stressScore > 60 ? 2.8 : 1.5;
+          break;
+        case 'sleep optimization':
+          impacts[intervention] = currentMetrics.sleepScore < 70 ? 4.1 : 2.2;
+          break;
+        case 'nutrition coaching':
+          impacts[intervention] = currentMetrics.nutritionScore < 65 ? 3.5 : 2.0;
+          break;
+        case 'cardio training':
+          impacts[intervention] = currentMetrics.exerciseScore < 60 ? 2.9 : 1.6;
+          break;
+        default:
+          impacts[intervention] = 1.5; // Default impact
+      }
+    });
+
+    return impacts;
   }
 
   private async generateRecommendations(userId: string, assessmentId: string, assessment: HealthAssessment): Promise<void> {

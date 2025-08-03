@@ -9,6 +9,7 @@ import Assessment from "@/pages/assessment";
 import Dashboard from "@/pages/dashboard";
 import Recommendations from "@/pages/recommendations";
 import Wearables from "@/pages/wearables";
+import HealthAI from "@/pages/health-ai";
 import Simulator from "@/pages/simulator";
 import About from "@/pages/about";
 import Login from "@/pages/login";
@@ -38,6 +39,11 @@ function Router() {
       <Route path="/wearables">
         <ProtectedRoute>
           <Wearables />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/health-ai">
+        <ProtectedRoute>
+          <HealthAI />
         </ProtectedRoute>
       </Route>
       <Route path="/simulator" component={Simulator} />

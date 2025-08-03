@@ -173,3 +173,78 @@ export type WearableConnection = typeof wearableConnections.$inferSelect;
 export type InsertWearableConnection = z.infer<typeof insertWearableConnectionSchema>;
 export type WearableData = typeof wearableData.$inferSelect;
 export type InsertWearableData = z.infer<typeof insertWearableDataSchema>;
+
+// Advanced Health Models and AI Schema
+export const healthModels = pgTable("health_models", {
+  id: varchar("id", { length: 255 }).primaryKey().$defaultFn(() => nanoid()),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id),
+  modelVersion: varchar("model_version", { length: 50 }).notNull(),
+  inputFeatures: jsonb("input_features").notNull(), // Array of health metrics used
+  predictions: jsonb("predictions").notNull(), // Biological age, disease risks, etc.
+  confidence: real("confidence").notNull(), // Model confidence score 0-1
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const healthInsights = pgTable("health_insights", {
+  id: varchar("id", { length: 255 }).primaryKey().$defaultFn(() => nanoid()),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id),
+  type: varchar("type", { length: 50 }).notNull(), // 'symptom_analysis', 'trend_prediction', 'intervention_suggestion'
+  query: text("query").notNull(), // Original user question or symptoms
+  response: text("response").notNull(), // AI-generated insight
+  confidence: real("confidence").notNull(),
+  sources: text("sources").array(), // Data sources used for insight
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const healthTrends = pgTable("health_trends", {
+  id: varchar("id", { length: 255 }).primaryKey().$defaultFn(() => nanoid()),
+  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id),
+  metricType: varchar("metric_type", { length: 50 }).notNull(), // 'biological_age', 'vitality_score', etc.
+  date: date("date").notNull(),
+  value: real("value").notNull(),
+  trend: varchar("trend", { length: 20 }).notNull(), // 'improving', 'stable', 'declining'
+  dataSource: varchar("data_source", { length: 50 }).notNull(), // 'assessment', 'wearable', 'manual'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Health Model schemas
+export const insertHealthModelSchema = createInsertSchema(healthModels).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertHealthInsightSchema = createInsertSchema(healthInsights).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertHealthTrendSchema = createInsertSchema(healthTrends).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Health Model types
+export type HealthModel = typeof healthModels.$inferSelect;
+export type InsertHealthModel = z.infer<typeof insertHealthModelSchema>;
+export type HealthInsight = typeof healthInsights.$inferSelect;
+export type InsertHealthInsight = z.infer<typeof insertHealthInsightSchema>;
+export type HealthTrend = typeof healthTrends.$inferSelect;
+export type InsertHealthTrend = z.infer<typeof insertHealthTrendSchema>;
+
+// Advanced Health Interfaces
+export interface HealthModelPredictions {
+  biologicalAge: number;
+  diseaseRisks: Record<string, number>;
+  interventionImpact: Record<string, number>;
+  lifeExpectancy: number;
+  optimalInterventions: string[];
+}
+
+export interface HealthAICapabilities {
+  analyzeSymptoms: (symptoms: string[]) => Promise<HealthInsight>;
+  suggestInterventions: (goals: string[]) => Promise<Recommendation[]>;
+  answerQuestions: (question: string) => Promise<string>;
+  predictTrends: (historicalData: HealthTrend[]) => Promise<HealthTrend[]>;
+}
