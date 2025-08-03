@@ -50,7 +50,17 @@ export const healthAI = new HealthAI();
 
 // Advanced health calculations with confidence scoring
 export class HealthModelingEngine {
-  static calculateBiologicalAge(metrics: any, confidence: boolean = true): { age: number; confidence: number } {
+  static calculateBiologicalAge(metrics: {
+    chronologicalAge?: number;
+    sleepScore?: number;
+    exerciseScore?: number;
+    nutritionScore?: number;
+    stressScore?: number;
+    wearableData?: Array<{
+      dataType: string;
+      metrics: { value: number };
+    }>;
+  }, confidence: boolean = true): { age: number; confidence: number } {
     let biologicalAge = metrics.chronologicalAge || 35;
     let confidenceScore = 0.7; // Base confidence
 
@@ -87,9 +97,9 @@ export class HealthModelingEngine {
       confidenceScore += 0.2;
       // HRV-based age adjustment
       const avgHRV = metrics.wearableData
-        .filter((d: any) => d.dataType === 'hrv')
-        .reduce((sum: number, d: any) => sum + (d.metrics.value || 0), 0) / 
-        metrics.wearableData.filter((d: any) => d.dataType === 'hrv').length;
+        .filter((d) => d.dataType === 'hrv')
+        .reduce((sum, d) => sum + (d.metrics.value || 0), 0) / 
+        metrics.wearableData.filter((d) => d.dataType === 'hrv').length;
       
       if (avgHRV > 0) {
         // Higher HRV generally indicates better health
@@ -99,32 +109,37 @@ export class HealthModelingEngine {
     }
 
     return {
-      age: Math.max(biologicalAge, metrics.chronologicalAge * 0.7),
+      age: Math.max(biologicalAge, (metrics.chronologicalAge || 35) * 0.7),
       confidence: Math.min(confidenceScore, 0.95)
     };
   }
 
-  static calculateDiseaseRisks(metrics: any): Record<string, number> {
+  static calculateDiseaseRisks(metrics: {
+    exerciseScore?: number;
+    stressScore?: number;
+    sleepScore?: number;
+    nutritionScore?: number;
+  }): Record<string, number> {
     const risks: Record<string, number> = {};
 
     // Cardiovascular risk calculation
     let cardioRisk = 0.1; // Base risk
-    if (metrics.exerciseScore < 50) cardioRisk += 0.2;
-    if (metrics.stressScore > 70) cardioRisk += 0.15;
-    if (metrics.sleepScore < 60) cardioRisk += 0.1;
+    if ((metrics.exerciseScore || 100) < 50) cardioRisk += 0.2;
+    if ((metrics.stressScore || 0) > 70) cardioRisk += 0.15;
+    if ((metrics.sleepScore || 100) < 60) cardioRisk += 0.1;
     risks.cardiovascular = Math.min(cardioRisk, 0.8);
 
     // Metabolic syndrome risk
     let metabolicRisk = 0.08;
-    if (metrics.exerciseScore < 40) metabolicRisk += 0.25;
-    if (metrics.nutritionScore < 50) metabolicRisk += 0.2;
+    if ((metrics.exerciseScore || 100) < 40) metabolicRisk += 0.25;
+    if ((metrics.nutritionScore || 100) < 50) metabolicRisk += 0.2;
     risks.metabolic = Math.min(metabolicRisk, 0.7);
 
     // Cognitive decline risk
     let cognitiveRisk = 0.05;
-    if (metrics.sleepScore < 50) cognitiveRisk += 0.15;
-    if (metrics.exerciseScore < 45) cognitiveRisk += 0.1;
-    if (metrics.stressScore > 75) cognitiveRisk += 0.1;
+    if ((metrics.sleepScore || 100) < 50) cognitiveRisk += 0.15;
+    if ((metrics.exerciseScore || 100) < 45) cognitiveRisk += 0.1;
+    if ((metrics.stressScore || 0) > 75) cognitiveRisk += 0.1;
     risks.cognitive = Math.min(cognitiveRisk, 0.6);
 
     return risks;

@@ -33,7 +33,7 @@ async function throwIfResNotOk(res: Response) {
       if (text) {
         try {
           errorData = JSON.parse(text);
-          errorMessage = (errorData as any)?.message || text;
+          errorMessage = (errorData as { message?: string })?.message || text;
         } catch {
           errorMessage = text;
         }
