@@ -29,7 +29,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function Assessment() {
   const [currentStep, setCurrentStep] = useState(1);
   const [, setLocation] = useLocation();
-  const { user } = useAuth();
+  const { firebaseUser, user } = useAuth();
   const { toast } = useToast();
   const createAssessment = useCreateHealthAssessment();
 
@@ -79,7 +79,7 @@ export default function Assessment() {
     try {
       await createAssessment.mutateAsync({
         ...data,
-        userId: user.uid,
+        userId: user?.id || "",
       });
       
       toast({
@@ -130,7 +130,7 @@ export default function Assessment() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Gender</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select gender" />
@@ -166,7 +166,7 @@ export default function Assessment() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Average Sleep Duration</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select sleep duration" />
@@ -191,7 +191,7 @@ export default function Assessment() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sleep Quality</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select sleep quality" />
@@ -219,7 +219,7 @@ export default function Assessment() {
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                       className="grid grid-cols-2 md:grid-cols-4 gap-3"
                     >
                       {["mediterranean", "plant-based", "balanced", "other"].map((diet) => (
@@ -245,7 +245,7 @@ export default function Assessment() {
                   <FormItem>
                     <FormLabel>Alcohol Consumption</FormLabel>
                     <FormControl>
-                      <RadioGroup onValueChange={field.onChange} defaultValue={field.value}>
+                      <RadioGroup onValueChange={field.onChange} value={field.value}>
                         {[
                           { value: "none", label: "None" },
                           { value: "occasional", label: "Occasional (1-3 drinks/week)" },
@@ -273,7 +273,7 @@ export default function Assessment() {
                   <FormItem>
                     <FormLabel>Smoking Status</FormLabel>
                     <FormControl>
-                      <RadioGroup onValueChange={field.onChange} defaultValue={field.value}>
+                      <RadioGroup onValueChange={field.onChange} value={field.value}>
                         {[
                           { value: "never", label: "Never smoked" },
                           { value: "former", label: "Former smoker" },
@@ -364,7 +364,7 @@ export default function Assessment() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Exercise Frequency</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select frequency" />
@@ -444,7 +444,7 @@ export default function Assessment() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Primary Longevity Goal</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select your primary goal" />

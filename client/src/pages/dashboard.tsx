@@ -16,9 +16,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { useHealthAssessment, useHealthMetrics } from "@/hooks/use-health-data";
 
 export default function Dashboard() {
-  const { user } = useAuth();
-  const { data: assessment, isLoading: assessmentLoading } = useHealthAssessment(user?.uid || "");
-  const { data: metrics, isLoading: metricsLoading } = useHealthMetrics(user?.uid || "");
+  const { firebaseUser, user } = useAuth();
+  const { data: assessment, isLoading: assessmentLoading } = useHealthAssessment(user?.id || "");
+  const { data: metrics, isLoading: metricsLoading } = useHealthMetrics(user?.id || "");
 
   if (!user) {
     return (

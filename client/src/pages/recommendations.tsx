@@ -5,8 +5,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRecommendations } from "@/hooks/use-health-data";
 
 export default function Recommendations() {
-  const { user } = useAuth();
-  const { data: recommendations, isLoading } = useRecommendations(user?.uid || "");
+  const { firebaseUser, user } = useAuth();
+  const { data: recommendations, isLoading } = useRecommendations(user?.id || "");
 
   if (!user) {
     return (
