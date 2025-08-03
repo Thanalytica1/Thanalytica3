@@ -39,8 +39,10 @@ export function useHealthTrends(userId: string, metricType?: string) {
   return useQuery<HealthTrend[]>({
     queryKey: ['health-trends', userId, metricType],
     enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 minutes for trend data
-    gcTime: 15 * 60 * 1000, // 15 minutes
+    // Optimize polling intervals for resource efficiency
+    refetchInterval: 10 * 60 * 1000, // 10 minutes - trends don't change frequently
+    staleTime: 5 * 60 * 1000, // 5 minutes - longer staleness for trend data
+    gcTime: 20 * 60 * 1000, // 20 minutes - keep trend data cached longer
     refetchOnWindowFocus: false,
     select: (data) => {
       // Client-side data processing to reduce server load

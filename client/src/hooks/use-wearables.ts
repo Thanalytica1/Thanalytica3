@@ -13,6 +13,11 @@ export function useWearableData(userId: string, dataType?: string) {
   return useQuery<WearableData[]>({
     queryKey: ["/api/wearable-data", userId, dataType],
     enabled: !!userId,
+    // Optimize for resource usage - wearable data doesn't need frequent polling
+    refetchInterval: 5 * 60 * 1000, // 5 minutes - reduce server load
+    staleTime: 3 * 60 * 1000, // 3 minutes - acceptable staleness for wearable data
+    gcTime: 15 * 60 * 1000, // 15 minutes - keep in cache longer for better UX
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 }
 

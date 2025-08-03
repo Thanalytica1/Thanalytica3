@@ -219,7 +219,9 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      // Optimized cache settings for lower memory usage
+      staleTime: 5 * 60 * 1000, // 5 minutes - data is fresh for 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes - cache cleanup after 10 minutes
       retry: (failureCount, error) => {
         // Don't retry on aborted requests
         if (error instanceof DOMException && error.name === "AbortError") {

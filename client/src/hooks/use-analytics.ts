@@ -14,6 +14,50 @@ function getSessionId(): string {
   return sessionId;
 }
 
+// Event batching for resource optimization
+class AnalyticsBatcher {
+  private eventQueue: InsertAnalyticsEvent[] = [];
+  private batchTimeout: NodeJS.Timeout | null = null;
+  private readonly BATCH_SIZE = 5;
+  private readonly BATCH_DELAY = 2000; // 2 seconds
+
+  constructor(private sendBatch: (events: InsertAnalyticsEvent[]) => void) {}
+
+  addEvent(event: InsertAnalyticsEvent) {
+    this.eventQueue.push(event);
+    
+    // Send batch if it reaches the size limit
+    if (this.eventQueue.length >= this.BATCH_SIZE) {
+      this.flushBatch();
+    } else {
+      // Set timeout to send batch after delay
+      if (this.batchTimeout) {
+        clearTimeout(this.batchTimeout);
+      }
+      this.batchTimeout = setTimeout(() => this.flushBatch(), this.BATCH_DELAY);
+    }
+  }
+
+  private flushBatch() {
+    if (this.eventQueue.length === 0) return;
+    
+    const events = [...this.eventQueue];
+    this.eventQueue = [];
+    
+    if (this.batchTimeout) {
+      clearTimeout(this.batchTimeout);
+      this.batchTimeout = null;
+    }
+    
+    this.sendBatch(events);
+  }
+
+  // Flush any remaining events (e.g., on component unmount)
+  flush() {
+    this.flushBatch();
+  }
+}
+
 // Get basic event properties
 function getEventProperties() {
   return {
@@ -32,17 +76,36 @@ export function useAnalytics() {
   const { user } = useAuth();
   const sessionIdRef = useRef(getSessionId());
 
-  // Track event mutation
-  const trackEventMutation = useMutation({
-    mutationFn: async (eventPayload: InsertAnalyticsEvent) => {
-      return apiRequest("POST", "/api/analytics/event", eventPayload);
+  // Batch mutation for multiple events
+  const batchEventMutation = useMutation({
+    mutationFn: async (events: InsertAnalyticsEvent[]) => {
+      // Send individual events but with less frequency
+      return Promise.all(
+        events.map(event => apiRequest("POST", "/api/analytics/event", event))
+      );
     },
     onError: (error) => {
-      console.warn("Failed to track analytics event:", error);
+      console.warn("Failed to track analytics batch:", error);
     },
   });
 
-  // Track event function
+  // Create batcher instance
+  const batcherRef = useRef<AnalyticsBatcher | null>(null);
+  
+  if (!batcherRef.current) {
+    batcherRef.current = new AnalyticsBatcher((events) => {
+      batchEventMutation.mutate(events);
+    });
+  }
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      batcherRef.current?.flush();
+    };
+  }, []);
+
+  // Track event function - now uses batching
   const trackEvent = useCallback(
     (
       eventName: string, 
@@ -59,9 +122,10 @@ export function useAnalytics() {
         ...getEventProperties(),
       };
 
-      trackEventMutation.mutate(eventPayload);
+      // Add to batch instead of sending immediately
+      batcherRef.current?.addEvent(eventPayload);
     },
-    [user?.id, trackEventMutation]
+    [user?.id]
   );
 
   // Convenience methods for common events
@@ -95,16 +159,23 @@ export function useAnalytics() {
     [trackEvent]
   );
 
-  // Get user's analytics events
+  // Get user's analytics events - optimize for less frequent loading
   const { data: userEvents, isLoading: isLoadingEvents } = useQuery({
     queryKey: ["/api/analytics/events", user?.id],
     enabled: !!user?.id,
+    staleTime: 10 * 60 * 1000, // 10 minutes - analytics don't need real-time updates
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
   });
 
-  // Get analytics summary
+  // Get analytics summary - even less frequent updates needed
   const { data: analyticsSummary, isLoading: isLoadingSummary } = useQuery({
     queryKey: ["/api/analytics/summary", user?.id],
     enabled: !!user?.id,
+    staleTime: 15 * 60 * 1000, // 15 minutes
+    gcTime: 45 * 60 * 1000, // 45 minutes
+    refetchOnWindowFocus: false,
+    refetchInterval: 20 * 60 * 1000, // Refresh every 20 minutes
   });
 
   // Specific tracking methods for common application events
@@ -187,11 +258,13 @@ export function useAnalytics() {
 
   return {
     ...analytics,
-    isTracking: trackEventMutation.isPending,
+    isTracking: batchEventMutation.isPending,
     events: userEvents as AnalyticsEvent[],
     summary: analyticsSummary,
     isLoadingEvents,
     isLoadingSummary,
+    // Expose flush method for manual batching control
+    flushEvents: () => batcherRef.current?.flush(),
   };
 }
 
