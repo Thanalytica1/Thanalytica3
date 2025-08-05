@@ -457,21 +457,29 @@ export default function Assessment() {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold text-professional-slate mb-2">Basic Information</h3>
-              <p className="text-gray-600">Tell us about yourself to get started.</p>
+          <div className="space-y-6 md:space-y-8">
+            <div className="text-center md:text-left">
+              <h3 className="text-xl md:text-2xl font-semibold text-professional-slate mb-2">Basic Information</h3>
+              <p className="text-gray-600 text-base">Tell us about yourself to get started.</p>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <FormField
                 control={form.control}
                 name="age"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Age</FormLabel>
+                  <FormItem className="space-y-3">
+                    <FormLabel className="text-base font-medium">Age</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value))} />
+                      <Input 
+                        type="number" 
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        className="h-12 text-lg px-4 border-2 focus:border-medical-green rounded-lg"
+                        placeholder="Enter your age"
+                        {...field} 
+                        onChange={(e) => field.onChange(parseInt(e.target.value))} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -482,19 +490,19 @@ export default function Assessment() {
                 control={form.control}
                 name="gender"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Gender</FormLabel>
+                  <FormItem className="space-y-3">
+                    <FormLabel className="text-base font-medium">Gender</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-12 text-lg px-4 border-2 focus:border-medical-green rounded-lg">
                           <SelectValue placeholder="Select gender" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                        <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                      <SelectContent className="text-lg">
+                        <SelectItem value="male" className="h-12 text-lg">Male</SelectItem>
+                        <SelectItem value="female" className="h-12 text-lg">Female</SelectItem>
+                        <SelectItem value="other" className="h-12 text-lg">Other</SelectItem>
+                        <SelectItem value="prefer-not-to-say" className="h-12 text-lg">Prefer not to say</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -507,31 +515,31 @@ export default function Assessment() {
 
       case 2:
         return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold text-professional-slate mb-2">Lifestyle & Habits</h3>
-              <p className="text-gray-600">Tell us about your daily routines and lifestyle choices.</p>
+          <div className="space-y-6 md:space-y-8">
+            <div className="text-center md:text-left">
+              <h3 className="text-xl md:text-2xl font-semibold text-professional-slate mb-2">Lifestyle & Habits</h3>
+              <p className="text-gray-600 text-base">Tell us about your daily routines and lifestyle choices.</p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <FormField
                 control={form.control}
                 name="sleepDuration"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Average Sleep Duration</FormLabel>
+                  <FormItem className="space-y-3">
+                    <FormLabel className="text-base font-medium">Average Sleep Duration</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-12 text-lg px-4 border-2 focus:border-medical-green rounded-lg">
                           <SelectValue placeholder="Select sleep duration" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="less-than-6">Less than 6 hours</SelectItem>
-                        <SelectItem value="6-7">6-7 hours</SelectItem>
-                        <SelectItem value="7-8">7-8 hours</SelectItem>
-                        <SelectItem value="8-9">8-9 hours</SelectItem>
-                        <SelectItem value="more-than-9">More than 9 hours</SelectItem>
+                      <SelectContent className="text-lg">
+                        <SelectItem value="less-than-6" className="h-12 text-lg">Less than 6 hours</SelectItem>
+                        <SelectItem value="6-7" className="h-12 text-lg">6-7 hours</SelectItem>
+                        <SelectItem value="7-8" className="h-12 text-lg">7-8 hours</SelectItem>
+                        <SelectItem value="8-9" className="h-12 text-lg">8-9 hours</SelectItem>
+                        <SelectItem value="more-than-9" className="h-12 text-lg">More than 9 hours</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -543,19 +551,19 @@ export default function Assessment() {
                 control={form.control}
                 name="sleepQuality"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Sleep Quality</FormLabel>
+                  <FormItem className="space-y-3">
+                    <FormLabel className="text-base font-medium">Sleep Quality</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-12 text-lg px-4 border-2 focus:border-medical-green rounded-lg">
                           <SelectValue placeholder="Select sleep quality" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="poor">Poor</SelectItem>
-                        <SelectItem value="fair">Fair</SelectItem>
-                        <SelectItem value="good">Good</SelectItem>
-                        <SelectItem value="excellent">Excellent</SelectItem>
+                      <SelectContent className="text-lg">
+                        <SelectItem value="poor" className="h-12 text-lg">Poor</SelectItem>
+                        <SelectItem value="fair" className="h-12 text-lg">Fair</SelectItem>
+                        <SelectItem value="good" className="h-12 text-lg">Good</SelectItem>
+                        <SelectItem value="excellent" className="h-12 text-lg">Excellent</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -568,18 +576,18 @@ export default function Assessment() {
               control={form.control}
               name="dietPattern"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dietary Pattern</FormLabel>
+                <FormItem className="space-y-4">
+                  <FormLabel className="text-base font-medium">Dietary Pattern</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
                       value={field.value}
-                      className="grid grid-cols-2 md:grid-cols-4 gap-3"
+                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
                     >
                       {["mediterranean", "plant-based", "balanced", "other"].map((diet) => (
-                        <div key={diet} className="flex items-center space-x-2">
-                          <RadioGroupItem value={diet} id={diet} />
-                          <label htmlFor={diet} className="text-sm font-medium capitalize">
+                        <div key={diet} className="flex items-center space-x-3 p-3 border-2 border-gray-200 rounded-lg hover:border-medical-green/50 transition-colors">
+                          <RadioGroupItem value={diet} id={diet} className="w-5 h-5" />
+                          <label htmlFor={diet} className="text-base font-medium capitalize cursor-pointer flex-1">
                             {diet.replace("-", " ")}
                           </label>
                         </div>
@@ -591,24 +599,24 @@ export default function Assessment() {
               )}
             />
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <FormField
                 control={form.control}
                 name="alcoholConsumption"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Alcohol Consumption</FormLabel>
+                  <FormItem className="space-y-4">
+                    <FormLabel className="text-base font-medium">Alcohol Consumption</FormLabel>
                     <FormControl>
-                      <RadioGroup onValueChange={field.onChange} value={field.value}>
+                      <RadioGroup onValueChange={field.onChange} value={field.value} className="space-y-3">
                         {[
                           { value: "none", label: "None" },
                           { value: "occasional", label: "Occasional (1-3 drinks/week)" },
                           { value: "moderate", label: "Moderate (4-7 drinks/week)" },
                           { value: "heavy", label: "Heavy (8+ drinks/week)" },
                         ].map((option) => (
-                          <div key={option.value} className="flex items-center space-x-2">
-                            <RadioGroupItem value={option.value} id={option.value} />
-                            <label htmlFor={option.value} className="text-sm">
+                          <div key={option.value} className="flex items-center space-x-3 p-3 border-2 border-gray-200 rounded-lg hover:border-medical-green/50 transition-colors">
+                            <RadioGroupItem value={option.value} id={option.value} className="w-5 h-5" />
+                            <label htmlFor={option.value} className="text-base cursor-pointer flex-1">
                               {option.label}
                             </label>
                           </div>
@@ -624,18 +632,18 @@ export default function Assessment() {
                 control={form.control}
                 name="smokingStatus"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Smoking Status</FormLabel>
+                  <FormItem className="space-y-4">
+                    <FormLabel className="text-base font-medium">Smoking Status</FormLabel>
                     <FormControl>
-                      <RadioGroup onValueChange={field.onChange} value={field.value}>
+                      <RadioGroup onValueChange={field.onChange} value={field.value} className="space-y-3">
                         {[
                           { value: "never", label: "Never smoked" },
                           { value: "former", label: "Former smoker" },
                           { value: "current", label: "Current smoker" },
                         ].map((option) => (
-                          <div key={option.value} className="flex items-center space-x-2">
-                            <RadioGroupItem value={option.value} id={option.value} />
-                            <label htmlFor={option.value} className="text-sm">
+                          <div key={option.value} className="flex items-center space-x-3 p-3 border-2 border-gray-200 rounded-lg hover:border-medical-green/50 transition-colors">
+                            <RadioGroupItem value={option.value} id={option.value} className="w-5 h-5" />
+                            <label htmlFor={option.value} className="text-base cursor-pointer flex-1">
                               {option.label}
                             </label>
                           </div>
@@ -652,19 +660,19 @@ export default function Assessment() {
 
       case 3:
         return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold text-professional-slate mb-2">Medical History</h3>
-              <p className="text-gray-600">Help us understand your health background.</p>
+          <div className="space-y-6 md:space-y-8">
+            <div className="text-center md:text-left">
+              <h3 className="text-xl md:text-2xl font-semibold text-professional-slate mb-2">Medical History</h3>
+              <p className="text-gray-600 text-base">Help us understand your health background.</p>
             </div>
             
             <FormField
               control={form.control}
               name="chronicConditions"
               render={() => (
-                <FormItem>
-                  <FormLabel>Chronic Conditions (if any)</FormLabel>
-                  <div className="grid grid-cols-2 gap-3">
+                <FormItem className="space-y-4">
+                  <FormLabel className="text-base font-medium">Chronic Conditions (if any)</FormLabel>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
                       "diabetes", "hypertension", "heart-disease", "arthritis", 
                       "depression", "anxiety", "asthma", "none"
@@ -676,10 +684,11 @@ export default function Assessment() {
                         render={({ field }) => (
                           <FormItem
                             key={condition}
-                            className="flex flex-row items-start space-x-3 space-y-0"
+                            className="flex flex-row items-center space-x-3 space-y-0 p-3 border-2 border-gray-200 rounded-lg hover:border-medical-green/50 transition-colors"
                           >
                             <FormControl>
                               <Checkbox
+                                className="w-5 h-5 data-[state=checked]:bg-medical-green data-[state=checked]:border-medical-green"
                                 checked={field.value?.includes(condition)}
                                 onCheckedChange={(checked) => {
                                   return checked
@@ -690,7 +699,7 @@ export default function Assessment() {
                                 }}
                               />
                             </FormControl>
-                            <FormLabel className="font-normal capitalize">
+                            <FormLabel className="font-normal capitalize text-base cursor-pointer flex-1">
                               {condition.replace("-", " ")}
                             </FormLabel>
                           </FormItem>
@@ -716,20 +725,20 @@ export default function Assessment() {
               control={form.control}
               name="exerciseFrequency"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Exercise Frequency</FormLabel>
+                <FormItem className="space-y-3">
+                  <FormLabel className="text-base font-medium">Exercise Frequency</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-12 text-lg px-4 border-2 focus:border-medical-green rounded-lg">
                         <SelectValue placeholder="Select frequency" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="1-2-times">1-2 times per week</SelectItem>
-                      <SelectItem value="3-4-times">3-4 times per week</SelectItem>
-                      <SelectItem value="5-6-times">5-6 times per week</SelectItem>
-                      <SelectItem value="daily">Daily</SelectItem>
+                    <SelectContent className="text-lg">
+                      <SelectItem value="none" className="h-12 text-lg">None</SelectItem>
+                      <SelectItem value="1-2-times" className="h-12 text-lg">1-2 times per week</SelectItem>
+                      <SelectItem value="3-4-times" className="h-12 text-lg">3-4 times per week</SelectItem>
+                      <SelectItem value="5-6-times" className="h-12 text-lg">5-6 times per week</SelectItem>
+                      <SelectItem value="daily" className="h-12 text-lg">Daily</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -957,11 +966,11 @@ export default function Assessment() {
   const biologicalAgePreview = currentStep > 1 ? calculatePreliminaryBiologicalAge(form.getValues()) : null;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 relative">
+    <div className="max-w-4xl mx-auto px-4 py-6 md:py-8 relative">
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} steps={steps} />
 
       <Card className="bg-white shadow-lg border border-gray-100">
-        <CardContent className="p-8">
+        <CardContent className="p-4 md:p-8">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
               {/* Biological Age Preview Banner */}
@@ -1100,15 +1109,16 @@ export default function Assessment() {
               )}
 
               {currentStep < 6 && (
-                <div className="flex justify-between items-center pt-8 border-t border-gray-200 mt-8">
-                  <div className="flex items-center space-x-2">
+                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 pt-6 md:pt-8 border-t border-gray-200 mt-6 md:mt-8">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={previousStep}
                       disabled={currentStep === 1 || createAssessment.isPending}
+                      className="h-12 text-base px-6 border-2 hover:border-medical-green/50"
                     >
-                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      <ArrowLeft className="w-5 h-5 mr-2" />
                       Previous
                     </Button>
                     
@@ -1116,12 +1126,11 @@ export default function Assessment() {
                     <Button
                       type="button"
                       variant="ghost"
-                      size="sm"
                       onClick={handleSaveDraft}
-                      className="text-gray-500 hover:text-gray-700"
+                      className="h-12 text-base px-4 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                       disabled={createAssessment.isPending}
                     >
-                      <Save className="w-3 h-3 mr-1" />
+                      <Save className="w-4 h-4 mr-2" />
                       Save Draft
                     </Button>
                   </div>
@@ -1129,11 +1138,11 @@ export default function Assessment() {
                   <Button
                     type="button"
                     onClick={nextStep}
-                    className="bg-medical-green text-white hover:bg-medical-green/90"
+                    className="h-12 text-base px-8 bg-medical-green text-white hover:bg-medical-green/90 font-medium"
                     disabled={createAssessment.isPending}
                   >
                     Next
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </div>
               )}
