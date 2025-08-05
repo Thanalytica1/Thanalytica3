@@ -10,6 +10,8 @@ export const users = pgTable("users", {
   displayName: text("display_name"),
   photoURL: text("photo_url"),
   firebaseUid: text("firebase_uid").notNull().unique(),
+  referralCode: varchar("referral_code", { length: 10 }).unique(),
+  referredById: varchar("referred_by_id", { length: 255 }).references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -100,6 +102,7 @@ export const recommendations = pgTable("recommendations", {
 // Zod schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
+  referralCode: true,
   createdAt: true,
 });
 
@@ -257,6 +260,32 @@ export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).om
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
 
+// Referral System
+export const referrals = pgTable("referrals", {
+  id: varchar("id", { length: 255 }).primaryKey().$defaultFn(() => nanoid()),
+  referrerUserId: varchar("referrer_user_id", { length: 255 }).notNull().references(() => users.id),
+  referredUserId: varchar("referred_user_id", { length: 255 }).references(() => users.id), // null until signup
+  referralCode: varchar("referral_code", { length: 10 }).notNull(),
+  email: text("email"), // email of referred user (if provided before signup)
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, signed_up, converted
+  shareMethod: varchar("share_method", { length: 50 }), // email, link, social
+  clickedAt: timestamp("clicked_at"),
+  signedUpAt: timestamp("signed_up_at"),
+  convertedAt: timestamp("converted_at"), // when they completed first assessment
+  rewardGranted: boolean("reward_granted").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Referral schema
+export const insertReferralSchema = createInsertSchema(referrals).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Referral types
+export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = z.infer<typeof insertReferralSchema>;
+
 // Advanced Health Interfaces
 export interface HealthModelPredictions {
   biologicalAge: number;
@@ -271,4 +300,12 @@ export interface HealthAICapabilities {
   suggestInterventions: (goals: string[]) => Promise<Recommendation[]>;
   answerQuestions: (question: string) => Promise<string>;
   predictTrends: (historicalData: HealthTrend[]) => Promise<HealthTrend[]>;
+}
+
+// Referral Program Interface
+export interface ReferralProgram {
+  shareableLink: string;
+  rewardForReferrer: "Premium features for 1 month";
+  rewardForReferred: "Detailed longevity report";
+  trackingMetrics: ["shares", "signups", "conversions"];
 }

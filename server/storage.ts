@@ -19,6 +19,8 @@ import {
   type InsertHealthTrend,
   type AnalyticsEvent,
   type InsertAnalyticsEvent,
+  type Referral,
+  type InsertReferral,
   users,
   healthAssessments,
   healthMetrics,
@@ -28,7 +30,8 @@ import {
   healthModels,
   healthInsights,
   healthTrends,
-  analyticsEvents
+  analyticsEvents,
+  referrals
 } from "@shared/schema";
 import { db, retryDatabaseOperation } from "./db";
 import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
@@ -1013,6 +1016,151 @@ export class DatabaseStorage implements IStorage {
         count: Number(growth.count) || 0
       }))
     };
+  }
+
+  // Referral System Methods
+  async generateReferralCode(userId: string): Promise<string> {
+    return retryDatabaseOperation(
+      async () => {
+        // Generate unique referral code
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let referralCode: string;
+        let isUnique = false;
+        
+        do {
+          referralCode = '';
+          for (let i = 0; i < 8; i++) {
+            referralCode += characters.charAt(Math.floor(Math.random() * characters.length));
+          }
+          
+          // Check if code is unique
+          const existing = await db.select().from(users).where(eq(users.referralCode, referralCode));
+          isUnique = existing.length === 0;
+        } while (!isUnique);
+        
+        // Update user with referral code
+        await db.update(users)
+          .set({ referralCode })
+          .where(eq(users.id, userId));
+          
+        return referralCode;
+      },
+      'generateReferralCode'
+    );
+  }
+
+  async getUserReferralCode(userId: string): Promise<string | null> {
+    return retryDatabaseOperation(
+      async () => {
+        const [user] = await db.select({ referralCode: users.referralCode })
+          .from(users)
+          .where(eq(users.id, userId));
+        
+        return user?.referralCode || null;
+      },
+      'getUserReferralCode'
+    );
+  }
+
+  async createReferral(insertReferral: InsertReferral): Promise<Referral> {
+    return retryDatabaseOperation(
+      async () => {
+        const [referral] = await db
+          .insert(referrals)
+          .values(insertReferral)
+          .returning();
+        return referral;
+      },
+      'createReferral'
+    );
+  }
+
+  async getReferralsByUser(userId: string): Promise<Referral[]> {
+    return retryDatabaseOperation(
+      async () => {
+        return await db.select()
+          .from(referrals)
+          .where(eq(referrals.referrerUserId, userId))
+          .orderBy(desc(referrals.createdAt));
+      },
+      'getReferralsByUser'
+    );
+  }
+
+  async getReferralStats(userId: string): Promise<{
+    totalReferrals: number;
+    pendingReferrals: number;
+    signedUpReferrals: number;
+    convertedReferrals: number;
+  }> {
+    return retryDatabaseOperation(
+      async () => {
+        const userReferrals = await db.select()
+          .from(referrals)
+          .where(eq(referrals.referrerUserId, userId));
+
+        return {
+          totalReferrals: userReferrals.length,
+          pendingReferrals: userReferrals.filter(r => r.status === 'pending').length,
+          signedUpReferrals: userReferrals.filter(r => r.status === 'signed_up').length,
+          convertedReferrals: userReferrals.filter(r => r.status === 'converted').length,
+        };
+      },
+      'getReferralStats'
+    );
+  }
+
+  async trackReferralClick(referralCode: string): Promise<void> {
+    return retryDatabaseOperation(
+      async () => {
+        await db.update(referrals)
+          .set({ clickedAt: new Date() })
+          .where(eq(referrals.referralCode, referralCode));
+      },
+      'trackReferralClick'
+    );
+  }
+
+  async processReferralSignup(referralCode: string, newUserId: string): Promise<void> {
+    return retryDatabaseOperation(
+      async () => {
+        await db.update(referrals)
+          .set({ 
+            referredUserId: newUserId,
+            signedUpAt: new Date(),
+            status: 'signed_up'
+          })
+          .where(eq(referrals.referralCode, referralCode));
+      },
+      'processReferralSignup'
+    );
+  }
+
+  async processReferralConversion(userId: string): Promise<void> {
+    return retryDatabaseOperation(
+      async () => {
+        await db.update(referrals)
+          .set({ 
+            convertedAt: new Date(),
+            status: 'converted'
+          })
+          .where(eq(referrals.referredUserId, userId));
+      },
+      'processReferralConversion'
+    );
+  }
+
+  async getUserByReferralCode(referralCode: string): Promise<User | null> {
+    return retryDatabaseOperation(
+      async () => {
+        const [user] = await db.select()
+          .from(users)
+          .where(eq(users.referralCode, referralCode));
+        
+        return user || null;
+      },
+      'getUserByReferralCode'
+    );
   }
 }
 

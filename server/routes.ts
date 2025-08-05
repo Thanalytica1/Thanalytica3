@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertHealthAssessmentSchema, insertAnalyticsEventSchema } from "@shared/schema";
+import { insertUserSchema, insertHealthAssessmentSchema, insertAnalyticsEventSchema, insertReferralSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -452,6 +452,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching admin analytics:", error);
       res.status(500).json({ error: "Failed to fetch admin analytics" });
+    }
+  });
+
+  // Referral System routes
+  app.get("/api/referral-code/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      let referralCode = await storage.getUserReferralCode(userId);
+      
+      if (!referralCode) {
+        referralCode = await storage.generateReferralCode(userId);
+      }
+      
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const shareableLink = `${baseUrl}?ref=${referralCode}`;
+      
+      res.json({ referralCode, shareableLink });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get referral code" });
+    }
+  });
+
+  app.get("/api/referral-stats/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const stats = await storage.getReferralStats(userId);
+      const referrals = await storage.getReferralsByUser(userId);
+      
+      res.json({ ...stats, referrals });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get referral stats" });
+    }
+  });
+
+  app.post("/api/referral", async (req, res) => {
+    try {
+      const referralData = insertReferralSchema.parse(req.body);
+      const referral = await storage.createReferral(referralData);
+      res.status(201).json(referral);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid referral data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create referral" });
+    }
+  });
+
+  app.post("/api/referral/track-click", async (req, res) => {
+    try {
+      const { referralCode } = req.body;
+      if (!referralCode) {
+        return res.status(400).json({ message: "Referral code is required" });
+      }
+      
+      await storage.trackReferralClick(referralCode);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to track referral click" });
     }
   });
 

@@ -10,6 +10,7 @@ import Assessment from "@/pages/assessment";
 import Dashboard from "@/pages/dashboard";
 import Recommendations from "@/pages/recommendations";
 import Wearables from "@/pages/wearables";
+import Referrals from "@/pages/referrals";
 // HealthAI page removed for resource optimization
 import Simulator from "@/pages/simulator";
 import About from "@/pages/about";
@@ -48,6 +49,13 @@ function Router() {
         <ErrorBoundary>
           <ProtectedRoute>
             <Wearables />
+          </ProtectedRoute>
+        </ErrorBoundary>
+      </Route>
+      <Route path="/referrals">
+        <ErrorBoundary>
+          <ProtectedRoute>
+            <Referrals />
           </ProtectedRoute>
         </ErrorBoundary>
       </Route>
