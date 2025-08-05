@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ProgressBar } from "@/components/progress-bar";
-import { ArrowLeft, ArrowRight, Loader2, AlertCircle, RefreshCw, Save } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, AlertCircle, RefreshCw, Save, TrendingDown, TrendingUp, Activity } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateHealthAssessment } from "@/hooks/use-health-data";
 import { insertHealthAssessmentSchema } from "@shared/schema";
@@ -21,6 +21,189 @@ import { ApiError, NetworkTimeoutError } from "@/lib/queryClient";
 // Analytics removed for resource optimization
 
 const steps = ["Basic Info", "Lifestyle", "Medical History", "Exercise", "Goals", "Review"];
+
+/**
+ * Calculate preliminary biological age based on basic inputs
+ */
+function calculatePreliminaryBiologicalAge(formData: Partial<FormData>): {
+  biologicalAge: number;
+  difference: number;
+  confidence: 'low' | 'medium' | 'high';
+  factors: string[];
+} {
+  const chronologicalAge = formData.age || 35;
+  let biologicalAge = chronologicalAge;
+  const factors: string[] = [];
+  
+  // Gender-based adjustments (statistical averages)
+  if (formData.gender === 'female') {
+    biologicalAge -= 2; // Women typically have slight longevity advantage
+    factors.push('Gender advantage');
+  }
+  
+  // Sleep quality impact
+  if (formData.sleepQuality) {
+    switch (formData.sleepQuality) {
+      case 'excellent':
+        biologicalAge -= 3;
+        factors.push('Excellent sleep quality');
+        break;
+      case 'good':
+        biologicalAge -= 1;
+        factors.push('Good sleep quality');
+        break;
+      case 'poor':
+        biologicalAge += 2;
+        factors.push('Poor sleep quality');
+        break;
+      case 'very-poor':
+        biologicalAge += 4;
+        factors.push('Very poor sleep quality');
+        break;
+    }
+  }
+  
+  // Sleep duration impact
+  if (formData.sleepDuration) {
+    switch (formData.sleepDuration) {
+      case '7-8':
+        biologicalAge -= 1;
+        factors.push('Optimal sleep duration');
+        break;
+      case '6-7':
+      case '8-9':
+        // Neutral
+        break;
+      case 'less-than-6':
+      case 'more-than-9':
+        biologicalAge += 2;
+        factors.push('Suboptimal sleep duration');
+        break;
+    }
+  }
+  
+  // Diet pattern impact
+  if (formData.dietPattern) {
+    switch (formData.dietPattern) {
+      case 'mediterranean':
+        biologicalAge -= 2;
+        factors.push('Mediterranean diet');
+        break;
+      case 'plant-based':
+        biologicalAge -= 1.5;
+        factors.push('Plant-based diet');
+        break;
+      case 'balanced':
+        biologicalAge -= 0.5;
+        factors.push('Balanced diet');
+        break;
+      case 'western':
+        biologicalAge += 1;
+        factors.push('Western diet pattern');
+        break;
+      case 'other':
+        biologicalAge += 0.5;
+        break;
+    }
+  }
+  
+  // Exercise frequency impact
+  if (formData.exerciseFrequency) {
+    switch (formData.exerciseFrequency) {
+      case 'daily':
+        biologicalAge -= 4;
+        factors.push('Daily exercise');
+        break;
+      case '5-6-times':
+        biologicalAge -= 3;
+        factors.push('Very frequent exercise');
+        break;
+      case '3-4-times':
+        biologicalAge -= 2;
+        factors.push('Regular exercise');
+        break;
+      case '1-2-times':
+        biologicalAge += 1;
+        factors.push('Infrequent exercise');
+        break;
+      case 'none':
+        biologicalAge += 3;
+        factors.push('No regular exercise');
+        break;
+    }
+  }
+  
+  // Smoking status impact
+  if (formData.smokingStatus) {
+    switch (formData.smokingStatus) {
+      case 'never':
+        biologicalAge -= 1;
+        factors.push('Never smoked');
+        break;
+      case 'former':
+        biologicalAge += 1;
+        factors.push('Former smoker');
+        break;
+      case 'occasional':
+        biologicalAge += 3;
+        factors.push('Occasional smoking');
+        break;
+      case 'regular':
+        biologicalAge += 6;
+        factors.push('Regular smoking');
+        break;
+    }
+  }
+  
+  // Alcohol consumption impact
+  if (formData.alcoholConsumption) {
+    switch (formData.alcoholConsumption) {
+      case 'none':
+        biologicalAge -= 0.5;
+        factors.push('No alcohol consumption');
+        break;
+      case 'light':
+        // Neutral to slightly positive
+        break;
+      case 'moderate':
+        biologicalAge += 0.5;
+        break;
+      case 'heavy':
+        biologicalAge += 2;
+        factors.push('Heavy alcohol consumption');
+        break;
+    }
+  }
+  
+  // Ensure biological age doesn't go below reasonable bounds
+  biologicalAge = Math.max(biologicalAge, chronologicalAge * 0.7);
+  biologicalAge = Math.min(biologicalAge, chronologicalAge * 1.4);
+  
+  const difference = chronologicalAge - biologicalAge;
+  
+  // Determine confidence based on available data
+  const dataPoints = [
+    formData.gender,
+    formData.sleepQuality,
+    formData.sleepDuration,
+    formData.dietPattern,
+    formData.exerciseFrequency,
+    formData.smokingStatus,
+    formData.alcoholConsumption
+  ].filter(Boolean).length;
+  
+  let confidence: 'low' | 'medium' | 'high';
+  if (dataPoints >= 5) confidence = 'medium';
+  else if (dataPoints >= 3) confidence = 'low';
+  else confidence = 'low';
+  
+  return {
+    biologicalAge: Math.round(biologicalAge * 10) / 10,
+    difference: Math.round(difference * 10) / 10,
+    confidence,
+    factors: factors.slice(0, 3) // Show top 3 factors
+  };
+}
 
 const formSchema = insertHealthAssessmentSchema.extend({
   exerciseTypes: z.array(z.string()).min(1, "Select at least one exercise type"),
@@ -770,6 +953,9 @@ export default function Assessment() {
     }
   };
 
+  // Calculate biological age preview for steps after basic info
+  const biologicalAgePreview = currentStep > 1 ? calculatePreliminaryBiologicalAge(form.getValues()) : null;
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 relative">
       <ProgressBar currentStep={currentStep} totalSteps={steps.length} steps={steps} />
@@ -778,6 +964,90 @@ export default function Assessment() {
         <CardContent className="p-8">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
+              {/* Biological Age Preview Banner */}
+              {biologicalAgePreview && (
+                <div className="mb-8">
+                  <Card className="bg-gradient-to-r from-medical-green/10 to-trust-blue/10 border-medical-green/20">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="bg-medical-green/10 p-3 rounded-full">
+                            <Activity className="w-6 h-6 text-medical-green" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-professional-slate mb-1">
+                              Biological Age Preview
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              Preliminary estimate • Complete assessment for full analysis
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="text-right">
+                          <div className="flex items-center space-x-3">
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-professional-slate">
+                                {biologicalAgePreview.biologicalAge}
+                              </div>
+                              <div className="text-xs text-gray-500">years</div>
+                            </div>
+                            
+                            <div className="flex items-center space-x-1">
+                              {biologicalAgePreview.difference > 0 ? (
+                                <>
+                                  <TrendingDown className="w-4 h-4 text-green-600" />
+                                  <span className="text-sm font-medium text-green-600">
+                                    {biologicalAgePreview.difference.toFixed(1)} years younger
+                                  </span>
+                                </>
+                              ) : biologicalAgePreview.difference < 0 ? (
+                                <>
+                                  <TrendingUp className="w-4 h-4 text-amber-600" />
+                                  <span className="text-sm font-medium text-amber-600">
+                                    {Math.abs(biologicalAgePreview.difference).toFixed(1)} years older
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-sm font-medium text-gray-600">
+                                  Equal to chronological age
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {biologicalAgePreview.factors.length > 0 && (
+                            <div className="mt-2">
+                              <p className="text-xs text-gray-500 mb-1">Key factors:</p>
+                              <div className="flex flex-wrap gap-1">
+                                {biologicalAgePreview.factors.map((factor, index) => (
+                                  <span
+                                    key={index}
+                                    className="text-xs bg-medical-green/10 text-medical-green px-2 py-1 rounded-full"
+                                  >
+                                    {factor}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="mt-2">
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              biologicalAgePreview.confidence === 'high' ? 'bg-green-100 text-green-700' :
+                              biologicalAgePreview.confidence === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-gray-100 text-gray-600'
+                            }`}>
+                              {biologicalAgePreview.confidence} confidence
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
               {renderStepContent()}
 
               {/* Error Display with Retry Options */}
