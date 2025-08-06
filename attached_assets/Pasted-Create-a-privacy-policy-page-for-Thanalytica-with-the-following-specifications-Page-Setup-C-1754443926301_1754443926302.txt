@@ -1,0 +1,81 @@
+Create a privacy policy page for Thanalytica with the following specifications:
+
+**Page Setup:**
+- Create /privacy-policy route and page
+- Use consistent styling with existing Thanalytica dashboard theme
+- Make page accessible from footer and settings menu
+
+**Complete Privacy Policy Content:**
+
+**Header:**
+- Title: "Privacy Policy for Thanalytica"
+- Effective Date: [Current date]
+- Intro paragraph about Thanalytica's commitment to privacy and health data from wearables
+
+**Section 1 - Information We Collect:**
+- Name, email, account information
+- Health/activity data from Garmin, Oura, Whoop integrations
+- Self-reported wellness data (stress, mood, sleep, journal entries)
+- Device identifiers, IP address, usage logs
+- Cookies and tracking technologies for analytics
+- Location data if enabled by device
+- Age verification requirement (13+ years)
+
+**Section 2 - How We Use Your Data:**
+- Personalized health insights and recommendations
+- Biological age and longevity projections
+- Wellness metric trend tracking
+- Platform functionality improvements
+
+**Section 3 - How We Share Your Data:**
+- Explicitly state we don't sell personal data
+- Service providers (Firebase, Google Cloud)
+- Wearable device platforms for authorized sync
+- Legal requirements
+- International data transfers
+- Aggregated/anonymized research data
+- Third-party data protection agreements
+
+**Section 4 - Your Rights and Choices:**
+- Access, correction, deletion requests
+- Wearable data sync revocation
+- Garmin Connect permission management
+- Historical vs future data sync clarification
+- Account closure and data removal
+- Contact: support@thanalytica.com
+
+**Section 5 - Security:**
+- AES-256 encryption (transit and at rest)
+- Secure authentication and access controls
+- Security audit access logs
+- GDPR and HIPAA-aligned practices
+
+**Section 6 - Changes:**
+- Policy update notifications
+- Continued use acceptance clause
+
+**Section 7 - Contact:**
+- Email: privacy@thanalytica.com
+
+**Section 8 - Governing Law:**
+- State law governance (placeholder for state)
+- GDPR rights for EU users
+
+**Section 9 - Data Retention:**
+- Active account data retention
+- 30-day deletion after account closure
+- Immediate deletion upon request
+
+**Styling Requirements:**
+- Clean, readable typography
+- Proper heading hierarchy (h1, h2)
+- Bulleted lists for easy scanning
+- Clickable email links
+- Mobile-responsive design
+- Match existing app color scheme and fonts
+- Add subtle borders/spacing for professional appearance
+
+**Integration:**
+- Add privacy policy link to app footer
+- Link from user settings page
+- Ensure page loads quickly and is SEO-friendly
