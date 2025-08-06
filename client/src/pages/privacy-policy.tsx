@@ -194,7 +194,7 @@ export default function PrivacyPolicy() {
                 <p>For privacy-related questions or concerns:</p>
                 <p className="text-lg">
                   <a href="mailto:privacy@thanalytica.com" className="text-medical-green hover:underline font-medium">
-                    privacy@thanalytica.com
+                    Jonah@thanalytica.com
                   </a>
                 </p>
               </div>
@@ -233,7 +233,7 @@ export default function PrivacyPolicy() {
         <div className="text-center mt-8 text-sm text-gray-600">
           <p>This privacy policy is part of our commitment to transparency and your health data security.</p>
           <p className="mt-2">
-            Questions? Contact us at <a href="mailto:support@thanalytica.com" className="text-medical-green hover:underline">support@thanalytica.com</a>
+            Questions? Contact us at <a href="mailto:support@thanalytica.com" className="text-medical-green hover:underline">Jonah@thanalytica.com</a>
           </p>
         </div>
       </div>
