@@ -155,6 +155,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get wearables data (new normalized endpoint)
+  app.get("/api/wearables-data/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { startDate, endDate, device } = req.query;
+      const data = await storage.getWearablesData(
+        userId,
+        startDate as string,
+        endDate as string,
+        device as string
+      );
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get wearables data" });
+    }
+  });
+
   // Health AI Routes
   app.post("/api/health-ai/analyze-symptoms", async (req, res) => {
     try {

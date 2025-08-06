@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { useHealthAssessment, useHealthMetrics } from "@/hooks/use-health-data";
 import { MoodStressCheckin } from "@/components/mood-stress-checkin";
+import { WearableDashboard } from "@/components/wearable-dashboard";
 // Analytics removed for resource optimization
 
 export default function Dashboard() {
@@ -155,6 +156,12 @@ export default function Dashboard() {
       {/* Mood & Stress Check-in */}
       <div className="mb-8">
         <MoodStressCheckin />
+        
+        {/* Wearable Devices Dashboard */}
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-professional-slate mb-4">Connected Devices</h2>
+          <WearableDashboard />
+        </div>
       </div>
 
       {/* Detailed Analysis */}
