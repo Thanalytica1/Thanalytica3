@@ -546,6 +546,53 @@ export class DatabaseStorage implements IStorage {
           syncedAt: new Date().toISOString()
         });
       }
+      
+      if (!device || device === "oura") {
+        mockData.push({
+          id: `oura-${i}`,
+          device: "oura",
+          date: dateStr,
+          dataJson: {
+            readinessScore: 60 + Math.floor(Math.random() * 40),
+            sleepScore: 70 + Math.floor(Math.random() * 30),
+            activityScore: 65 + Math.floor(Math.random() * 35),
+            hrv: 35 + Math.floor(Math.random() * 35),
+            restingHeartRate: 54 + Math.floor(Math.random() * 10),
+            tempDeviation: -0.5 + Math.random() * 1.5, // -0.5 to +1.0
+            sleepTotal: 21600 + Math.floor(Math.random() * 10800), // 6-9 hours in seconds
+            sleepEfficiency: 75 + Math.floor(Math.random() * 20),
+            steps: 5000 + Math.floor(Math.random() * 10000),
+            sleepRemMinutes: 60 + Math.floor(Math.random() * 60),
+            sleepDeepMinutes: 40 + Math.floor(Math.random() * 50),
+            sleepLightMinutes: 200 + Math.floor(Math.random() * 100)
+          },
+          syncedAt: new Date().toISOString()
+        });
+      }
+      
+      if (!device || device === "apple_health") {
+        mockData.push({
+          id: `apple-${i}`,
+          device: "apple_health",
+          date: dateStr,
+          dataJson: {
+            steps: 7000 + Math.floor(Math.random() * 8000),
+            activeEnergy: 200 + Math.floor(Math.random() * 400),
+            restingEnergy: 1500 + Math.floor(Math.random() * 300),
+            standHours: 8 + Math.floor(Math.random() * 8),
+            exerciseMinutes: 15 + Math.floor(Math.random() * 45),
+            moveMinutes: 180 + Math.floor(Math.random() * 180),
+            heartRateAverage: 65 + Math.floor(Math.random() * 15),
+            heartRateResting: 58 + Math.floor(Math.random() * 10),
+            hrv: 40 + Math.floor(Math.random() * 30),
+            sleepHours: 6 + Math.random() * 3,
+            mindfulMinutes: Math.floor(Math.random() * 20),
+            walkingSpeed: 3.5 + Math.random() * 1.5,
+            vo2Max: 35 + Math.floor(Math.random() * 20)
+          },
+          syncedAt: new Date().toISOString()
+        });
+      }
     }
     
     return mockData;

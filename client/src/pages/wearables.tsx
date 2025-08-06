@@ -77,7 +77,7 @@ export default function Wearables() {
 
   // Initiate OAuth connection
   const initiateConnection = useMutation({
-    mutationFn: async (deviceType: "garmin" | "whoop") => {
+    mutationFn: async (deviceType: "garmin" | "whoop" | "oura" | "apple_health") => {
       const response = await apiRequest("GET", `/auth/${deviceType}/initiate?userId=${user?.id}`);
       return response.json();
     },
@@ -139,7 +139,15 @@ export default function Wearables() {
     },
   });
 
-  const handleConnect = (deviceType: "garmin" | "whoop") => {
+  const handleConnect = (deviceType: "garmin" | "whoop" | "oura" | "apple_health") => {
+    if (deviceType === "apple_health") {
+      // Special handling for Apple Health - requires iOS app
+      toast({
+        title: "Apple Health Integration",
+        description: "Please download our iOS app from the App Store to connect Apple Health. Web integration coming soon!",
+      });
+      return;
+    }
     initiateConnection.mutate(deviceType);
   };
 
@@ -258,6 +266,154 @@ export default function Wearables() {
                       <Watch className="h-4 w-4 mr-2" />
                     )}
                     Connect Garmin
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Oura Ring */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Moon className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <CardTitle>Oura Ring</CardTitle>
+                      <CardDescription>
+                        Track sleep stages, readiness, temperature trends, and heart rate variability
+                      </CardDescription>
+                    </div>
+                  </div>
+                  {getConnectionStatus("oura") ? (
+                    <Badge variant="default" className="bg-green-600">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Connected
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">
+                      <XCircle className="h-3 w-3 mr-1" />
+                      Not Connected
+                    </Badge>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {getConnectionStatus("oura") ? (
+                  <div className="space-y-4">
+                    <div className="text-sm text-gray-600">
+                      Last synced: {getConnectionStatus("oura")?.lastSyncAt 
+                        ? format(new Date(getConnectionStatus("oura")!.lastSyncAt), "PPp")
+                        : "Never"}
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        onClick={() => handleSync("oura")}
+                        disabled={syncingDevice === "oura"}
+                      >
+                        {syncingDevice === "oura" ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                        )}
+                        Sync Now
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => disconnectDevice.mutate(getConnectionStatus("oura")!.id)}
+                        disabled={disconnectDevice.isPending}
+                      >
+                        Disconnect
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={() => handleConnect("oura")}
+                    disabled={initiateConnection.isPending}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {initiateConnection.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Moon className="h-4 w-4 mr-2" />
+                    )}
+                    Connect Oura
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Apple Health */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-gray-100 rounded-lg">
+                      <Heart className="h-6 w-6 text-gray-600" />
+                    </div>
+                    <div>
+                      <CardTitle>Apple Health</CardTitle>
+                      <CardDescription>
+                        Sync comprehensive health data from iPhone and Apple Watch
+                      </CardDescription>
+                    </div>
+                  </div>
+                  {getConnectionStatus("apple_health") ? (
+                    <Badge variant="default" className="bg-green-600">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Connected
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">
+                      <XCircle className="h-3 w-3 mr-1" />
+                      Not Connected
+                    </Badge>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {getConnectionStatus("apple_health") ? (
+                  <div className="space-y-4">
+                    <div className="text-sm text-gray-600">
+                      Last synced: {getConnectionStatus("apple_health")?.lastSyncAt 
+                        ? format(new Date(getConnectionStatus("apple_health")!.lastSyncAt), "PPp")
+                        : "Never"}
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        onClick={() => handleSync("apple_health")}
+                        disabled={syncingDevice === "apple_health"}
+                      >
+                        {syncingDevice === "apple_health" ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                        )}
+                        Sync Now
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => disconnectDevice.mutate(getConnectionStatus("apple_health")!.id)}
+                        disabled={disconnectDevice.isPending}
+                      >
+                        Disconnect
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={() => handleConnect("apple_health")}
+                    disabled={initiateConnection.isPending}
+                    className="bg-gray-600 hover:bg-gray-700"
+                  >
+                    {initiateConnection.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Heart className="h-4 w-4 mr-2" />
+                    )}
+                    Connect Apple Health
                   </Button>
                 )}
               </CardContent>
@@ -387,6 +543,94 @@ export default function Wearables() {
                           <p className="text-sm text-gray-600">Stress</p>
                           <p className="text-2xl font-semibold">
                             {getLatestData("garmin")?.dataJson?.stressScore || "—"}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Oura Data */}
+                {getLatestData("oura") && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <Moon className="h-5 w-5 mr-2 text-blue-600" />
+                        Latest Oura Data
+                      </CardTitle>
+                      <CardDescription>
+                        {format(new Date(getLatestData("oura")!.date), "PPPP")}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-600">Readiness</p>
+                          <p className="text-2xl font-semibold">
+                            {getLatestData("oura")?.dataJson?.readinessScore || "—"}%
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-600">Sleep Score</p>
+                          <p className="text-2xl font-semibold">
+                            {getLatestData("oura")?.dataJson?.sleepScore || "—"}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-600">HRV</p>
+                          <p className="text-2xl font-semibold">
+                            {getLatestData("oura")?.dataJson?.hrv || "—"} ms
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-600">Body Temp</p>
+                          <p className="text-2xl font-semibold">
+                            {getLatestData("oura")?.dataJson?.tempDeviation !== undefined ? 
+                              `${getLatestData("oura")?.dataJson?.tempDeviation > 0 ? '+' : ''}${getLatestData("oura")?.dataJson?.tempDeviation.toFixed(1)}°` : 
+                              "—"}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Apple Health Data */}
+                {getLatestData("apple_health") && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <Heart className="h-5 w-5 mr-2 text-gray-600" />
+                        Latest Apple Health Data
+                      </CardTitle>
+                      <CardDescription>
+                        {format(new Date(getLatestData("apple_health")!.date), "PPPP")}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-600">Steps</p>
+                          <p className="text-2xl font-semibold">
+                            {getLatestData("apple_health")?.dataJson?.steps?.toLocaleString() || "—"}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-600">Active Energy</p>
+                          <p className="text-2xl font-semibold">
+                            {getLatestData("apple_health")?.dataJson?.activeEnergy || "—"} kcal
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-600">Stand Hours</p>
+                          <p className="text-2xl font-semibold">
+                            {getLatestData("apple_health")?.dataJson?.standHours || "—"}
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-600">Exercise Min</p>
+                          <p className="text-2xl font-semibold">
+                            {getLatestData("apple_health")?.dataJson?.exerciseMinutes || "—"}
                           </p>
                         </div>
                       </div>

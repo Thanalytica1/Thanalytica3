@@ -10,7 +10,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2025)
 
-**Referral System Implementation (Latest - August 5, 2025):**
+**Wearable Integration Expansion (Latest - August 6, 2025):**
+- ✅ **Extended Device Support**: Added Oura Ring and Apple Health alongside existing Garmin and Whoop integrations
+- ✅ **Oura Ring Integration**: Full OAuth flow support with readiness scores, sleep stages, temperature deviation tracking
+- ✅ **Apple Health Integration**: Comprehensive health metrics including steps, active energy, stand hours, exercise minutes
+- ✅ **Data Normalization**: Updated wearable-data-normalizer to handle all 4 device types with unified output format
+- ✅ **Dashboard Updates**: Wearable connections widget now displays all 4 device types with connection status
+- ✅ **Mock Data Generation**: Added realistic mock data for Oura and Apple Health for testing without real devices
+- ✅ **Multi-Device Priority**: Enhanced merging algorithm to handle data from 4 simultaneous sources
+- ✅ **UI Consistency**: Maintained medical-themed color scheme across all wearable components
+
+**Referral System Implementation (August 5, 2025):**
 - ✅ **Database Schema Enhancement**: Added referralCode and referredById fields to users table
 - ✅ **Referrals Table Creation**: Comprehensive referrals table with tracking for shares, signups, and conversions
 - ✅ **Unique Referral Code Generation**: 8-character alphanumeric codes with collision detection

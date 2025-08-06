@@ -21,10 +21,14 @@ import {
 import { format, subDays } from "date-fns";
 import { 
   normalizeGarminData, 
-  normalizeWhoopData, 
+  normalizeWhoopData,
+  normalizeOuraData,
+  normalizeAppleHealthData,
   mergeWearableData,
   calculateTrends,
-  type NormalizedHealthData 
+  type NormalizedHealthData,
+  type RawOuraData,
+  type RawAppleHealthData
 } from "@/utils/wearable-data-normalizer";
 import {
   LineChart,
@@ -80,21 +84,35 @@ export function WearableDashboard() {
     const date = item.date;
     
     if (!acc[date]) {
-      acc[date] = { garmin: null, whoop: null };
+      acc[date] = { garmin: null, whoop: null, oura: null, apple: null };
     }
 
     if (item.device === "garmin") {
       acc[date].garmin = normalizeGarminData(item.dataJson);
     } else if (item.device === "whoop") {
       acc[date].whoop = normalizeWhoopData(item.dataJson);
+    } else if (item.device === "oura") {
+      acc[date].oura = normalizeOuraData(item.dataJson);
+    } else if (item.device === "apple_health") {
+      acc[date].apple = normalizeAppleHealthData(item.dataJson);
     }
 
     return acc;
-  }, {} as Record<string, { garmin: NormalizedHealthData | null; whoop: NormalizedHealthData | null }>);
+  }, {} as Record<string, { 
+    garmin: NormalizedHealthData | null; 
+    whoop: NormalizedHealthData | null;
+    oura: NormalizedHealthData | null;
+    apple: NormalizedHealthData | null;
+  }>);
 
-  // Merge data from both sources
+  // Merge data from all sources
   const mergedData = Object.entries(normalizedData)
-    .map(([date, sources]) => mergeWearableData(sources.garmin ?? undefined, sources.whoop ?? undefined))
+    .map(([date, sources]) => mergeWearableData(
+      sources.garmin ?? undefined, 
+      sources.whoop ?? undefined,
+      sources.oura ?? undefined,
+      sources.apple ?? undefined
+    ))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   // Calculate trends
@@ -103,7 +121,14 @@ export function WearableDashboard() {
   // Get connection status
   const garminConnected = connections.some(c => c.deviceType === "garmin" && c.isActive);
   const whoopConnected = connections.some(c => c.deviceType === "whoop" && c.isActive);
-  const anyConnected = garminConnected || whoopConnected;
+  const ouraConnected = connections.some(c => c.deviceType === "oura" && c.isActive);
+  const appleConnected = connections.some(c => c.deviceType === "apple_health" && c.isActive);
+  const anyConnected = garminConnected || whoopConnected || ouraConnected || appleConnected;
+  
+  // Helper to get connection status
+  const getConnectionStatus = (deviceType: string) => {
+    return connections.find(c => c.deviceType === deviceType);
+  };
 
   // Get last sync times
   const getLastSync = (deviceType: string) => {
@@ -131,7 +156,7 @@ export function WearableDashboard() {
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 font-medium">No Wearable Devices Connected</p>
           <p className="text-sm text-gray-500 mt-2">
-            Connect your Garmin or Whoop device to see health insights here
+            Connect your Garmin, Whoop, Oura, or Apple Health device to see health insights here
           </p>
         </CardContent>
       </Card>
@@ -203,6 +228,70 @@ export function WearableDashboard() {
                 </div>
               </div>
               {whoopConnected ? (
+                <Badge className="bg-green-100 text-green-800">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Active
+                </Badge>
+              ) : (
+                <Badge variant="secondary">Inactive</Badge>
+              )}
+            </div>
+
+            {/* Oura Status */}
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Moon className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-medium">Oura Ring</p>
+                  <p className="text-sm text-gray-600">
+                    {getConnectionStatus("oura") ? (
+                      <>
+                        <Clock className="inline h-3 w-3 mr-1" />
+                        {getLastSync("oura") ? 
+                          `Synced ${format(getLastSync("oura")!, "h:mm a")}` : 
+                          "Never synced"}
+                      </>
+                    ) : (
+                      "Not connected"
+                    )}
+                  </p>
+                </div>
+              </div>
+              {getConnectionStatus("oura") ? (
+                <Badge className="bg-green-100 text-green-800">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Active
+                </Badge>
+              ) : (
+                <Badge variant="secondary">Inactive</Badge>
+              )}
+            </div>
+
+            {/* Apple Health Status */}
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <Heart className="h-5 w-5 text-gray-600" />
+                </div>
+                <div>
+                  <p className="font-medium">Apple Health</p>
+                  <p className="text-sm text-gray-600">
+                    {getConnectionStatus("apple_health") ? (
+                      <>
+                        <Clock className="inline h-3 w-3 mr-1" />
+                        {getLastSync("apple_health") ? 
+                          `Synced ${format(getLastSync("apple_health")!, "h:mm a")}` : 
+                          "Never synced"}
+                      </>
+                    ) : (
+                      "Not connected"
+                    )}
+                  </p>
+                </div>
+              </div>
+              {getConnectionStatus("apple_health") ? (
                 <Badge className="bg-green-100 text-green-800">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Active

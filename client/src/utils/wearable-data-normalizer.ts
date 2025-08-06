@@ -39,6 +39,40 @@ export interface RawWhoopData {
   sleepDisturbances?: number;
 }
 
+export interface RawOuraData {
+  date: string;
+  readinessScore?: number;
+  sleepScore?: number;
+  activityScore?: number;
+  hrv?: number;
+  restingHeartRate?: number;
+  tempDeviation?: number;
+  sleepTotal?: number;
+  sleepEfficiency?: number;
+  sleepLatency?: number;
+  sleepRemMinutes?: number;
+  sleepDeepMinutes?: number;
+  sleepLightMinutes?: number;
+  steps?: number;
+}
+
+export interface RawAppleHealthData {
+  date: string;
+  steps?: number;
+  activeEnergy?: number;
+  restingEnergy?: number;
+  standHours?: number;
+  exerciseMinutes?: number;
+  moveMinutes?: number;
+  heartRateAverage?: number;
+  heartRateResting?: number;
+  hrv?: number;
+  sleepHours?: number;
+  mindfulMinutes?: number;
+  walkingSpeed?: number;
+  vo2Max?: number;
+}
+
 /**
  * Normalize Garmin data to standard format
  */
@@ -108,19 +142,93 @@ export function normalizeWhoopData(data: RawWhoopData): NormalizedHealthData {
 }
 
 /**
+ * Normalize Oura data to standard format
+ */
+export function normalizeOuraData(data: RawOuraData): NormalizedHealthData {
+  let confidence = 0;
+  let dataPoints = 0;
+  let presentPoints = 0;
+
+  // Count data completeness
+  const fields = ['readinessScore', 'sleepScore', 'hrv', 'tempDeviation', 'steps'];
+  fields.forEach(field => {
+    dataPoints++;
+    if (data[field as keyof RawOuraData] !== undefined && data[field as keyof RawOuraData] !== null) {
+      presentPoints++;
+    }
+  });
+
+  confidence = presentPoints / dataPoints;
+
+  return {
+    date: data.date,
+    steps: data.steps ?? null,
+    sleepHours: data.sleepTotal ? data.sleepTotal / 3600 : null, // Convert seconds to hours
+    sleepScore: data.sleepScore ?? null,
+    recoveryScore: data.readinessScore ?? null,
+    activityScore: data.activityScore ?? null,
+    heartRateResting: data.restingHeartRate ?? null,
+    hrv: data.hrv ?? null,
+    stress: calculateOuraStress(data),
+    source: "oura" as "garmin" | "whoop" | "combined",
+    confidence
+  };
+}
+
+/**
+ * Normalize Apple Health data to standard format
+ */
+export function normalizeAppleHealthData(data: RawAppleHealthData): NormalizedHealthData {
+  let confidence = 0;
+  let dataPoints = 0;
+  let presentPoints = 0;
+
+  // Count data completeness
+  const fields = ['steps', 'activeEnergy', 'exerciseMinutes', 'heartRateResting', 'hrv'];
+  fields.forEach(field => {
+    dataPoints++;
+    if (data[field as keyof RawAppleHealthData] !== undefined && data[field as keyof RawAppleHealthData] !== null) {
+      presentPoints++;
+    }
+  });
+
+  confidence = presentPoints / dataPoints;
+
+  return {
+    date: data.date,
+    steps: data.steps ?? null,
+    sleepHours: data.sleepHours ?? null,
+    sleepScore: calculateAppleHealthSleepScore(data.sleepHours),
+    recoveryScore: calculateAppleHealthRecoveryScore(data),
+    activityScore: calculateAppleHealthActivityScore(data),
+    heartRateResting: data.heartRateResting ?? data.heartRateAverage ?? null,
+    hrv: data.hrv ?? null,
+    stress: calculateAppleHealthStress(data),
+    source: "apple" as "garmin" | "whoop" | "combined",
+    confidence
+  };
+}
+
+/**
  * Merge data from multiple sources with priority logic
  */
 export function mergeWearableData(
   garminData?: NormalizedHealthData,
   whoopData?: NormalizedHealthData,
-  priority: "garmin" | "whoop" | "best" = "best"
+  ouraData?: NormalizedHealthData,
+  appleData?: NormalizedHealthData,
+  priority: "garmin" | "whoop" | "oura" | "apple" | "best" = "best"
 ): NormalizedHealthData {
-  // If only one source available, return it
-  if (!garminData && !whoopData) {
+  // If no sources available, return empty
+  const availableSources = [garminData, whoopData, ouraData, appleData].filter(Boolean);
+  if (availableSources.length === 0) {
     return createEmptyNormalizedData(new Date().toISOString().split('T')[0]);
   }
-  if (!garminData) return whoopData!;
-  if (!whoopData) return garminData!;
+  
+  // If only one source available, return it
+  if (availableSources.length === 1) {
+    return availableSources[0]!;
+  }
 
   // Both sources available - merge based on priority
   if (priority === "garmin") {
@@ -146,18 +254,20 @@ export function mergeWearableData(
   }
 
   // "best" priority - pick the most complete/reliable data for each field
+  const allData = [garminData, whoopData, ouraData, appleData].filter(Boolean) as NormalizedHealthData[];
+  
   return {
-    date: garminData.date,
-    steps: garminData.steps ?? whoopData.steps, // Garmin has steps, Whoop doesn't
-    sleepHours: selectBestValue(garminData.sleepHours, whoopData.sleepHours),
-    sleepScore: whoopData.sleepScore ?? garminData.sleepScore, // Whoop has better sleep tracking
-    recoveryScore: whoopData.recoveryScore ?? garminData.recoveryScore, // Whoop specializes in recovery
-    activityScore: selectBestValue(garminData.activityScore, whoopData.activityScore),
-    heartRateResting: selectBestValue(garminData.heartRateResting, whoopData.heartRateResting),
-    hrv: whoopData.hrv ?? garminData.hrv, // Whoop specializes in HRV
-    stress: garminData.stress ?? whoopData.stress, // Garmin has better stress tracking
+    date: allData[0].date,
+    steps: selectBestFromMultiple([garminData?.steps, appleData?.steps, ouraData?.steps]),
+    sleepHours: selectBestFromMultiple([ouraData?.sleepHours, whoopData?.sleepHours, garminData?.sleepHours]),
+    sleepScore: selectBestFromMultiple([ouraData?.sleepScore, whoopData?.sleepScore, garminData?.sleepScore]),
+    recoveryScore: selectBestFromMultiple([ouraData?.recoveryScore, whoopData?.recoveryScore, garminData?.recoveryScore]),
+    activityScore: selectBestFromMultiple([garminData?.activityScore, appleData?.activityScore, whoopData?.activityScore]),
+    heartRateResting: selectBestFromMultiple([ouraData?.heartRateResting, whoopData?.heartRateResting, garminData?.heartRateResting, appleData?.heartRateResting]),
+    hrv: selectBestFromMultiple([ouraData?.hrv, whoopData?.hrv, appleData?.hrv, garminData?.hrv]),
+    stress: selectBestFromMultiple([garminData?.stress, whoopData?.stress, ouraData?.stress]),
     source: "combined",
-    confidence: Math.max(garminData.confidence, whoopData.confidence)
+    confidence: Math.max(...allData.map(d => d.confidence))
   };
 }
 
@@ -307,6 +417,118 @@ function selectBestValue<T>(val1: T | null, val2: T | null): T | null {
     return val1;
   }
   return val1 ?? val2;
+}
+
+function selectBestFromMultiple<T>(values: (T | null | undefined)[]): T | null {
+  const validValues = values.filter(v => v !== null && v !== undefined) as T[];
+  return validValues.length > 0 ? validValues[0] : null;
+}
+
+function calculateOuraStress(data: RawOuraData): number | null {
+  // Estimate stress from readiness and HRV
+  if (!data.readinessScore && !data.hrv) return null;
+  
+  let stress = 50; // Base stress
+  
+  if (data.readinessScore) {
+    // Lower readiness = higher stress
+    stress = 100 - data.readinessScore;
+  }
+  
+  if (data.tempDeviation) {
+    // Temperature deviation can indicate stress
+    const tempStress = Math.abs(data.tempDeviation) * 10;
+    stress = (stress + tempStress) / 2;
+  }
+  
+  return Math.min(100, Math.max(0, stress));
+}
+
+function calculateAppleHealthSleepScore(sleepHours?: number): number | null {
+  if (!sleepHours) return null;
+  // Simple sleep score based on hours (7-9 hours optimal)
+  if (sleepHours >= 7 && sleepHours <= 9) return 90;
+  if (sleepHours >= 6 && sleepHours < 7) return 70;
+  if (sleepHours > 9 && sleepHours <= 10) return 80;
+  if (sleepHours < 6) return 50;
+  return 60;
+}
+
+function calculateAppleHealthRecoveryScore(data: RawAppleHealthData): number | null {
+  // Estimate recovery based on available metrics
+  let score = 50; // Base score
+  let factorCount = 0;
+  
+  if (data.hrv) {
+    factorCount++;
+    if (data.hrv > 50) score += 20;
+    else if (data.hrv > 30) score += 10;
+    else score -= 10;
+  }
+  
+  if (data.heartRateResting) {
+    factorCount++;
+    if (data.heartRateResting < 60) score += 15;
+    else if (data.heartRateResting < 70) score += 5;
+    else score -= 5;
+  }
+  
+  if (data.sleepHours) {
+    factorCount++;
+    if (data.sleepHours >= 7 && data.sleepHours <= 9) score += 15;
+    else if (data.sleepHours >= 6) score += 5;
+    else score -= 10;
+  }
+  
+  return factorCount > 0 ? Math.min(100, Math.max(0, score)) : null;
+}
+
+function calculateAppleHealthActivityScore(data: RawAppleHealthData): number | null {
+  let score = 0;
+  let hasData = false;
+  
+  if (data.steps) {
+    hasData = true;
+    // 10k steps = 50 points
+    score += Math.min(50, (data.steps / 10000) * 50);
+  }
+  
+  if (data.exerciseMinutes) {
+    hasData = true;
+    // 30 exercise minutes = 30 points
+    score += Math.min(30, (data.exerciseMinutes / 30) * 30);
+  }
+  
+  if (data.activeEnergy) {
+    hasData = true;
+    // 500 active calories = 20 points
+    score += Math.min(20, (data.activeEnergy / 500) * 20);
+  }
+  
+  return hasData ? Math.min(100, score) : null;
+}
+
+function calculateAppleHealthStress(data: RawAppleHealthData): number | null {
+  // Estimate stress from HRV and mindful minutes
+  let stress = 50; // Base stress
+  let hasData = false;
+  
+  if (data.hrv) {
+    hasData = true;
+    // Low HRV indicates stress
+    if (data.hrv < 30) stress += 25;
+    else if (data.hrv < 50) stress += 10;
+    else stress -= 15;
+  }
+  
+  if (data.mindfulMinutes) {
+    hasData = true;
+    // More mindful minutes = less stress
+    if (data.mindfulMinutes > 10) stress -= 20;
+    else if (data.mindfulMinutes > 5) stress -= 10;
+  }
+  
+  return hasData ? Math.min(100, Math.max(0, stress)) : null;
 }
 
 function calculateAverage(values: (number | null)[]): number {
