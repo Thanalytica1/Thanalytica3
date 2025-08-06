@@ -142,21 +142,23 @@ export type InsertRecommendation = z.infer<typeof insertRecommendationSchema>;
 export const wearableConnections = pgTable("wearable_connections", {
   id: varchar("id", { length: 255 }).primaryKey().$defaultFn(() => nanoid()),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id),
-  deviceType: varchar("device_type", { length: 50 }).notNull(), // 'oura', 'apple_health'
+  deviceType: varchar("device_type", { length: 50 }).notNull(), // 'garmin', 'whoop', 'oura', 'apple_health'
   accessToken: text("access_token"), // encrypted token for API access
   refreshToken: text("refresh_token"), // for token refresh
+  tokenSecret: text("token_secret"), // For OAuth 1.0a (Garmin)
   isActive: boolean("is_active").default(true).notNull(),
   lastSyncAt: timestamp("last_sync_at"),
+  expiresAt: timestamp("expires_at"), // Token expiration time
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const wearableData = pgTable("wearable_data", {
+export const wearablesData = pgTable("wearables_data", {
   id: varchar("id", { length: 255 }).primaryKey().$defaultFn(() => nanoid()),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id),
-  connectionId: varchar("connection_id", { length: 255 }).notNull().references(() => wearableConnections.id),
-  dataType: varchar("data_type", { length: 50 }).notNull(), // 'sleep', 'activity', 'heart_rate', 'hrv'
+  device: varchar("device", { length: 50 }).notNull(), // 'garmin', 'whoop'
   date: date("date").notNull(),
-  metrics: jsonb("metrics").notNull(), // flexible JSON structure for different data types
+  dataJson: jsonb("data_json").notNull(), // Raw data from the device API
+  syncedAt: timestamp("synced_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -166,16 +168,17 @@ export const insertWearableConnectionSchema = createInsertSchema(wearableConnect
   createdAt: true,
 });
 
-export const insertWearableDataSchema = createInsertSchema(wearableData).omit({
+export const insertWearablesDataSchema = createInsertSchema(wearablesData).omit({
   id: true,
+  syncedAt: true,
   createdAt: true,
 });
 
 // Wearable types
 export type WearableConnection = typeof wearableConnections.$inferSelect;
 export type InsertWearableConnection = z.infer<typeof insertWearableConnectionSchema>;
-export type WearableData = typeof wearableData.$inferSelect;
-export type InsertWearableData = z.infer<typeof insertWearableDataSchema>;
+export type WearablesData = typeof wearablesData.$inferSelect;
+export type InsertWearablesData = z.infer<typeof insertWearablesDataSchema>;
 
 // Advanced Health Models and AI Schema
 export const healthModels = pgTable("health_models", {

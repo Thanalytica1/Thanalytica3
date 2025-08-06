@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertHealthAssessmentSchema, insertAnalyticsEventSchema, insertReferralSchema } from "@shared/schema";
 import { z } from "zod";
+import { registerOAuthRoutes } from "./oauth-routes";
+import { registerSyncRoutes } from "./sync-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
@@ -512,6 +514,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to track referral click" });
     }
   });
+
+  // Register OAuth and sync routes
+  registerOAuthRoutes(app);
+  registerSyncRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;

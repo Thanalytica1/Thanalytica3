@@ -9,8 +9,8 @@ import {
   type InsertRecommendation,
   type WearableConnection,
   type InsertWearableConnection,
-  type WearableData,
-  type InsertWearableData,
+  type WearablesData,
+  type InsertWearablesData,
   type HealthModel,
   type InsertHealthModel,
   type HealthInsight,
@@ -26,7 +26,7 @@ import {
   healthMetrics,
   recommendations,
   wearableConnections,
-  wearableData,
+  wearablesData,
   healthModels,
   healthInsights,
   healthTrends,
@@ -1160,6 +1160,123 @@ export class DatabaseStorage implements IStorage {
         return user || null;
       },
       'getUserByReferralCode'
+    );
+  }
+
+  // OAuth and Wearable Connection Methods
+  async storeTemporaryToken(userId: string, provider: string, token: string): Promise<void> {
+    // Store in memory or cache - in production, use Redis or similar
+    const key = `temp_token_${userId}_${provider}`;
+    (global as any)[key] = token;
+  }
+
+  async getTemporaryToken(userId: string, provider: string): Promise<string | null> {
+    const key = `temp_token_${userId}_${provider}`;
+    return (global as any)[key] || null;
+  }
+
+  async saveWearableConnection(data: Partial<InsertWearableConnection>): Promise<WearableConnection> {
+    return retryDatabaseOperation(
+      async () => {
+        const [connection] = await db
+          .insert(wearableConnections)
+          .values({
+            ...data,
+            isActive: data.isActive ?? true,
+          })
+          .onConflictDoUpdate({
+            target: [wearableConnections.userId, wearableConnections.deviceType],
+            set: {
+              accessToken: data.accessToken,
+              refreshToken: data.refreshToken,
+              tokenSecret: data.tokenSecret,
+              isActive: data.isActive ?? true,
+              lastSyncAt: data.lastSyncAt,
+              expiresAt: data.expiresAt,
+            },
+          })
+          .returning();
+        return connection;
+      },
+      'saveWearableConnection'
+    );
+  }
+
+  async getWearableConnection(userId: string, deviceType: string): Promise<WearableConnection | null> {
+    return retryDatabaseOperation(
+      async () => {
+        const [connection] = await db
+          .select()
+          .from(wearableConnections)
+          .where(
+            and(
+              eq(wearableConnections.userId, userId),
+              eq(wearableConnections.deviceType, deviceType)
+            )
+          );
+        return connection || null;
+      },
+      'getWearableConnection'
+    );
+  }
+
+  async updateWearableConnection(connectionId: string, data: Partial<WearableConnection>): Promise<void> {
+    return retryDatabaseOperation(
+      async () => {
+        await db
+          .update(wearableConnections)
+          .set(data)
+          .where(eq(wearableConnections.id, connectionId));
+      },
+      'updateWearableConnection'
+    );
+  }
+
+  async saveWearablesData(data: Omit<InsertWearablesData, 'id' | 'syncedAt' | 'createdAt'>): Promise<WearablesData> {
+    return retryDatabaseOperation(
+      async () => {
+        const [wearableDataEntry] = await db
+          .insert(wearablesData)
+          .values(data)
+          .returning();
+        return wearableDataEntry;
+      },
+      'saveWearablesData'
+    );
+  }
+
+  async getWearablesData(
+    userId: string,
+    startDate?: string,
+    endDate?: string,
+    device?: string
+  ): Promise<WearablesData[]> {
+    return retryDatabaseOperation(
+      async () => {
+        let query = db
+          .select()
+          .from(wearablesData)
+          .where(eq(wearablesData.userId, userId));
+
+        const conditions = [eq(wearablesData.userId, userId)];
+
+        if (startDate) {
+          conditions.push(gte(wearablesData.date, startDate));
+        }
+        if (endDate) {
+          conditions.push(lte(wearablesData.date, endDate));
+        }
+        if (device) {
+          conditions.push(eq(wearablesData.device, device));
+        }
+
+        return await db
+          .select()
+          .from(wearablesData)
+          .where(and(...conditions))
+          .orderBy(desc(wearablesData.date));
+      },
+      'getWearablesData'
     );
   }
 }
