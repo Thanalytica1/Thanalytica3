@@ -54,6 +54,7 @@ Preferred communication style: Simple, everyday language.
 - **Robust Error Handling**: Comprehensive error boundary implementation, centralized error handling utilities, and safe parsing for data.
 - **Resource Optimization**: Implemented strategies for memory reduction, optimized React Query cache settings, and lazy loading for components.
 - **Authentication & Routing**: Protected routes and auto-redirection based on authentication status.
+- **Privacy Policy**: Comprehensive privacy policy page with GDPR/HIPAA alignment, wearable data coverage, and user rights management.
 
 ## External Dependencies
 
