@@ -1,0 +1,842 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanalytica - AI Health Forecasting Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'medical-green': '#2E8B57',
+                        'trust-blue': '#4682B4',
+                        'vitality-gold': '#FFD700',
+                        'clinical-white': '#F8FFFE',
+                        'professional-slate': '#2F4F4F',
+                        'gentle-coral': '#FF6B6B'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="font-inter bg-clinical-white text-professional-slate">
+    <!-- @COMPONENT: Navigation [global navigation with authentication] -->
+    <nav class="bg-white shadow-sm border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-heartbeat text-medical-green text-2xl mr-3"></i>
+                        <span class="text-xl font-bold text-professional-slate">Thanalytica</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="text-professional-slate hover:text-medical-green px-3 py-2 rounded-md text-sm font-medium">
+                        Dashboard
+                    </button>
+                    <button class="text-professional-slate hover:text-medical-green px-3 py-2 rounded-md text-sm font-medium">
+                        Assessment
+                    </button>
+                    <button class="bg-medical-green text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors">
+                        <i class="fas fa-user mr-2"></i>Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- @END_COMPONENT: Navigation -->
+
+    <!-- @COMPONENT: MainContent [tabbed interface showing different app sections] -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Tab Navigation -->
+        <div class="border-b border-gray-200 mb-8">
+            <nav class="-mb-px flex space-x-8">
+                <button id="tab-welcome" class="tab-button active border-medical-green text-medical-green border-b-2 font-medium text-sm px-1 pb-4">
+                    Welcome
+                </button>
+                <button id="tab-assessment" class="tab-button border-transparent text-gray-500 hover:text-gray-700 border-b-2 font-medium text-sm px-1 pb-4">
+                    Health Assessment
+                </button>
+                <button id="tab-dashboard" class="tab-button border-transparent text-gray-500 hover:text-gray-700 border-b-2 font-medium text-sm px-1 pb-4">
+                    Results Dashboard
+                </button>
+                <button id="tab-recommendations" class="tab-button border-transparent text-gray-500 hover:text-gray-700 border-b-2 font-medium text-sm px-1 pb-4">
+                    Health Optimization
+                </button>
+            </nav>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="content-container">
+            <!-- Welcome Section -->
+            <div id="content-welcome" class="tab-content">
+                <!-- @COMPONENT: HeroSection [main landing area] -->
+                <div class="text-center mb-16">
+                    <div class="max-w-3xl mx-auto">
+                        <h1 class="text-4xl font-bold text-professional-slate mb-6">
+                            Your Journey to <span class="text-medical-green">150 Years</span> Starts Here
+                        </h1>
+                        <p class="text-xl text-gray-600 mb-8 leading-relaxed">
+                            AI-powered health forecasting platform that evaluates your longevity trajectory and provides personalized optimization strategies for extended vitality.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <button data-event="click:startAssessment" class="bg-medical-green text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-opacity-90 transition-colors shadow-lg">
+                                <i class="fas fa-play mr-3"></i>Start Health Assessment
+                            </button>
+                            <button class="border-2 border-trust-blue text-trust-blue px-8 py-4 rounded-lg text-lg font-semibold hover:bg-trust-blue hover:text-white transition-colors">
+                                <i class="fas fa-info-circle mr-3"></i>Learn More
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: HeroSection -->
+
+                <!-- @COMPONENT: FeatureCards [platform capabilities overview] -->
+                <div class="grid md:grid-cols-3 gap-8 mb-16">
+                    <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow border border-gray-100">
+                        <div class="w-12 h-12 bg-medical-green bg-opacity-10 rounded-lg flex items-center justify-center mb-4">
+                            <i class="fas fa-brain text-medical-green text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">AI Health Analysis</h3>
+                        <p class="text-gray-600">Advanced algorithms assess your aging patterns and predict optimal longevity trajectories based on cutting-edge research.</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow border border-gray-100">
+                        <div class="w-12 h-12 bg-trust-blue bg-opacity-10 rounded-lg flex items-center justify-center mb-4">
+                            <i class="fas fa-chart-line text-trust-blue text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">Vitality Tracking</h3>
+                        <p class="text-gray-600">Real-time monitoring of biological age, health markers, and lifestyle factors that impact your journey to 150.</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow border border-gray-100">
+                        <div class="w-12 h-12 bg-vitality-gold bg-opacity-10 rounded-lg flex items-center justify-center mb-4">
+                            <i class="fas fa-target text-vitality-gold text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">Personalized Optimization</h3>
+                        <p class="text-gray-600">Custom recommendations for diet, exercise, sleep, and lifestyle modifications to maximize your longevity potential.</p>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: FeatureCards -->
+            </div>
+
+            <!-- Health Assessment Section -->
+            <div id="content-assessment" class="tab-content hidden">
+                <!-- @COMPONENT: AssessmentForm [multi-step health data collection] -->
+                <div class="max-w-4xl mx-auto">
+                    <!-- Progress Indicator -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-2xl font-bold text-professional-slate">Health Assessment</h2>
+                            <span class="text-sm text-gray-500">Step <span data-bind="currentStep">2</span> of 6</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-medical-green h-2 rounded-full transition-all duration-300" style="width: 33%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 mt-2">
+                            <span>Basic Info</span>
+                            <span class="font-medium text-medical-green">Lifestyle</span>
+                            <span>Medical History</span>
+                            <span>Exercise</span>
+                            <span>Goals</span>
+                            <span>Review</span>
+                        </div>
+                    </div>
+
+                    <!-- Current Form Step -->
+                    <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+                        <div class="mb-6">
+                            <h3 class="text-xl font-semibold text-professional-slate mb-2">Lifestyle & Habits</h3>
+                            <p class="text-gray-600">Tell us about your daily routines and lifestyle choices.</p>
+                        </div>
+
+                        <div class="space-y-6">
+                            <!-- Sleep Pattern -->
+                            <div>
+                                <label class="block text-sm font-medium text-professional-slate mb-3">Sleep Pattern</label>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">Average Sleep Duration</label>
+                                        <select data-mock="true" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-medical-green focus:border-transparent">
+                                            <option>6-7 hours</option>
+                                            <option selected>7-8 hours</option>
+                                            <option>8-9 hours</option>
+                                            <option>9+ hours</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">Sleep Quality</label>
+                                        <select data-mock="true" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-medical-green focus:border-transparent">
+                                            <option>Poor</option>
+                                            <option>Fair</option>
+                                            <option selected>Good</option>
+                                            <option>Excellent</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Diet Assessment -->
+                            <div>
+                                <label class="block text-sm font-medium text-professional-slate mb-3">Dietary Pattern</label>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <label class="relative">
+                                        <input type="radio" name="diet" value="mediterranean" data-mock="true" class="peer sr-only">
+                                        <div class="p-4 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-medical-green peer-checked:bg-medical-green peer-checked:bg-opacity-5 hover:border-gray-300 transition-colors">
+                                            <div class="text-center">
+                                                <i class="fas fa-leaf text-medical-green text-xl mb-2"></i>
+                                                <div class="text-sm font-medium">Mediterranean</div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                    <label class="relative">
+                                        <input type="radio" name="diet" value="plant-based" data-mock="true" class="peer sr-only">
+                                        <div class="p-4 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-medical-green peer-checked:bg-medical-green peer-checked:bg-opacity-5 hover:border-gray-300 transition-colors">
+                                            <div class="text-center">
+                                                <i class="fas fa-seedling text-medical-green text-xl mb-2"></i>
+                                                <div class="text-sm font-medium">Plant-Based</div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                    <label class="relative">
+                                        <input type="radio" name="diet" value="balanced" data-mock="true" class="peer sr-only" checked>
+                                        <div class="p-4 border-2 border-medical-green rounded-lg cursor-pointer bg-medical-green bg-opacity-5 hover:border-gray-300 transition-colors">
+                                            <div class="text-center">
+                                                <i class="fas fa-balance-scale text-medical-green text-xl mb-2"></i>
+                                                <div class="text-sm font-medium">Balanced</div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                    <label class="relative">
+                                        <input type="radio" name="diet" value="other" data-mock="true" class="peer sr-only">
+                                        <div class="p-4 border-2 border-gray-200 rounded-lg cursor-pointer peer-checked:border-medical-green peer-checked:bg-medical-green peer-checked:bg-opacity-5 hover:border-gray-300 transition-colors">
+                                            <div class="text-center">
+                                                <i class="fas fa-utensils text-medical-green text-xl mb-2"></i>
+                                                <div class="text-sm font-medium">Other</div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Substance Use -->
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-professional-slate mb-3">Alcohol Consumption</label>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center">
+                                            <input type="radio" name="alcohol" value="none" data-mock="true" class="text-medical-green focus:ring-medical-green">
+                                            <span class="ml-2 text-sm">None</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="alcohol" value="occasional" data-mock="true" class="text-medical-green focus:ring-medical-green" checked>
+                                            <span class="ml-2 text-sm">Occasional (1-3 drinks/week)</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="alcohol" value="moderate" data-mock="true" class="text-medical-green focus:ring-medical-green">
+                                            <span class="ml-2 text-sm">Moderate (4-7 drinks/week)</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="alcohol" value="heavy" data-mock="true" class="text-medical-green focus:ring-medical-green">
+                                            <span class="ml-2 text-sm">Heavy (8+ drinks/week)</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-professional-slate mb-3">Smoking Status</label>
+                                    <div class="space-y-2">
+                                        <label class="flex items-center">
+                                            <input type="radio" name="smoking" value="never" data-mock="true" class="text-medical-green focus:ring-medical-green" checked>
+                                            <span class="ml-2 text-sm">Never smoked</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="smoking" value="former" data-mock="true" class="text-medical-green focus:ring-medical-green">
+                                            <span class="ml-2 text-sm">Former smoker</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="radio" name="smoking" value="current" data-mock="true" class="text-medical-green focus:ring-medical-green">
+                                            <span class="ml-2 text-sm">Current smoker</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div class="flex justify-between pt-8 border-t border-gray-200 mt-8">
+                            <button data-event="click:previousStep" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                <i class="fas fa-arrow-left mr-2"></i>Previous
+                            </button>
+                            <button data-event="click:nextStep" class="px-6 py-2 bg-medical-green text-white rounded-lg hover:bg-opacity-90 transition-colors">
+                                Next<i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: AssessmentForm -->
+            </div>
+
+            <!-- Results Dashboard Section -->
+            <div id="content-dashboard" class="tab-content hidden">
+                <!-- @COMPONENT: DashboardHeader [health trajectory overview] -->
+                <div class="mb-8">
+                    <div class="bg-gradient-to-r from-medical-green to-trust-blue rounded-xl p-8 text-white">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                            <div>
+                                <h2 class="text-3xl font-bold mb-2">Your Health Trajectory</h2>
+                                <p class="text-lg opacity-90">Based on comprehensive AI analysis</p>
+                            </div>
+                            <div class="mt-4 md:mt-0 text-right">
+                                <div class="text-4xl font-bold" data-bind="trajectoryRating">OPTIMAL</div>
+                                <div class="text-sm opacity-75">Trajectory Rating</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: DashboardHeader -->
+
+                <!-- @COMPONENT: HealthMetrics [key health indicators grid] -->
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-medical-green bg-opacity-10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-user-clock text-medical-green text-xl"></i>
+                            </div>
+                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Excellent</span>
+                        </div>
+                        <div class="text-2xl font-bold text-professional-slate" data-bind="biologicalAge">28.5</div>
+                        <div class="text-sm text-gray-600">Biological Age</div>
+                        <div class="text-xs text-green-600 mt-1">
+                            <i class="fas fa-arrow-down mr-1"></i>6.5 years younger
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-vitality-gold bg-opacity-10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-bolt text-vitality-gold text-xl"></i>
+                            </div>
+                            <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">Good</span>
+                        </div>
+                        <div class="text-2xl font-bold text-professional-slate" data-bind="vitalityScore">87/100</div>
+                        <div class="text-sm text-gray-600">Vitality Score</div>
+                        <div class="text-xs text-green-600 mt-1">
+                            <i class="fas fa-arrow-up mr-1"></i>+5 from last month
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-trust-blue bg-opacity-10 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-shield-alt text-trust-blue text-xl"></i>
+                            </div>
+                            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Protected</span>
+                        </div>
+                        <div class="text-2xl font-bold text-professional-slate" data-bind="riskScore">Low</div>
+                        <div class="text-sm text-gray-600">Risk Assessment</div>
+                        <div class="text-xs text-blue-600 mt-1">
+                            <i class="fas fa-check mr-1"></i>2 protective factors
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-calendar-alt text-purple-600 text-xl"></i>
+                            </div>
+                            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">Target</span>
+                        </div>
+                        <div class="text-2xl font-bold text-professional-slate" data-bind="projectedAge">150</div>
+                        <div class="text-sm text-gray-600">Projected Lifespan</div>
+                        <div class="text-xs text-green-600 mt-1">
+                            <i class="fas fa-target mr-1"></i>On track
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: HealthMetrics -->
+
+                <!-- @COMPONENT: DetailedAnalysis [comprehensive health breakdown] -->
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <!-- Health Factors Chart -->
+                    <div class="lg:col-span-2 bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                        <h3 class="text-lg font-semibold text-professional-slate mb-6">Health Factor Analysis</h3>
+                        
+                        <!-- Lifestyle Factors -->
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Sleep Quality</span>
+                                    <span class="text-sm text-green-600 font-medium" data-bind="sleepScore">92%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 92%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Exercise Consistency</span>
+                                    <span class="text-sm text-green-600 font-medium" data-bind="exerciseScore">78%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-green-400 h-2 rounded-full" style="width: 78%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Nutrition Score</span>
+                                    <span class="text-sm text-yellow-600 font-medium" data-bind="nutritionScore">84%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-yellow-400 h-2 rounded-full" style="width: 84%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Stress Management</span>
+                                    <span class="text-sm text-yellow-600 font-medium" data-bind="stressScore">71%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-yellow-500 h-2 rounded-full" style="width: 71%"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Cognitive Health</span>
+                                    <span class="text-sm text-green-600 font-medium" data-bind="cognitiveScore">89%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 89%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Risk Factors -->
+                        <div class="mt-8">
+                            <h4 class="text-md font-semibold text-professional-slate mb-4">Risk Factors Monitor</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex items-center p-3 bg-green-50 rounded-lg">
+                                    <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                                    <div>
+                                        <div class="text-sm font-medium text-green-800">Cardiovascular</div>
+                                        <div class="text-xs text-green-600">Low Risk</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center p-3 bg-yellow-50 rounded-lg">
+                                    <i class="fas fa-exclamation-triangle text-yellow-500 mr-3"></i>
+                                    <div>
+                                        <div class="text-sm font-medium text-yellow-800">Metabolic</div>
+                                        <div class="text-xs text-yellow-600">Monitor</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="space-y-6">
+                        <!-- Trajectory Timeline -->
+                        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                            <h3 class="text-lg font-semibold text-professional-slate mb-4">Longevity Timeline</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-medical-green rounded-full mr-3"></div>
+                                    <div class="flex-1">
+                                        <div class="text-sm font-medium">Current Age: <span data-bind="currentAge">35</span></div>
+                                        <div class="text-xs text-gray-500">Optimal trajectory maintained</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-trust-blue rounded-full mr-3"></div>
+                                    <div class="flex-1">
+                                        <div class="text-sm font-medium">Age 50</div>
+                                        <div class="text-xs text-gray-500">Peak performance phase</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-vitality-gold rounded-full mr-3"></div>
+                                    <div class="flex-1">
+                                        <div class="text-sm font-medium">Age 100</div>
+                                        <div class="text-xs text-gray-500">Vitality maintenance</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                                    <div class="flex-1">
+                                        <div class="text-sm font-medium">Age 150</div>
+                                        <div class="text-xs text-gray-500">Target achievement</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Updates -->
+                        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                            <h3 class="text-lg font-semibold text-professional-slate mb-4">Recent Updates</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-start">
+                                    <div class="w-2 h-2 bg-green-400 rounded-full mt-2 mr-3"></div>
+                                    <div>
+                                        <div class="text-sm">Sleep score improved by 8%</div>
+                                        <div class="text-xs text-gray-500">2 days ago</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3"></div>
+                                    <div>
+                                        <div class="text-sm">New exercise routine added</div>
+                                        <div class="text-xs text-gray-500">1 week ago</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="w-2 h-2 bg-yellow-400 rounded-full mt-2 mr-3"></div>
+                                    <div>
+                                        <div class="text-sm">Stress management goal set</div>
+                                        <div class="text-xs text-gray-500">2 weeks ago</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: DetailedAnalysis -->
+            </div>
+
+            <!-- Health Optimization Section -->
+            <div id="content-recommendations" class="tab-content hidden">
+                <!-- @COMPONENT: OptimizationRecommendations [personalized health guidance] -->
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-professional-slate mb-4">Personalized Health Optimization</h2>
+                        <p class="text-lg text-gray-600">Science-backed recommendations tailored to your longevity goals</p>
+                    </div>
+
+                    <!-- Priority Recommendations -->
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold text-professional-slate mb-6">Priority Actions</h3>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-l-gentle-coral border border-gray-100">
+                                <div class="flex items-start">
+                                    <div class="w-10 h-10 bg-gentle-coral bg-opacity-10 rounded-lg flex items-center justify-center mr-4 mt-1">
+                                        <i class="fas fa-brain text-gentle-coral"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-professional-slate mb-2">Stress Management Enhancement</h4>
+                                        <p class="text-sm text-gray-600 mb-3">Your stress levels show room for improvement. Implementing targeted stress reduction can add 3-5 years to your longevity projection.</p>
+                                        <div class="flex items-center text-xs text-gentle-coral">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            <span>Est. impact: +4.2 years</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-l-vitality-gold border border-gray-100">
+                                <div class="flex items-start">
+                                    <div class="w-10 h-10 bg-vitality-gold bg-opacity-10 rounded-lg flex items-center justify-center mr-4 mt-1">
+                                        <i class="fas fa-dumbbell text-vitality-gold"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-professional-slate mb-2">Strength Training Integration</h4>
+                                        <p class="text-sm text-gray-600 mb-3">Adding 2 weekly strength sessions could significantly improve your muscle mass retention trajectory for later decades.</p>
+                                        <div class="flex items-center text-xs text-vitality-gold">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            <span>Est. impact: +2.8 years</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Recommendations by Category -->
+                    <div class="space-y-8">
+                        <!-- Exercise Optimization -->
+                        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                            <div class="flex items-center mb-4">
+                                <div class="w-8 h-8 bg-medical-green bg-opacity-10 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-running text-medical-green"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-professional-slate">Exercise Optimization</h3>
+                                <span class="ml-auto text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">Good Foundation</span>
+                            </div>
+                            
+                            <div class="grid md:grid-cols-3 gap-4 mb-4">
+                                <div class="p-4 bg-gray-50 rounded-lg">
+                                    <div class="text-sm font-medium text-gray-700 mb-1">Current: Cardio Focus</div>
+                                    <div class="text-xs text-gray-500">4x/week cardio sessions</div>
+                                </div>
+                                <div class="p-4 bg-medical-green bg-opacity-5 rounded-lg border border-medical-green">
+                                    <div class="text-sm font-medium text-medical-green mb-1">Recommended: Hybrid Training</div>
+                                    <div class="text-xs text-medical-green">3x cardio + 2x strength</div>
+                                </div>
+                                <div class="p-4 bg-gray-50 rounded-lg">
+                                    <div class="text-sm font-medium text-gray-700 mb-1">Target: Zone 2 + HIIT</div>
+                                    <div class="text-xs text-gray-500">Optimal longevity protocol</div>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Add 20-minute strength sessions twice weekly</span>
+                                </div>
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Incorporate Zone 2 cardio (80% of training volume)</span>
+                                </div>
+                                <div class="flex items-center text-sm">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Weekly VO2 max intervals for cardiovascular health</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nutrition Enhancement -->
+                        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                            <div class="flex items-center mb-4">
+                                <div class="w-8 h-8 bg-trust-blue bg-opacity-10 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-leaf text-trust-blue"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-professional-slate">Nutrition Enhancement</h3>
+                                <span class="ml-auto text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full">Optimization Ready</span>
+                            </div>
+
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 class="font-medium text-gray-700 mb-3">Longevity Nutrients</h4>
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                            <span class="text-sm">Omega-3 EPA/DHA</span>
+                                            <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Increase</span>
+                                        </div>
+                                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                            <span class="text-sm">Polyphenols</span>
+                                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Good</span>
+                                        </div>
+                                        <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                            <span class="text-sm">Fiber Intake</span>
+                                            <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Boost</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-gray-700 mb-3">Metabolic Optimization</h4>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center text-sm">
+                                            <i class="fas fa-clock text-trust-blue mr-2"></i>
+                                            <span>Consider 16:8 intermittent fasting</span>
+                                        </div>
+                                        <div class="flex items-center text-sm">
+                                            <i class="fas fa-thermometer-half text-trust-blue mr-2"></i>
+                                            <span>Add cold exposure therapy</span>
+                                        </div>
+                                        <div class="flex items-center text-sm">
+                                            <i class="fas fa-utensils text-trust-blue mr-2"></i>
+                                            <span>Time-restricted eating window</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sleep & Recovery -->
+                        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                            <div class="flex items-center mb-4">
+                                <div class="w-8 h-8 bg-vitality-gold bg-opacity-10 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-moon text-vitality-gold"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-professional-slate">Sleep & Recovery</h3>
+                                <span class="ml-auto text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">Strong Performance</span>
+                            </div>
+
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <div class="flex items-center">
+                                    <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                                    <div>
+                                        <div class="text-sm font-medium text-green-800">Excellent sleep foundation detected</div>
+                                        <div class="text-xs text-green-600 mt-1">Your 7.5-hour average with good quality positions you well for longevity. Minor optimizations can enhance recovery further.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 text-sm text-gray-600">
+                                <strong>Fine-tuning recommendations:</strong> Consider blackout curtains, temperature regulation (65-68°F), and a consistent wind-down routine to maximize deep sleep phases.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Plan -->
+                    <div class="mt-8 bg-gradient-to-r from-medical-green to-trust-blue rounded-xl p-6 text-white">
+                        <h3 class="text-xl font-semibold mb-4">30-Day Action Plan</h3>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                                <div class="font-medium mb-2">Week 1-2</div>
+                                <div class="text-sm opacity-90">
+                                    <div>• Add 2 strength sessions</div>
+                                    <div>• Begin stress tracking</div>
+                                    <div>• Optimize sleep environment</div>
+                                </div>
+                            </div>
+                            <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                                <div class="font-medium mb-2">Week 3-4</div>
+                                <div class="text-sm opacity-90">
+                                    <div>• Implement Zone 2 training</div>
+                                    <div>• Start intermittent fasting</div>
+                                    <div>• Add meditation practice</div>
+                                </div>
+                            </div>
+                            <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                                <div class="font-medium mb-2">Ongoing</div>
+                                <div class="text-sm opacity-90">
+                                    <div>• Weekly progress tracking</div>
+                                    <div>• Monthly re-assessment</div>
+                                    <div>• Continuous optimization</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: OptimizationRecommendations -->
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: MainContent -->
+
+    <!-- @COMPONENT: Footer [app footer with links and info] -->
+    <footer class="bg-white border-t border-gray-200 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-heartbeat text-medical-green text-xl mr-2"></i>
+                        <span class="text-lg font-bold text-professional-slate">Thanalytica</span>
+                    </div>
+                    <p class="text-sm text-gray-600">AI-powered health forecasting for longevity optimization and vitality enhancement.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-professional-slate mb-3">Platform</h4>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <div>Health Assessment</div>
+                        <div>Results Dashboard</div>
+                        <div>Recommendations</div>
+                        <div>Progress Tracking</div>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-professional-slate mb-3">Science</h4>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <div>Longevity Research</div>
+                        <div>AI Methodology</div>
+                        <div>Clinical Validation</div>
+                        <div>Data Privacy</div>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-professional-slate mb-3">Support</h4>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <div>Help Center</div>
+                        <div>Contact Us</div>
+                        <div>Privacy Policy</div>
+                        <div>Terms of Service</div>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-200 pt-6 mt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="text-sm text-gray-500">
+                        © 2024 Thanalytica. All rights reserved. HIPAA-compliant health data platform.
+                    </div>
+                    <div class="flex space-x-4 mt-4 md:mt-0">
+                        <i class="fab fa-twitter text-gray-400 hover:text-trust-blue cursor-pointer"></i>
+                        <i class="fab fa-linkedin text-gray-400 hover:text-trust-blue cursor-pointer"></i>
+                        <i class="fas fa-envelope text-gray-400 hover:text-trust-blue cursor-pointer"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- @END_COMPONENT: Footer -->
+
+    <script>
+        // Tab functionality
+        (function() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetId = button.id.replace('tab-', 'content-');
+                    
+                    // Remove active classes
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('active', 'border-medical-green', 'text-medical-green');
+                        btn.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    
+                    // Hide all content
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    
+                    // Show selected content
+                    const targetContent = document.getElementById(targetId);
+                    if (targetContent) {
+                        targetContent.classList.remove('hidden');
+                    }
+                    
+                    // Add active class to clicked button
+                    button.classList.remove('border-transparent', 'text-gray-500');
+                    button.classList.add('active', 'border-medical-green', 'text-medical-green');
+                });
+            });
+
+            // Initialize first tab as active
+            document.getElementById('tab-welcome').click();
+        })();
+
+        // Form navigation simulation
+        document.addEventListener('click', function(e) {
+            if (e.target.matches('[data-event*="nextStep"]')) {
+                // TODO: Implement form validation and step progression
+                console.log('Next step clicked - implement form progression logic');
+            }
+            
+            if (e.target.matches('[data-event*="previousStep"]')) {
+                // TODO: Implement previous step navigation
+                console.log('Previous step clicked - implement back navigation');
+            }
+            
+            if (e.target.matches('[data-event*="startAssessment"]')) {
+                // Navigate to assessment tab
+                document.getElementById('tab-assessment').click();
+            }
+        });
+
+        // Real-time updates simulation
+        (function() {
+            // TODO: Implement WebSocket connection for real-time dashboard updates
+            // TODO: Add Firebase integration for user data persistence
+            // TODO: Implement AI analysis engine communication
+            
+            // Placeholder for real-time data updates
+            setInterval(() => {
+                // Simulate real-time metric updates
+                const vitalityElement = document.querySelector('[data-bind="vitalityScore"]');
+                if (vitalityElement && Math.random() > 0.95) {
+                    // Simulate occasional metric updates
+                    console.log('Real-time metric update would occur here');
+                }
+            }, 5000);
+        })();
+    </script>
+</body>
+</html>

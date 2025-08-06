@@ -37,6 +37,67 @@ import { db, retryDatabaseOperation } from "./db";
 import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
+// Temporary token storage (in production, use Redis or database)
+interface TemporaryToken {
+  token: string;
+  expiresAt: Date;
+}
+
+class TemporaryTokenStore {
+  private tokens = new Map<string, TemporaryToken>();
+  private cleanupInterval: NodeJS.Timeout;
+
+  constructor() {
+    // Clean up expired tokens every 5 minutes
+    this.cleanupInterval = setInterval(() => {
+      this.cleanup();
+    }, 5 * 60 * 1000);
+  }
+
+  store(userId: string, provider: string, token: string, ttlMs: number = 10 * 60 * 1000): void {
+    const key = `${userId}:${provider}`;
+    const expiresAt = new Date(Date.now() + ttlMs);
+    this.tokens.set(key, { token, expiresAt });
+  }
+
+  get(userId: string, provider: string): string | null {
+    const key = `${userId}:${provider}`;
+    const stored = this.tokens.get(key);
+    
+    if (!stored) {
+      return null;
+    }
+    
+    if (stored.expiresAt < new Date()) {
+      this.tokens.delete(key);
+      return null;
+    }
+    
+    return stored.token;
+  }
+
+  delete(userId: string, provider: string): void {
+    const key = `${userId}:${provider}`;
+    this.tokens.delete(key);
+  }
+
+  private cleanup(): void {
+    const now = new Date();
+    for (const [key, stored] of this.tokens.entries()) {
+      if (stored.expiresAt < now) {
+        this.tokens.delete(key);
+      }
+    }
+  }
+
+  destroy(): void {
+    clearInterval(this.cleanupInterval);
+    this.tokens.clear();
+  }
+}
+
+const tempTokenStore = new TemporaryTokenStore();
+
 /**
  * Safe number conversion utility
  */
@@ -1176,14 +1237,29 @@ export class DatabaseStorage implements IStorage {
 
   // OAuth and Wearable Connection Methods
   async storeTemporaryToken(userId: string, provider: string, token: string): Promise<void> {
-    // Store in memory or cache - in production, use Redis or similar
-    const key = `temp_token_${userId}_${provider}`;
-    (global as any)[key] = token;
+    // Validate inputs
+    if (!userId || !provider || !token) {
+      throw new Error('Invalid parameters for token storage');
+    }
+    
+    // Store with 10-minute expiration
+    tempTokenStore.store(userId, provider, token, 10 * 60 * 1000);
   }
 
   async getTemporaryToken(userId: string, provider: string): Promise<string | null> {
-    const key = `temp_token_${userId}_${provider}`;
-    return (global as any)[key] || null;
+    // Validate inputs
+    if (!userId || !provider) {
+      return null;
+    }
+    
+    return tempTokenStore.get(userId, provider);
+  }
+
+  async deleteTemporaryToken(userId: string, provider: string): Promise<void> {
+    // Clean up token after use
+    if (userId && provider) {
+      tempTokenStore.delete(userId, provider);
+    }
   }
 
   async saveWearableConnection(data: Partial<InsertWearableConnection>): Promise<WearableConnection> {

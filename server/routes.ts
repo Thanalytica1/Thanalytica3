@@ -11,6 +11,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user/:firebaseUid", async (req, res) => {
     try {
       const { firebaseUid } = req.params;
+      
+      // Validate firebaseUid parameter
+      if (typeof firebaseUid !== 'string' || firebaseUid.trim().length === 0) {
+        return res.status(400).json({ message: "Invalid Firebase UID" });
+      }
+      
+      // Additional Firebase UID format validation
+      if (firebaseUid.length > 128 || !/^[A-Za-z0-9\-_]+$/.test(firebaseUid)) {
+        return res.status(400).json({ message: "Invalid Firebase UID format" });
+      }
+      
       const user = await storage.getUserByFirebaseUid(firebaseUid);
       
       if (!user) {
@@ -19,6 +30,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(user);
     } catch (error) {
+      console.error('Get user by Firebase UID error:', error);
       res.status(500).json({ message: "Failed to get user" });
     }
   });
@@ -37,8 +49,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(user);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error('User creation validation error:', error.errors);
         return res.status(400).json({ message: "Invalid user data", errors: error.errors });
       }
+      console.error('Create user error:', error);
       res.status(500).json({ message: "Failed to create user" });
     }
   });
@@ -47,6 +61,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/health-assessment/:userId", async (req, res) => {
     try {
       const { userId } = req.params;
+      
+      // Validate userId parameter
+      if (typeof userId !== 'string' || userId.trim().length === 0) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
       const assessment = await storage.getHealthAssessment(userId);
       
       if (!assessment) {
@@ -55,6 +75,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(assessment);
     } catch (error) {
+      console.error('Get health assessment error:', error);
       res.status(500).json({ message: "Failed to get assessment" });
     }
   });
@@ -63,21 +84,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId, ...assessmentData } = req.body;
       
-      if (!userId) {
-        return res.status(400).json({ message: "User ID is required" });
+      // Validate userId
+      if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
+        return res.status(400).json({ message: "Valid user ID is required" });
       }
       
+      // Validate and parse assessment data
       const validatedData = insertHealthAssessmentSchema.parse(assessmentData);
       const assessment = await storage.createHealthAssessment({
         ...validatedData,
-        userId,
+        userId: userId.trim(),
       });
       
       res.status(201).json(assessment);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error('Assessment creation validation error:', error.errors);
         return res.status(400).json({ message: "Invalid assessment data", errors: error.errors });
       }
+      console.error('Create assessment error:', error);
       res.status(500).json({ message: "Failed to create assessment" });
     }
   });
@@ -86,6 +111,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/health-metrics/:userId", async (req, res) => {
     try {
       const { userId } = req.params;
+      
+      // Validate userId parameter
+      if (typeof userId !== 'string' || userId.trim().length === 0) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
       const metrics = await storage.getHealthMetrics(userId);
       
       if (!metrics) {
@@ -94,6 +125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(metrics);
     } catch (error) {
+      console.error('Get health metrics error:', error);
       res.status(500).json({ message: "Failed to get metrics" });
     }
   });
@@ -102,9 +134,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/recommendations/:userId", async (req, res) => {
     try {
       const { userId } = req.params;
+      
+      // Validate userId parameter
+      if (typeof userId !== 'string' || userId.trim().length === 0) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
       const recommendations = await storage.getRecommendations(userId);
       res.json(recommendations);
     } catch (error) {
+      console.error('Get recommendations error:', error);
       res.status(500).json({ message: "Failed to get recommendations" });
     }
   });
@@ -113,10 +152,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/wearable-connections/:userId", async (req, res) => {
     try {
       const { userId } = req.params;
+      
+      // Validate userId parameter
+      if (typeof userId !== 'string' || userId.trim().length === 0) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
       const connections = await storage.getWearableConnections(userId);
       res.json(connections);
     } catch (error) {
+      console.error('Get wearable connections error:', error);
       res.status(500).json({ message: "Failed to get wearable connections" });
+    }
+  });
+
+  // Alternative route for plural 'wearables' (for compatibility)
+  app.get("/api/wearables/connections/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Validate userId parameter
+      if (typeof userId !== 'string' || userId.trim().length === 0) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      const connections = await storage.getWearableConnections(userId);
+      res.json(connections);
+    } catch (error) {
+      console.error('Get wearables connections error:', error);
+      res.status(500).json({ message: "Failed to get wearables connections" });
     }
   });
 
@@ -147,10 +211,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "User ID is required" });
       }
       
-      // TODO: Add ownership verification - ensure the connection belongs to the user
+      // Validate input parameters
+      if (typeof id !== 'string' || id.trim().length === 0) {
+        return res.status(400).json({ message: "Invalid connection ID" });
+      }
+      
+      if (typeof userId !== 'string' || userId.trim().length === 0) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // Verify ownership - ensure the connection belongs to the user
+      const existingConnection = await storage.getWearableConnection(userId, '');
+      const allUserConnections = await storage.getWearableConnections(userId);
+      const connectionToDelete = allUserConnections.find(conn => conn.id === id);
+      
+      if (!connectionToDelete) {
+        return res.status(404).json({ message: "Wearable connection not found or access denied" });
+      }
+      
       await storage.deleteWearableConnection(id);
       res.status(204).send();
     } catch (error) {
+      console.error('Delete wearable connection error:', error);
       res.status(500).json({ message: "Failed to delete wearable connection" });
     }
   });
@@ -159,6 +241,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { userId } = req.params;
       const { dataType, startDate, endDate } = req.query;
+      
+      // Validate userId parameter
+      if (typeof userId !== 'string' || userId.trim().length === 0) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
       const data = await storage.getWearableData(
         userId,
         dataType as string,
@@ -167,7 +255,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       res.json(data);
     } catch (error) {
+      console.error('Get wearable data error:', error);
       res.status(500).json({ message: "Failed to get wearable data" });
+    }
+  });
+
+  // Alternative route for plural 'wearables' (for compatibility)
+  app.get("/api/wearables/data/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { dataType, startDate, endDate } = req.query;
+      
+      // Validate userId parameter
+      if (typeof userId !== 'string' || userId.trim().length === 0) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      const data = await storage.getWearableData(
+        userId,
+        dataType as string,
+        startDate as string,
+        endDate as string
+      );
+      res.json(data);
+    } catch (error) {
+      console.error('Get wearables data error:', error);
+      res.status(500).json({ message: "Failed to get wearables data" });
     }
   });
 

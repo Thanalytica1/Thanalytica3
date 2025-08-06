@@ -8,10 +8,11 @@ import type { User } from "@shared/schema";
 export function useAuth() {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(false);
   const isMounted = useRef(true);
-  const abortController = useRef<AbortController | null>(null);
+  const currentOperation = useRef<string | null>(null);
 
-  // REPLACE the old useUser call with this optimized version
+  // Optimized user query with proper configuration
   const { data: dbUser, isLoading: userLoading, refetch: refetchUser } = useUser(
     firebaseUser?.uid || "", 
     {
@@ -31,83 +32,55 @@ export function useAuth() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!isMounted.current) return;
 
-      // Cancel any pending operations
-      if (abortController.current) {
-        abortController.current.abort();
-      }
-      abortController.current = new AbortController();
+      const operationId = `auth-${Date.now()}`;
+      currentOperation.current = operationId;
 
       setFirebaseUser(user);
 
       if (user) {
+        // Simplified user creation logic
         const handleUserCreation = async () => {
           try {
-            // Small delay to prevent race conditions
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Check if operation is still current
+            if (!isMounted.current || currentOperation.current !== operationId) {
+              return;
+            }
 
-            if (!isMounted.current || abortController.current?.signal.aborted) return;
-
-            // Pass abort signal to refetch if your query library supports it
+            // Try to get existing user first
             let userResponse;
             try {
               userResponse = await refetchUser();
             } catch (refetchError) {
-              // Check if component is unmounted or operation was cancelled
-              if (!isMounted.current || abortController.current?.signal.aborted) {
+              // Check if operation is still current
+              if (!isMounted.current || currentOperation.current !== operationId) {
                 return;
               }
 
-              // If it's an abort error, silently return - this is normal
-              if (refetchError instanceof Error && 
-                  (refetchError.name === 'AbortError' || 
-                   refetchError.message.includes('aborted') ||
-                   refetchError.message.includes('signal is aborted'))) {
-                return;
-              }
-              // For other errors, don't throw - just continue to user creation
-              console.warn('User fetch failed, attempting to create user:', refetchError.message);
+              // Log warning and continue to user creation
+              console.warn('User fetch failed, attempting to create user:', refetchError);
               userResponse = { data: null };
             }
 
-            if (!isMounted.current || abortController.current?.signal.aborted) return;
+            // Check if operation is still current
+            if (!isMounted.current || currentOperation.current !== operationId) {
+              return;
+            }
 
-            // Only create user if we don't have one and we're not already creating
+            // Create user if none exists and we're not already creating one
             if (!userResponse?.data && !createUser.isPending) {
-              try {
-                createUser.mutate({
-                  firebaseUid: user.uid,
-                  email: user.email!,
-                  displayName: user.displayName,
-                  photoURL: user.photoURL,
-                });
-              } catch (mutateError) {
-                if (!isMounted.current || abortController.current?.signal.aborted) {
-                  return;
-                }
-
-                // Handle abort errors silently for mutations too
-                if (mutateError instanceof Error && 
-                    (mutateError.name === 'AbortError' || 
-                     mutateError.message.includes('aborted') ||
-                     mutateError.message.includes('signal is aborted'))) {
-                  return;
-                }
-                console.error('User creation failed:', mutateError);
-              }
+              setIsNewUser(true);
+              createUser.mutate({
+                firebaseUid: user.uid,
+                email: user.email!,
+                displayName: user.displayName,
+                photoURL: user.photoURL,
+              });
             }
           } catch (error) {
-            if (!isMounted.current || abortController.current?.signal.aborted) {
-              return;
+            // Check if operation is still current before logging
+            if (isMounted.current && currentOperation.current === operationId) {
+              console.error("Auth error:", error);
             }
-
-            // Silently ignore abort-related errors
-            if (error instanceof Error && 
-                (error.name === 'AbortError' || 
-                 error.message.includes('aborted') ||
-                 error.message.includes('signal is aborted'))) {
-              return;
-            }
-            console.error("Auth error:", error);
           }
         };
 
@@ -115,7 +88,8 @@ export function useAuth() {
         handleUserCreation();
       }
 
-      if (isMounted.current) {
+      // Set loading to false only if this is still the current operation
+      if (isMounted.current && currentOperation.current === operationId) {
         setLoading(false);
       }
     });
@@ -141,9 +115,7 @@ export function useAuth() {
     // Cleanup function
     return () => {
       isMounted.current = false;
-      if (abortController.current) {
-        abortController.current.abort();
-      }
+      currentOperation.current = null;
       unsubscribe();
     };
   }, [refetchUser, createUser]);
@@ -153,7 +125,8 @@ export function useAuth() {
   return { 
     firebaseUser, 
     user: dbUser as User | undefined, 
-    loading: isLoading 
+    loading: isLoading,
+    isNewUser 
   };
 }
 

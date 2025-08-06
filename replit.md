@@ -36,6 +36,11 @@ Preferred communication style: Simple, everyday language.
 
 **Firebase Authentication**: Integrates Firebase Auth for user management, including Google OAuth sign-in. Firebase UID is the primary user identifier, and a redirect-based authentication flow is used. Session management is handled with React hooks and Firebase's `onAuthStateChanged` listener.
 
+**User Routing Logic**: 
+- New users (sign-ups) are automatically redirected to `/assessment` to complete their initial health assessment
+- Existing users are redirected to `/dashboard` after successful login
+- The system tracks new user status through the authentication hook to ensure proper routing
+
 ### Development and Build Process
 
 **TypeScript Configuration**: Strict TypeScript setup with path mapping (`@/` for client, `@shared` for shared types).
@@ -53,7 +58,7 @@ Preferred communication style: Simple, everyday language.
 - **Mobile-First Design**: Optimized health assessment forms and UI components for mobile devices, ensuring responsive touch targets and improved readability.
 - **Robust Error Handling**: Comprehensive error boundary implementation, centralized error handling utilities, and safe parsing for data.
 - **Resource Optimization**: Implemented strategies for memory reduction, optimized React Query cache settings, and lazy loading for components.
-- **Authentication & Routing**: Protected routes and auto-redirection based on authentication status.
+- **Authentication & Routing**: Protected routes and auto-redirection based on authentication status. New users are directed to assessment, existing users to their dashboard.
 - **Privacy Policy**: Comprehensive privacy policy page with GDPR/HIPAA alignment, wearable data coverage, and user rights management.
 
 ## External Dependencies

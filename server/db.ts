@@ -43,26 +43,58 @@ function initializeDatabase() {
     throw error;
   }
 
-  // Create pool with retry logic and error handling
+  // Create pool with improved configuration to prevent exhaustion
   const pool = new Pool({ 
     connectionString: process.env.DATABASE_URL,
-    // Connection pool configuration for stability
-    max: 10, // Maximum number of connections
-    idleTimeoutMillis: 30000, // 30 seconds
-    connectionTimeoutMillis: 10000, // 10 seconds
+    // Enhanced connection pool configuration for high load
+    max: 20, // Maximum number of connections (increased for better concurrency)
+    min: 2, // Minimum number of connections to maintain
+    idleTimeoutMillis: 30000, // 30 seconds - close idle connections
+    connectionTimeoutMillis: 10000, // 10 seconds - timeout for new connections
+    acquireTimeoutMillis: 60000, // 60 seconds - timeout for acquiring connections from pool
+    createTimeoutMillis: 30000, // 30 seconds - timeout for creating new connections
+    destroyTimeoutMillis: 5000, // 5 seconds - timeout for destroying connections
+    reapIntervalMillis: 1000, // 1 second - how often to check for idle connections
+    createRetryIntervalMillis: 200, // 200ms - delay between connection creation retries
   });
 
-  // Add connection event listeners for monitoring
+  // Add comprehensive connection event listeners for monitoring
   pool.on('error', (err) => {
     console.error('Database pool error:', {
       message: err.message,
       code: (err as any).code,
       timestamp: new Date().toISOString(),
+      totalCount: pool.totalCount,
+      idleCount: pool.idleCount,
+      waitingCount: pool.waitingCount,
     });
   });
 
-  pool.on('connect', () => {
-    console.log('Database connection established successfully');
+  pool.on('connect', (client) => {
+    console.log('Database connection established successfully', {
+      totalCount: pool.totalCount,
+      idleCount: pool.idleCount,
+      waitingCount: pool.waitingCount,
+    });
+  });
+
+  pool.on('acquire', () => {
+    // Log when pool reaches high utilization
+    if (pool.totalCount >= 18) { // 90% of max connections
+      console.warn('Database pool high utilization warning:', {
+        totalCount: pool.totalCount,
+        idleCount: pool.idleCount,
+        waitingCount: pool.waitingCount,
+        utilizationPercent: Math.round((pool.totalCount / 20) * 100),
+      });
+    }
+  });
+
+  pool.on('remove', () => {
+    console.log('Database connection removed from pool', {
+      totalCount: pool.totalCount,
+      idleCount: pool.idleCount,
+    });
   });
 
   // Create Drizzle instance with schema

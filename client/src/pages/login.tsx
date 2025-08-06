@@ -11,9 +11,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { signInWithGoogle, signInWithEmail, signUpWithEmail } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
+interface FirebaseAuthError {
+  code: string;
+  message: string;
+}
+
 export default function Login() {
   const [location, setLocation] = useLocation();
-  const { firebaseUser, loading: authLoading } = useAuth();
+  const { firebaseUser, loading: authLoading, isNewUser } = useAuth();
   const { toast } = useToast();
   
   const [isSignUp, setIsSignUp] = useState(false);
@@ -24,13 +29,20 @@ export default function Login() {
     confirmPassword: ""
   });
   const [errors, setErrors] = useState<string[]>([]);
+  const [justSignedUp, setJustSignedUp] = useState(false);
 
-  // Redirect if already logged in
+  // Redirect based on authentication state
   useEffect(() => {
     if (firebaseUser && !authLoading) {
-      setLocation("/dashboard");
+      // If user just signed up or is a new user (from Google sign-in), redirect to assessment
+      if (justSignedUp || isNewUser) {
+        setLocation("/assessment");
+      } else {
+        // Otherwise, redirect to dashboard
+        setLocation("/dashboard");
+      }
     }
-  }, [firebaseUser, authLoading, setLocation]);
+  }, [firebaseUser, authLoading, setLocation, justSignedUp, isNewUser]);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -38,11 +50,12 @@ export default function Login() {
       setErrors([]);
       await signInWithGoogle();
       // Redirect will happen automatically via useEffect when firebaseUser updates
-    } catch (error: any) {
-      console.error("Google sign-in error:", error);
-      const errorMessage = error.code === "auth/unauthorized-domain" 
+    } catch (error: unknown) {
+      const firebaseError = error as FirebaseAuthError;
+      console.error("Google sign-in error:", firebaseError);
+      const errorMessage = firebaseError.code === "auth/unauthorized-domain" 
         ? "Please add your current domain to Firebase authorized domains in the console."
-        : error.message || "Failed to sign in with Google";
+        : firebaseError.message || "Failed to sign in with Google";
       setErrors([errorMessage]);
       toast({
         title: "Sign In Failed",
@@ -79,12 +92,14 @@ export default function Login() {
 
       if (isSignUp) {
         await signUpWithEmail(formData.email, formData.password);
+        setJustSignedUp(true); // Mark that user just signed up
         toast({
           title: "Account Created",
-          description: "Welcome to Thanalytica! You can now access your dashboard.",
+          description: "Welcome to Thanalytica! Let's start with your health assessment.",
         });
       } else {
         await signInWithEmail(formData.email, formData.password);
+        setJustSignedUp(false); // Ensure login goes to dashboard
         toast({
           title: "Welcome Back",
           description: "Successfully signed in to your account.",
@@ -92,11 +107,12 @@ export default function Login() {
       }
       
       // Redirect will happen automatically via useEffect
-    } catch (error: any) {
-      console.error("Email auth error:", error);
+    } catch (error: unknown) {
+      const firebaseError = error as FirebaseAuthError;
+      console.error("Email auth error:", firebaseError);
       let errorMessage = "Authentication failed";
       
-      switch (error.code) {
+      switch (firebaseError.code) {
         case "auth/user-not-found":
           errorMessage = "No account found with this email address";
           break;

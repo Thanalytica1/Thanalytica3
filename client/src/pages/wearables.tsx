@@ -34,12 +34,22 @@ interface WearableConnection {
   createdAt: string;
 }
 
+interface WearableMetrics {
+  [key: string]: number | string | boolean | null | undefined;
+}
+
 interface WearablesData {
   id: string;
   device: string;
   date: string;
-  dataJson: any;
+  dataJson: WearableMetrics;
   syncedAt: string;
+}
+
+interface ApiError {
+  message: string;
+  code?: string;
+  status?: number;
 }
 
 export default function Wearables() {
@@ -86,10 +96,11 @@ export default function Wearables() {
         window.location.href = data.authorizeUrl;
       }
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
       toast({
         title: "Connection Failed",
-        description: error.message || "Failed to initiate device connection",
+        description: apiError.message || "Failed to initiate device connection",
         variant: "destructive",
       });
     },
@@ -109,10 +120,11 @@ export default function Wearables() {
       queryClient.invalidateQueries({ queryKey: ["/api/wearables-data", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["/api/wearable-connections", user?.id] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const apiError = error as ApiError;
       toast({
         title: "Sync Failed",
-        description: error.message || "Failed to sync device data",
+        description: apiError.message || "Failed to sync device data",
         variant: "destructive",
       });
     },
