@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useHealthAssessment, useHealthMetrics } from "@/hooks/use-health-data";
+import { MoodStressCheckin } from "@/components/mood-stress-checkin";
 // Analytics removed for resource optimization
 
 export default function Dashboard() {
@@ -149,6 +150,11 @@ export default function Dashboard() {
             />
           </>
         )}
+      </div>
+
+      {/* Mood & Stress Check-in */}
+      <div className="mb-8">
+        <MoodStressCheckin />
       </div>
 
       {/* Detailed Analysis */}
