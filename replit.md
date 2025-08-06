@@ -2,200 +2,90 @@
 
 ## Overview
 
-Thanalytica is a comprehensive health assessment and longevity optimization platform that evaluates users' health trajectories and provides personalized recommendations for extended vitality. The application combines detailed health assessments with AI-powered analysis to calculate biological age, vitality scores, and provide actionable insights for improving longevity outcomes.
+Thanalytica is a comprehensive health assessment and longevity optimization platform that evaluates users' health trajectories and provides personalized recommendations for extended vitality. The application combines detailed health assessments with AI-powered analysis to calculate biological age, vitality scores, and provide actionable insights for improving longevity outcomes. Our vision is to empower individuals to extend their healthy lifespan, leveraging cutting-edge AI and comprehensive health data.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes (January 2025)
-
-**Wearable Integration Expansion (Latest - August 6, 2025):**
-- ✅ **Extended Device Support**: Added Oura Ring and Apple Health alongside existing Garmin and Whoop integrations
-- ✅ **Oura Ring Integration**: Full OAuth flow support with readiness scores, sleep stages, temperature deviation tracking
-- ✅ **Apple Health Integration**: Comprehensive health metrics including steps, active energy, stand hours, exercise minutes
-- ✅ **Data Normalization**: Updated wearable-data-normalizer to handle all 4 device types with unified output format
-- ✅ **Dashboard Updates**: Wearable connections widget now displays all 4 device types with connection status
-- ✅ **Mock Data Generation**: Added realistic mock data for Oura and Apple Health for testing without real devices
-- ✅ **Multi-Device Priority**: Enhanced merging algorithm to handle data from 4 simultaneous sources
-- ✅ **UI Consistency**: Maintained medical-themed color scheme across all wearable components
-
-**Referral System Implementation (August 5, 2025):**
-- ✅ **Database Schema Enhancement**: Added referralCode and referredById fields to users table
-- ✅ **Referrals Table Creation**: Comprehensive referrals table with tracking for shares, signups, and conversions
-- ✅ **Unique Referral Code Generation**: 8-character alphanumeric codes with collision detection
-- ✅ **API Routes Implementation**: Complete REST API for referral management and statistics
-- ✅ **Referral Page Component**: Professional UI with stats dashboard, shareable links, and social sharing
-- ✅ **Navigation Integration**: Added referrals link to main navigation with Share2 icon
-- ✅ **Reward System Design**: Premium features for referrers, detailed reports for referred users
-- ✅ **Status Tracking**: Pending, signed_up, and converted status tracking with visual indicators
-- ✅ **Share Integration**: Email, Twitter, and LinkedIn sharing with custom messages
-- ✅ **Click Tracking**: Timestamp tracking for referral link clicks and conversions
-
-**Previous Mobile Assessment Optimization & User Experience:**
-- ✅ **Mobile-First Assessment Design**: Optimized health assessment form for mobile devices with larger touch targets (min 44px)
-- ✅ **Enhanced Form Controls**: Increased input field heights to 48px with larger text (18px) and improved spacing
-- ✅ **Responsive Touch Targets**: Made radio buttons and checkboxes larger (20px) with expanded clickable areas
-- ✅ **Mobile Navigation**: Optimized assessment navigation buttons with better mobile layout and responsive design
-- ✅ **Progressive Mobile Layout**: Enhanced progress bar with mobile-specific design that shows current step prominently
-- ✅ **Improved Mobile Keyboard**: Added proper inputMode and pattern attributes for numeric inputs
-- ✅ **Touch-Friendly Selections**: Bordered containers around form options for easier mobile selection
-- ✅ **Responsive Grid System**: Optimized form layouts from mobile-first single column to responsive multi-column
-- ✅ **Mobile Typography**: Enhanced text sizing and spacing for better mobile readability
-- ✅ **Instant Biological Age Preview**: Added sophisticated biological age calculation appearing after step 1 completion
-
-**Previous Critical Error Fixing & System Stability:**
-- ✅ **Database Connection Safety**: Enhanced server/db.ts with comprehensive validation, retry logic, and connection monitoring
-- ✅ **Firebase Configuration Validation**: Added runtime validation for all Firebase environment variables with helpful error messages
-- ✅ **Type Safety in Database Queries**: Replaced unsafe parseInt() with safe number conversion utilities throughout server/storage.ts
-- ✅ **Network Error Handling**: Improved client/src/lib/queryClient.ts with exponential backoff, detailed error messages, and proper timeout handling
-- ✅ **Authentication Race Conditions**: Enhanced client/src/hooks/use-auth.ts with proper cleanup and abort error handling
-- ✅ **Form Validation Edge Cases**: Added comprehensive input validation and error handling in assessment form with localStorage safety
-- ✅ **Error Boundary Implementation**: Created comprehensive error boundary system with graceful fallbacks and error logging
-- ✅ **Centralized Error Handling**: Built complete error handling utilities (errorHandling.ts, validation.ts, typeGuards.ts)
-- ✅ **JSON Parsing Safety**: Added safe parsing for localStorage and API responses with proper error recovery
-- ✅ **Resource Optimization**: Removed all analytics features for maximum performance and memory efficiency
-
-**Previous Analytics System & Admin Dashboard:**
-- Implemented comprehensive analytics tracking system with database schema and API routes (REMOVED for optimization)
-- Created admin analytics dashboard at `/admin/analytics` with real-time metrics display (REMOVED for optimization)
-- Added analytics event tracking across all main user flows (REMOVED for optimization)
-- Built protected admin routes with role-based access control (admin emails or @thanalytica.com)
-- Fixed TypeScript compilation errors in storage layer related to Drizzle query builder
-- Verified application health: all core systems operational, database tables properly configured
-
-**Data Science & AI Enhancements:**
-- Implemented advanced health modeling with biological age calculations and confidence scoring
-- Created comprehensive AI-powered health assistant with symptom analysis and intervention suggestions
-- Added sophisticated health trend visualizations using Recharts with time-range selection and chart type options
-- Built optimized React Query caching system with smart prefetching and performance monitoring
-- Enhanced database schema with health models, insights, and trends tables for AI-powered analysis
-- Integrated wearable device data (Oura Ring, Apple Health) into advanced biological age calculations
-- Added dedicated `/health-ai` page with real-time AI insights and model performance metrics
-- Implemented comprehensive loading states throughout the application including dashboard skeleton components, assessment form loading overlays, and health simulator calculation indicators
-- Enhanced error handling system with user-friendly toast messages, intelligent retry logic, and comprehensive timeout management
-- Implemented React Error Boundary components with graceful error fallbacks and comprehensive error logging
-- Enhanced assessment form error handling with specific error messages, automatic form data preservation, and retry functionality
-- Removed error test component to eliminate browser console errors
-- Completed comprehensive health check confirming all systems operational (January 3, 2025)
-- Fixed React Query race condition in auth hook causing "signal is aborted without reason" errors (January 3, 2025)
-  - Added useRef to track component mount status
-  - Implemented proper error handling for aborted requests
-  - Added global unhandled rejection handler to suppress normal abort errors
-  - Updated query client to properly ignore aborted requests
-
-**Resource Optimization & Performance Improvements (January 3, 2025):**
-- Implemented comprehensive resource usage optimization targeting 30-50% memory reduction
-- Optimized React Query cache settings: reduced staleTime to 5 minutes, gcTime to 10 minutes for global defaults
-- Added wearable data polling optimization: 5-minute refetch intervals to reduce server load
-- Implemented analytics event batching system: groups events in batches of 5 or 2-second delays
-- Enhanced health data caching: 10-15 minute stale times, 15-30 minute refetch intervals
-- Created lazy loading infrastructure for chart components (ChartContainer, Recharts components)
-- Optimized health trends queries: 10-minute polling intervals for better resource efficiency
-- Configured analytics queries for less frequent updates: 10-20 minute refresh intervals
-
-**Authentication & Routing System:**
-- Created dedicated `/login` page with Firebase email/password and Google OAuth
-- Added route protection for `/dashboard`, `/assessment`, `/recommendations`, `/wearables`, `/health-ai`, and `/admin/analytics`
-- Fixed login flow: login buttons now redirect to `/login` instead of immediate Firebase calls
-- Auto-redirect authenticated users from `/login` to `/dashboard`
-- Auto-redirect unauthenticated users from protected routes to `/login`
-
-**Database Migration & Wearable Integration:**
-- Migrated from in-memory storage to PostgreSQL database
-- Updated authentication to properly handle user creation in database
-- Added comprehensive wearable device integration database schema
-- All user data, assessments, recommendations, and device connections now persist in database
-
-**Branding Updates:**
-- Updated all references to use "Thanalytica" consistently
-- Added comprehensive meta tags and SEO optimization
-- Updated page title to "Thanalytica - Your Journey to 150 Years"
-
 ## System Architecture
 
 ### Frontend Architecture
 
-**React Single Page Application**: Built with React 18 using TypeScript, featuring a component-based architecture with modern hooks and functional components. The frontend uses Wouter for lightweight client-side routing without the overhead of React Router.
+**React Single Page Application**: Built with React 18 and TypeScript, using a component-based architecture with modern hooks and functional components. Wouter is used for lightweight client-side routing.
 
-**UI Component System**: Implements shadcn/ui component library built on Radix UI primitives, providing accessible and customizable components with consistent design patterns. Uses Tailwind CSS for utility-first styling with custom CSS variables for theming.
+**UI Component System**: Implements shadcn/ui component library built on Radix UI primitives, providing accessible and customizable components. Styling is managed with Tailwind CSS, utilizing custom CSS variables for a consistent medical/clinical theme (medical-green, trust-blue, vitality-gold, clinical-white).
 
-**State Management**: Leverages TanStack Query (React Query) for server state management, providing caching, synchronization, and background updates. Local component state is managed with React hooks.
+**State Management**: TanStack Query (React Query) handles server state management, caching, and background updates. Local component state uses React hooks.
 
-**Form Handling**: Uses React Hook Form with Zod schema validation for type-safe form management, particularly in the multi-step health assessment flow.
-
-**Styling Approach**: Tailwind CSS with custom design tokens for medical/clinical theming, including custom colors for medical-green, trust-blue, vitality-gold, and clinical-white to establish professional healthcare aesthetics.
+**Form Handling**: React Hook Form with Zod schema validation is used for type-safe form management, especially for the multi-step health assessment.
 
 ### Backend Architecture
 
-**Express.js REST API**: Node.js server using Express with TypeScript, providing RESTful endpoints for user management, health assessments, metrics, and recommendations.
+**Express.js REST API**: A Node.js server with Express and TypeScript, providing RESTful endpoints for user management, health assessments, metrics, and recommendations. API endpoints follow REST conventions and include middleware for logging, error handling, and JSON parsing.
 
-**Route Organization**: Centralized route registration with middleware for request logging, error handling, and JSON parsing. API endpoints follow REST conventions with proper HTTP status codes.
-
-**Data Storage Strategy**: Currently implements in-memory storage with an interface-based design (IStorage) that allows easy migration to persistent database solutions. The storage layer abstracts CRUD operations for users, health assessments, metrics, and recommendations.
-
-**Development Environment**: Vite-powered development server with hot module replacement, TypeScript compilation, and error overlay for enhanced developer experience.
+**Data Storage Strategy**: Utilizes Drizzle ORM with PostgreSQL dialect, abstracting CRUD operations for users, health assessments, metrics, and recommendations.
 
 ### Database Design
 
-**Schema Architecture**: Uses Drizzle ORM with PostgreSQL dialect for type-safe database operations. Schema includes:
-- Users table with Firebase authentication integration
-- Health assessments with comprehensive health data (lifestyle, medical history, goals)
-- Health metrics for calculated values (biological age, vitality scores)
-- Recommendations system for personalized advice
+**Schema Architecture**: Drizzle ORM with PostgreSQL is used for type-safe database operations. The schema includes tables for Users (integrated with Firebase authentication), Health Assessments (comprehensive health data), Health Metrics (calculated values like biological age), and a Recommendations system.
 
-**Data Validation**: Employs Zod schemas for runtime type checking and validation, with drizzle-zod integration for seamless database schema validation.
+**Data Validation**: Zod schemas are employed for runtime type checking and validation, with drizzle-zod for seamless database schema validation.
 
 ### Authentication System
 
-**Firebase Authentication**: Integrates Firebase Auth for user management with Google OAuth sign-in. Uses Firebase UID as the primary user identifier with redirect-based authentication flow suitable for web applications.
-
-**Session Management**: Handles authentication state with React hooks and Firebase's onAuthStateChanged listener for real-time auth status updates.
+**Firebase Authentication**: Integrates Firebase Auth for user management, including Google OAuth sign-in. Firebase UID is the primary user identifier, and a redirect-based authentication flow is used. Session management is handled with React hooks and Firebase's `onAuthStateChanged` listener.
 
 ### Development and Build Process
 
-**TypeScript Configuration**: Strict TypeScript setup with path mapping for clean imports (@/ for client, @shared for shared types).
+**TypeScript Configuration**: Strict TypeScript setup with path mapping (`@/` for client, `@shared` for shared types).
 
-**Build Pipeline**: Vite for frontend bundling and esbuild for server compilation, optimized for both development and production environments.
+**Build Pipeline**: Vite for frontend bundling and esbuild for server compilation, optimized for both development and production.
 
-**Code Organization**: Monorepo structure with clear separation between client, server, and shared code, enabling type sharing between frontend and backend.
+**Code Organization**: A monorepo structure clearly separates client, server, and shared code, enabling type sharing between frontend and backend.
+
+### Key Features and Implementations
+
+- **AI-Powered Health Assessment**: Advanced health modeling for biological age calculations, vitality scores, and AI-powered health assistant features with symptom analysis.
+- **Personalized Recommendations**: System for generating personalized advice based on assessment data.
+- **Wearable Integration**: Support for Garmin, Whoop, Oura Ring, and Apple Health, with data normalization and multi-device priority merging.
+- **Referral System**: Comprehensive referral tracking with unique codes, API routes, and a dedicated UI for managing referrals.
+- **Mobile-First Design**: Optimized health assessment forms and UI components for mobile devices, ensuring responsive touch targets and improved readability.
+- **Robust Error Handling**: Comprehensive error boundary implementation, centralized error handling utilities, and safe parsing for data.
+- **Resource Optimization**: Implemented strategies for memory reduction, optimized React Query cache settings, and lazy loading for components.
+- **Authentication & Routing**: Protected routes and auto-redirection based on authentication status.
 
 ## External Dependencies
 
 ### Core Framework Dependencies
-- **React 18** with TypeScript for frontend development
-- **Express.js** for backend API server
-- **Vite** for development server and build tooling
-- **Node.js** runtime environment
+- **React 18**
+- **Express.js**
+- **Vite**
+- **Node.js**
 
 ### UI and Styling
-- **shadcn/ui** component library built on Radix UI primitives
-- **Tailwind CSS** for utility-first styling
-- **Radix UI** for accessible component primitives
-- **Lucide React** for consistent iconography
+- **shadcn/ui**
+- **Tailwind CSS**
+- **Radix UI**
+- **Lucide React**
 
 ### Database and ORM
-- **Drizzle ORM** for type-safe database operations
-- **PostgreSQL** as the target database (configured for Neon)
-- **@neondatabase/serverless** for serverless database connections
+- **Drizzle ORM**
+- **PostgreSQL** (configured for Neon)
+- **@neondatabase/serverless**
 
 ### Authentication
-- **Firebase Authentication** for user management and OAuth
-- **Google OAuth** integration for sign-in
+- **Firebase Authentication**
+- **Google OAuth**
 
 ### State Management and Data Fetching
-- **TanStack Query (React Query)** for server state management
-- **React Hook Form** for form state management
-- **Zod** for schema validation and type safety
-
-### Development Tools
-- **TypeScript** for static type checking
-- **ESBuild** for server-side bundling
-- **PostCSS** with Autoprefixer for CSS processing
-- **@replit/vite-plugin-runtime-error-modal** for development error handling
+- **TanStack Query (React Query)**
+- **React Hook Form**
+- **Zod**
 
 ### Utility Libraries
-- **date-fns** for date manipulation
-- **clsx** and **tailwind-merge** for conditional CSS classes
-- **nanoid** for unique ID generation
-- **class-variance-authority** for component variant management
+- **date-fns**
+- **clsx**
+- **tailwind-merge**
+- **nanoid**
+- **class-variance-authority**
