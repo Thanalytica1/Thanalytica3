@@ -14,7 +14,7 @@ export function useWearableConnections(
   return useQuery<WearableConnection[]>({
     queryKey: ["/api/wearable-connections", userId],
     queryFn: async ({ signal }) => {
-      const response = await apiRequest("GET", `/api/wearable-connections?userId=${userId}`, undefined, signal);
+      const response = await apiRequest("GET", `/api/wearable-connections/${userId}`, undefined, signal);
       return response.json();
     },
     enabled: !!userId,

@@ -122,7 +122,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/wearable-connections", async (req, res) => {
     try {
-      const connection = await storage.createWearableConnection(req.body);
+      const { userId, ...connectionData } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+      
+      const connection = await storage.createWearableConnection({
+        ...connectionData,
+        userId,
+      });
       res.status(201).json(connection);
     } catch (error) {
       res.status(500).json({ message: "Failed to create wearable connection" });
@@ -132,6 +141,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/wearable-connections/:id", async (req, res) => {
     try {
       const { id } = req.params;
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+      
+      // TODO: Add ownership verification - ensure the connection belongs to the user
       await storage.deleteWearableConnection(id);
       res.status(204).send();
     } catch (error) {

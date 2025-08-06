@@ -112,8 +112,9 @@ export interface IStorage {
   createWearableConnection(connection: InsertWearableConnection): Promise<WearableConnection>;
   updateWearableConnection(id: string, updates: Partial<WearableConnection>): Promise<WearableConnection>;
   deleteWearableConnection(id: string): Promise<void>;
-  getWearableData(userId: string, dataType?: string, startDate?: string, endDate?: string): Promise<WearableData[]>;
-  createWearableData(data: InsertWearableData): Promise<WearableData>;
+  getWearableData(userId: string, dataType?: string, startDate?: string, endDate?: string): Promise<WearablesData[]>;
+  createWearableData(data: InsertWearablesData): Promise<WearablesData>;
+  getWearablesData(userId: string, startDate?: string, endDate?: string, device?: string): Promise<WearablesData[]>;
   
   // AI and Advanced Analytics methods
   createHealthModel(model: InsertHealthModel): Promise<HealthModel>;
@@ -484,119 +485,34 @@ export class DatabaseStorage implements IStorage {
       .where(eq(wearableConnections.id, id));
   }
 
-  async getWearableData(userId: string, dataType?: string, startDate?: string, endDate?: string): Promise<WearableData[]> {
+  async getWearableData(userId: string, dataType?: string, startDate?: string, endDate?: string): Promise<WearablesData[]> {
     let query = db
       .select()
-      .from(wearableData)
-      .where(eq(wearableData.userId, userId));
+      .from(wearablesData)
+      .where(eq(wearablesData.userId, userId));
 
-    // Add filters if provided
-    // Note: This is a simplified implementation - in production you'd use proper date filtering
+    if (startDate) {
+      query = query.where(gte(wearablesData.date, startDate));
+    }
+    if (endDate) {
+      query = query.where(lte(wearablesData.date, endDate));
+    }
+    if (dataType) {
+      query = query.where(eq(wearablesData.device, dataType));
+    }
+
     return await query;
   }
 
-  async createWearableData(data: InsertWearableData): Promise<WearableData> {
+  async createWearableData(data: InsertWearablesData): Promise<WearablesData> {
     const [wearableDataEntry] = await db
-      .insert(wearableData)
+      .insert(wearablesData)
       .values(data)
       .returning();
     return wearableDataEntry;
   }
 
-  async getWearablesData(userId: string, startDate?: string, endDate?: string, device?: string): Promise<any[]> {
-    // Return mock data for demo purposes since wearables_data table might not be fully set up
-    const mockData = [];
-    const today = new Date();
-    
-    // Generate 7 days of mock data
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      
-      if (!device || device === "garmin") {
-        mockData.push({
-          id: `garmin-${i}`,
-          device: "garmin",
-          date: dateStr,
-          dataJson: {
-            steps: 6000 + Math.floor(Math.random() * 8000),
-            sleepHours: 6 + Math.random() * 3,
-            restingHeartRate: 58 + Math.floor(Math.random() * 10),
-            stressScore: 20 + Math.floor(Math.random() * 40),
-            activeMinutes: 20 + Math.floor(Math.random() * 60)
-          },
-          syncedAt: new Date().toISOString()
-        });
-      }
-      
-      if (!device || device === "whoop") {
-        mockData.push({
-          id: `whoop-${i}`,
-          device: "whoop",
-          date: dateStr,
-          dataJson: {
-            recoveryScore: 50 + Math.floor(Math.random() * 50),
-            strainScore: 5 + Math.random() * 15,
-            sleepPerformance: 60 + Math.floor(Math.random() * 40),
-            hrv: 30 + Math.floor(Math.random() * 40),
-            restingHeartRate: 56 + Math.floor(Math.random() * 12),
-            sleepDuration: 21600 + Math.floor(Math.random() * 10800) // 6-9 hours in seconds
-          },
-          syncedAt: new Date().toISOString()
-        });
-      }
-      
-      if (!device || device === "oura") {
-        mockData.push({
-          id: `oura-${i}`,
-          device: "oura",
-          date: dateStr,
-          dataJson: {
-            readinessScore: 60 + Math.floor(Math.random() * 40),
-            sleepScore: 70 + Math.floor(Math.random() * 30),
-            activityScore: 65 + Math.floor(Math.random() * 35),
-            hrv: 35 + Math.floor(Math.random() * 35),
-            restingHeartRate: 54 + Math.floor(Math.random() * 10),
-            tempDeviation: -0.5 + Math.random() * 1.5, // -0.5 to +1.0
-            sleepTotal: 21600 + Math.floor(Math.random() * 10800), // 6-9 hours in seconds
-            sleepEfficiency: 75 + Math.floor(Math.random() * 20),
-            steps: 5000 + Math.floor(Math.random() * 10000),
-            sleepRemMinutes: 60 + Math.floor(Math.random() * 60),
-            sleepDeepMinutes: 40 + Math.floor(Math.random() * 50),
-            sleepLightMinutes: 200 + Math.floor(Math.random() * 100)
-          },
-          syncedAt: new Date().toISOString()
-        });
-      }
-      
-      if (!device || device === "apple_health") {
-        mockData.push({
-          id: `apple-${i}`,
-          device: "apple_health",
-          date: dateStr,
-          dataJson: {
-            steps: 7000 + Math.floor(Math.random() * 8000),
-            activeEnergy: 200 + Math.floor(Math.random() * 400),
-            restingEnergy: 1500 + Math.floor(Math.random() * 300),
-            standHours: 8 + Math.floor(Math.random() * 8),
-            exerciseMinutes: 15 + Math.floor(Math.random() * 45),
-            moveMinutes: 180 + Math.floor(Math.random() * 180),
-            heartRateAverage: 65 + Math.floor(Math.random() * 15),
-            heartRateResting: 58 + Math.floor(Math.random() * 10),
-            hrv: 40 + Math.floor(Math.random() * 30),
-            sleepHours: 6 + Math.random() * 3,
-            mindfulMinutes: Math.floor(Math.random() * 20),
-            walkingSpeed: 3.5 + Math.random() * 1.5,
-            vo2Max: 35 + Math.floor(Math.random() * 20)
-          },
-          syncedAt: new Date().toISOString()
-        });
-      }
-    }
-    
-    return mockData;
-  }
+
 
   // AI and Advanced Analytics Methods
   async createHealthModel(data: InsertHealthModel): Promise<HealthModel> {
