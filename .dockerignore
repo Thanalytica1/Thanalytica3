@@ -1,0 +1,59 @@
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Development files
+.git
+.gitignore
+README.md
+*.md
+
+# Development config
+.env.local
+.env.development
+.env.test
+
+# Build artifacts (except dist which we copy)
+.next
+.replit
+.local
+.config
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Coverage directory used by tools like istanbul
+coverage
+
+# Firebase
+.firebase
+firebase-debug.log
+
+# Client source (we only need the built version)
+client/src
+client/public
+server/*.ts
+!server/index.js
+
+# Testing
+test
+tests
+__tests__
+*.test.*
+*.spec.*

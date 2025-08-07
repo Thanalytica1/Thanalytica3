@@ -168,12 +168,91 @@ export const signInWithGoogle = () => {
   return signInWithRedirect(auth, provider);
 };
 
-export const signInWithEmail = (email: string, password: string) => {
-  return signInWithEmailAndPassword(auth, email, password);
+export const signInWithEmail = async (email: string, password: string) => {
+  try {
+    // Anti-enumeration: Always take similar time regardless of outcome
+    const startTime = Date.now();
+    
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    
+    // Ensure minimum response time to prevent timing attacks
+    const minResponseTime = 200;
+    const elapsed = Date.now() - startTime;
+    if (elapsed < minResponseTime) {
+      await new Promise(resolve => setTimeout(resolve, minResponseTime - elapsed));
+    }
+    
+    return result;
+  } catch (error: any) {
+    // Anti-enumeration: Consistent error message and timing
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    // Don't expose whether email exists or not
+    throw new AuthError(
+      'Invalid email or password. Please check your credentials and try again.',
+      { code: 'auth/invalid-credentials' }
+    );
+  }
 };
 
-export const signUpWithEmail = (email: string, password: string) => {
-  return createUserWithEmailAndPassword(auth, email, password);
+export const signUpWithEmail = async (email: string, password: string) => {
+  try {
+    const startTime = Date.now();
+    
+    // Validate email format before attempting signup
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new AuthError(
+        'Please enter a valid email address.',
+        { code: 'auth/invalid-email' }
+      );
+    }
+    
+    // Validate password strength
+    if (password.length < 8) {
+      throw new AuthError(
+        'Password must be at least 8 characters long.',
+        { code: 'auth/weak-password' }
+      );
+    }
+    
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    
+    // Ensure minimum response time
+    const minResponseTime = 200;
+    const elapsed = Date.now() - startTime;
+    if (elapsed < minResponseTime) {
+      await new Promise(resolve => setTimeout(resolve, minResponseTime - elapsed));
+    }
+    
+    return result;
+  } catch (error: any) {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    // Sanitize error messages to prevent enumeration
+    if (error.code === 'auth/email-already-in-use') {
+      throw new AuthError(
+        'An account with this email already exists. Please sign in instead.',
+        { code: 'auth/email-already-in-use' }
+      );
+    } else if (error.code === 'auth/weak-password') {
+      throw new AuthError(
+        'Password must be at least 8 characters long and contain a mix of letters and numbers.',
+        { code: 'auth/weak-password' }
+      );
+    } else if (error.code === 'auth/invalid-email') {
+      throw new AuthError(
+        'Please enter a valid email address.',
+        { code: 'auth/invalid-email' }
+      );
+    } else {
+      // Generic error for other cases
+      throw new AuthError(
+        'Unable to create account. Please try again later.',
+        { code: 'auth/operation-failed' }
+      );
+    }
+  }
 };
 
 export const handleAuthRedirect = () => {

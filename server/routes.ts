@@ -6,9 +6,19 @@ import { z } from "zod";
 import { registerOAuthRoutes } from "./oauth-routes";
 import { registerSyncRoutes } from "./sync-routes";
 
+// Security middleware imports
+import { validateFirebaseToken, requireHealthDataAccess, validateUserAccess } from "./middleware/auth";
+import { healthDataRateLimit, oauthRateLimit } from "./middleware/rateLimiting";
+import { auditPHIAccess, auditAuthEvent, AuditEventType } from "./middleware/auditLogging";
+import { strictCorsConfig } from "./middleware/security";
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // User routes
-  app.get("/api/user/:firebaseUid", async (req, res) => {
+  // User routes with authentication and audit logging
+  app.get("/api/user/:firebaseUid", 
+    validateFirebaseToken,
+    validateUserAccess,
+    auditPHIAccess,
+    async (req, res) => {
     try {
       const { firebaseUid } = req.params;
       
@@ -35,7 +45,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/user", async (req, res) => {
+  app.post("/api/user", 
+    validateFirebaseToken,
+    auditPHIAccess,
+    async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
       
@@ -57,8 +70,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Health Assessment routes
-  app.get("/api/health-assessment/:userId", async (req, res) => {
+  // Health Assessment routes - CRITICAL PHI DATA
+  app.get("/api/health-assessment/:userId", 
+    healthDataRateLimit,
+    strictCorsConfig,
+    validateFirebaseToken,
+    requireHealthDataAccess,
+    validateUserAccess,
+    auditPHIAccess,
+    async (req, res) => {
     try {
       const { userId } = req.params;
       
@@ -80,7 +100,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/health-assessment", async (req, res) => {
+  app.post("/api/health-assessment", 
+    healthDataRateLimit,
+    strictCorsConfig,
+    validateFirebaseToken,
+    requireHealthDataAccess,
+    auditPHIAccess,
+    async (req, res) => {
     try {
       const { userId, ...assessmentData } = req.body;
       
@@ -107,8 +133,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Health Metrics routes
-  app.get("/api/health-metrics/:userId", async (req, res) => {
+  // Health Metrics routes - CRITICAL PHI DATA
+  app.get("/api/health-metrics/:userId", 
+    healthDataRateLimit,
+    strictCorsConfig,
+    validateFirebaseToken,
+    requireHealthDataAccess,
+    validateUserAccess,
+    auditPHIAccess,
+    async (req, res) => {
     try {
       const { userId } = req.params;
       
@@ -659,6 +692,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       res.status(500).json({ message: "Failed to track referral click" });
     }
+  });
+
+  // Health check endpoint for Cloud Run
+  app.get("/api/health", (_req, res) => {
+    res.status(200).json({ 
+      status: "healthy", 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
   });
 
   // Register OAuth and sync routes
