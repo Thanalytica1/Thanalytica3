@@ -132,10 +132,10 @@ const createAuditEntry = (
     resourceAccessed: `${req.method} ${req.path}`,
     action: `${req.method.toLowerCase()}_${req.path.split('/').pop() || 'unknown'}`,
     outcome,
-    sourceIp: req.ip,
+    sourceIp: req.ip || 'unknown',
     userAgent: req.headers['user-agent'] || 'unknown',
     sessionId: req.headers['x-session-id'] as string,
-    correlationId: req.correlationId || req.headers['x-correlation-id'] as string || crypto.randomUUID(),
+    correlationId: req.correlationId || (req.headers['x-correlation-id'] as string) || generateUUID(),
     details: details || {},
     dataTypes: getDataTypes(req.path, req.method),
     sensitivityLevel: getDataSensitivity(req.path),
@@ -325,4 +325,16 @@ export const applyAuditByEndpoint = (path: string) => {
   
   // For other endpoints, use general system access logging
   return [auditAuthEvent(AuditEventType.SYSTEM_ACCESS)];
+};
+
+const generateUUID = (): string => {
+  if (crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback for older Node.js versions
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
 };
