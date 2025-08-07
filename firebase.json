@@ -1,23 +1,14 @@
 {
   "hosting": {
-    "public": "client",
+    "public": "dist/public",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
     "rewrites": [
-      {
-        "source": "/api/**",
-        "run": {
-          "serviceId": "welcome",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
+      { "source": "/api/**", "function": "api" },
+      { "source": "**", "destination": "/index.html" }
     ],
     "headers": [
       {
@@ -33,11 +24,11 @@
   },
   "functions": [
     {
-      "source": ".",
+      "source": "functions",
       "codebase": "default",
       "runtime": "nodejs20",
       "memory": 512,
-      "timeout": 60,
+      "timeoutSeconds": 60,
       "minInstances": 0,
       "maxInstances": 10,
       "concurrency": 80
