@@ -5,6 +5,15 @@ export default {
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      colors: {
+        // Expose custom brand colors to Tailwind so utilities like from-*/to-* work
+        "medical-green": "var(--medical-green)",
+        "trust-blue": "var(--trust-blue)",
+        "vitality-gold": "var(--vitality-gold)",
+        "clinical-white": "var(--clinical-white)",
+        "professional-slate": "var(--professional-slate)",
+        "gentle-coral": "var(--gentle-coral)",
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

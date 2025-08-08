@@ -136,6 +136,7 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
+  signal?: AbortSignal
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
@@ -146,7 +147,7 @@ export async function apiRequest(
       headers: data ? { "Content-Type": "application/json" } : {},
       body: data ? JSON.stringify(data) : undefined,
       credentials: "include",
-      signal: controller.signal,
+      signal: signal ?? controller.signal,
     });
 
     clearTimeout(timeoutId);
