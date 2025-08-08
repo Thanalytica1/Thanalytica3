@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,8 @@ import {
   Sparkles,
   Clock,
   Shield,
-  Heart
+  Heart,
+  Loader2
 } from "lucide-react";
 import type { FormData, BiologicalAgeResult } from "./guided-onboarding";
 
@@ -152,14 +153,14 @@ function InsightsStep({ formData, onNext, insights }: StepProps) {
   const [showResults, setShowResults] = useState(false);
   
   // Simulate insights generation
-  useState(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       setIsGenerating(false);
       setShowResults(true);
     }, 3000);
     
     return () => clearTimeout(timer);
-  });
+  }, []);
   
   const longevityProjection = formData.longevityTarget || 100;
   const optimizedLifespan = Math.min(

@@ -199,7 +199,7 @@ export default function Day1Dashboard({ user, assessment }: Day1DashboardProps) 
               <span className="text-lg font-semibold">Welcome to Your 150-Year Journey</span>
             </div>
             <h1 className="text-4xl font-bold mb-4">
-              Hello, {user.firstName || 'Health Pioneer'}! 🎉
+              Hello, {user.displayName || 'Health Pioneer'}! 🎉
             </h1>
             <p className="text-xl opacity-90 mb-6">
               Your personalized longevity profile is ready. Here's what we discovered about your health optimization potential.
