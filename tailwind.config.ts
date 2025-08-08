@@ -6,20 +6,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Expose custom brand colors to Tailwind so utilities like from-*/to-* work
+        // Brand aliases (enable utilities like from-*/to-*)
         "medical-green": "var(--medical-green)",
         "trust-blue": "var(--trust-blue)",
         "vitality-gold": "var(--vitality-gold)",
         "clinical-white": "var(--clinical-white)",
         "professional-slate": "var(--professional-slate)",
         "gentle-coral": "var(--gentle-coral)",
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-      colors: {
+
+        // Semantic tokens
         background: "var(--background)",
         foreground: "var(--foreground)",
         card: {
@@ -70,6 +65,11 @@ export default {
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)",
         },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
         "accordion-down": {
