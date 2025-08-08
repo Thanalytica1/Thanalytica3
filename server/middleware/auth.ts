@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 import { getAuth } from 'firebase-admin/auth';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 
@@ -70,11 +71,12 @@ export const validateFirebaseToken = async (
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       // Anti-enumeration: Always return same error message
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Authentication required',
         message: 'Valid authentication token required',
         correlationId,
       });
+      return;
     }
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
@@ -82,11 +84,12 @@ export const validateFirebaseToken = async (
     // Basic token format validation
     if (!token || token.length < 10) {
       await simulateDelay(); // Anti-timing attack
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Authentication required',
         message: 'Valid authentication token required',
         correlationId,
       });
+      return;
     }
 
     if (!adminAuth) {
@@ -111,11 +114,12 @@ export const validateFirebaseToken = async (
     const tokenAge = Date.now() - user.issuedAt.getTime();
     if (tokenAge > 60 * 60 * 1000) {
       await simulateDelay();
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Authentication required',
         message: 'Token expired - please refresh',
         correlationId,
       });
+      return;
     }
 
     // Validate audience matches our project
@@ -126,11 +130,12 @@ export const validateFirebaseToken = async (
         correlationId,
       });
       await simulateDelay();
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Authentication required',
         message: 'Invalid token audience',
         correlationId,
       });
+      return;
     }
 
     // Check if user account is disabled
@@ -143,11 +148,12 @@ export const validateFirebaseToken = async (
           correlationId,
         });
         await simulateDelay();
-        return res.status(401).json({
+        res.status(401).json({
           error: 'Authentication required',
           message: 'Account access suspended',
           correlationId,
         });
+        return;
       }
     } catch (userError) {
       // User not found or other error
@@ -157,11 +163,12 @@ export const validateFirebaseToken = async (
         correlationId,
       });
       await simulateDelay();
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Authentication required',
         message: 'Invalid user account',
         correlationId,
       });
+      return;
     }
 
     // Audit log successful authentication (without sensitive data)
@@ -192,11 +199,12 @@ export const validateFirebaseToken = async (
     });
 
     await simulateDelay(); // Anti-timing attack
-    return res.status(401).json({
+    res.status(401).json({
       error: 'Authentication required',
       message: 'Valid authentication token required',
       correlationId: req.correlationId,
     });
+    return;
   }
 };
 
@@ -221,11 +229,12 @@ export const optionalAuth = async (
 export const requireRole = (requiredRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Authentication required',
         message: 'Valid authentication token required',
         correlationId: req.correlationId,
       });
+      return;
     }
 
     const userRoles = req.user.roles || [];
@@ -243,11 +252,12 @@ export const requireRole = (requiredRoles: string[]) => {
         timestamp: new Date().toISOString(),
       });
 
-      return res.status(403).json({
+      res.status(403).json({
         error: 'Insufficient permissions',
         message: 'Required role not found',
         correlationId: req.correlationId,
       });
+      return;
     }
 
     next();
@@ -257,11 +267,12 @@ export const requireRole = (requiredRoles: string[]) => {
 // Health data access validation
 export const requireHealthDataAccess = (req: Request, res: Response, next: NextFunction): void => {
   if (!req.user) {
-    return res.status(401).json({
+    res.status(401).json({
       error: 'Authentication required',
       message: 'Health data access requires authentication',
       correlationId: req.correlationId,
     });
+    return;
   }
 
   // Verify email is verified for health data access
@@ -273,11 +284,12 @@ export const requireHealthDataAccess = (req: Request, res: Response, next: NextF
       correlationId: req.correlationId,
     });
 
-    return res.status(403).json({
+    res.status(403).json({
       error: 'Email verification required',
       message: 'Please verify your email to access health data',
       correlationId: req.correlationId,
     });
+    return;
   }
 
   // Additional health data specific validations can be added here
@@ -298,10 +310,11 @@ export const validateUserAccess = (req: Request, res: Response, next: NextFuncti
   const targetUserId = req.params.userId || req.params.firebaseUid;
   
   if (!req.user) {
-    return res.status(401).json({
+    res.status(401).json({
       error: 'Authentication required',
       correlationId: req.correlationId,
     });
+    return;
   }
 
   // Users can only access their own data unless they have admin role
@@ -317,11 +330,12 @@ export const validateUserAccess = (req: Request, res: Response, next: NextFuncti
       timestamp: new Date().toISOString(),
     });
 
-    return res.status(403).json({
+    res.status(403).json({
       error: 'Access denied',
       message: 'Cannot access other users data',
       correlationId: req.correlationId,
     });
+    return;
   }
 
   next();
@@ -359,9 +373,10 @@ export const validateSession = async (req: Request, res: Response, next: NextFun
       correlationId: req.correlationId,
     });
     
-    return res.status(500).json({
+    res.status(500).json({
       error: 'Session validation failed',
       correlationId: req.correlationId,
     });
+    return;
   }
 };

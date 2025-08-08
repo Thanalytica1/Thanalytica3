@@ -54,7 +54,7 @@ interface ApiError {
 
 export default function Wearables() {
   const { user: firebaseUser } = useAuth();
-  const { data: user } = useUser(firebaseUser?.uid);
+  const { data: user } = useUser(firebaseUser?.uid || "");
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const [syncingDevice, setSyncingDevice] = useState<string | null>(null);
@@ -242,7 +242,7 @@ export default function Wearables() {
                   <div className="space-y-4">
                     <div className="text-sm text-gray-600">
                       Last synced: {getConnectionStatus("garmin")?.lastSyncAt 
-                        ? format(new Date(getConnectionStatus("garmin")!.lastSyncAt), "PPp")
+                        ? format(new Date(getConnectionStatus("garmin")!.lastSyncAt as string), "PPp")
                         : "Never"}
                     </div>
                     <div className="flex space-x-2">
@@ -316,7 +316,7 @@ export default function Wearables() {
                   <div className="space-y-4">
                     <div className="text-sm text-gray-600">
                       Last synced: {getConnectionStatus("oura")?.lastSyncAt 
-                        ? format(new Date(getConnectionStatus("oura")!.lastSyncAt), "PPp")
+                        ? format(new Date(getConnectionStatus("oura")!.lastSyncAt as string), "PPp")
                         : "Never"}
                     </div>
                     <div className="flex space-x-2">
@@ -390,7 +390,7 @@ export default function Wearables() {
                   <div className="space-y-4">
                     <div className="text-sm text-gray-600">
                       Last synced: {getConnectionStatus("apple_health")?.lastSyncAt 
-                        ? format(new Date(getConnectionStatus("apple_health")!.lastSyncAt), "PPp")
+                        ? format(new Date(getConnectionStatus("apple_health")!.lastSyncAt as string), "PPp")
                         : "Never"}
                     </div>
                     <div className="flex space-x-2">
@@ -464,7 +464,7 @@ export default function Wearables() {
                   <div className="space-y-4">
                     <div className="text-sm text-gray-600">
                       Last synced: {getConnectionStatus("whoop")?.lastSyncAt 
-                        ? format(new Date(getConnectionStatus("whoop")!.lastSyncAt), "PPp")
+                        ? format(new Date(getConnectionStatus("whoop")!.lastSyncAt as string), "PPp")
                         : "Never"}
                     </div>
                     <div className="flex space-x-2">
@@ -542,7 +542,9 @@ export default function Wearables() {
                         <div className="space-y-1">
                           <p className="text-sm text-gray-600">Sleep</p>
                           <p className="text-2xl font-semibold">
-                            {getLatestData("garmin")?.dataJson?.sleepHours?.toFixed(1) || "—"} hrs
+                            {typeof getLatestData("garmin")?.dataJson?.sleepHours === 'number' 
+                              ? (getLatestData("garmin")!.dataJson!.sleepHours as number).toFixed(1) 
+                              : "—"} hrs
                           </p>
                         </div>
                         <div className="space-y-1">
@@ -597,8 +599,8 @@ export default function Wearables() {
                         <div className="space-y-1">
                           <p className="text-sm text-gray-600">Body Temp</p>
                           <p className="text-2xl font-semibold">
-                            {getLatestData("oura")?.dataJson?.tempDeviation !== undefined ? 
-                              `${getLatestData("oura")?.dataJson?.tempDeviation > 0 ? '+' : ''}${getLatestData("oura")?.dataJson?.tempDeviation.toFixed(1)}°` : 
+                             {getLatestData("oura")?.dataJson?.tempDeviation !== undefined && getLatestData("oura")?.dataJson?.tempDeviation !== null ? 
+                              `${(getLatestData("oura")!.dataJson!.tempDeviation as number) > 0 ? '+' : ''}${(getLatestData("oura")!.dataJson!.tempDeviation as number).toFixed(1)}°` : 
                               "—"}
                           </p>
                         </div>
@@ -642,7 +644,7 @@ export default function Wearables() {
                         <div className="space-y-1">
                           <p className="text-sm text-gray-600">Exercise Min</p>
                           <p className="text-2xl font-semibold">
-                            {getLatestData("apple_health")?.dataJson?.exerciseMinutes || "—"}
+                            {getLatestData("apple_health")?.dataJson?.exerciseMinutes ?? "—"}
                           </p>
                         </div>
                       </div>
@@ -673,7 +675,9 @@ export default function Wearables() {
                         <div className="space-y-1">
                           <p className="text-sm text-gray-600">Strain</p>
                           <p className="text-2xl font-semibold">
-                            {getLatestData("whoop")?.dataJson?.strainScore?.toFixed(1) || "—"}
+                            {typeof getLatestData("whoop")?.dataJson?.strainScore === 'number' 
+                              ? (getLatestData("whoop")!.dataJson!.strainScore as number).toFixed(1) 
+                              : "—"}
                           </p>
                         </div>
                         <div className="space-y-1">

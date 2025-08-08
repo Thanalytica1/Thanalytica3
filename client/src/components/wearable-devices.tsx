@@ -146,10 +146,11 @@ function WearableDataSummary({ userId }: { userId: string }) {
 
   // Group data by type for display
   const dataByType = wearableData.reduce((acc, item) => {
-    if (!acc[item.dataType]) {
-      acc[item.dataType] = [];
+    const typeKey = item.dataJson?.type || item.device;
+    if (!acc[typeKey]) {
+      acc[typeKey] = [] as typeof wearableData;
     }
-    acc[item.dataType].push(item);
+    acc[typeKey].push(item);
     return acc;
   }, {} as Record<string, typeof wearableData>);
 
@@ -196,7 +197,7 @@ function WearableDataSummary({ userId }: { userId: string }) {
 export default function WearableDevices() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { data: connections = [], isLoading } = useWearableConnections(user?.id || "");
+  const { data: connections = [], isLoading } = useWearableConnections(user?.id ?? "");
   const deleteConnection = useDeleteWearableConnection();
 
   const handleConnect = async (deviceType: keyof typeof DEVICE_CONFIG) => {
@@ -244,7 +245,7 @@ export default function WearableDevices() {
 
   const handleDisconnect = async (connectionId: string, deviceName: string) => {
     try {
-      await deleteConnection.mutateAsync(connectionId);
+      await deleteConnection.mutateAsync({ id: connectionId, userId: user!.id });
       toast({
         title: "Disconnected",
         description: `${deviceName} has been disconnected`,

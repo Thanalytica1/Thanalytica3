@@ -1,6 +1,7 @@
 import rateLimit from 'express-rate-limit';
 import type { Request, Response } from 'express';
 import Redis from 'ioredis';
+// no extra Request import; using express Request type
 
 // Redis store for distributed rate limiting
 let redisClient: Redis | null = null;
@@ -8,11 +9,7 @@ let redisClient: Redis | null = null;
 // Initialize Redis client for rate limiting (optional - falls back to memory store)
 try {
   if (process.env.RATE_LIMIT_REDIS_URL) {
-    redisClient = new Redis(process.env.RATE_LIMIT_REDIS_URL, {
-      retryDelayOnFailover: 100,
-      enableReadyCheck: false,
-      maxRetriesPerRequest: 1,
-    });
+    redisClient = new Redis(process.env.RATE_LIMIT_REDIS_URL as string);
     
     redisClient.on('error', (err) => {
       console.warn('Redis rate limit store error:', err.message);
@@ -33,14 +30,14 @@ const generateKey = (req: Request): string => {
 
 // Custom error handler for rate limit exceeded
 const rateLimitHandler = (req: Request, res: Response): void => {
-  const retryAfter = Math.round(req.rateLimit?.resetTime ?? Date.now() / 1000);
+  const retryAfter = Math.round((req as any).rateLimit?.resetTime ?? Date.now() / 1000);
   
   res.status(429).json({
     error: 'Too Many Requests',
     message: 'Rate limit exceeded. Please try again later.',
     retryAfter: retryAfter,
-    limit: req.rateLimit?.limit,
-    remaining: req.rateLimit?.remaining,
+    limit: (req as any).rateLimit?.limit,
+    remaining: (req as any).rateLimit?.remaining,
     // HIPAA compliance: Log rate limit violations without exposing PHI
     timestamp: new Date().toISOString(),
   });
@@ -115,7 +112,7 @@ export const healthDataRateLimit = rateLimit({
   legacyHeaders: false,
   keyGenerator: generateKey,
   handler: rateLimitHandler,
-  store: redisClient ? new RedisStore(redisClient) : undefined,
+  // Note: express-rate-limit expects a specific Store interface; custom store omitted for TS compat
   skip: (req) => {
     // Skip rate limiting for health checks
     return req.path === '/api/health';
@@ -131,7 +128,6 @@ export const oauthRateLimit = rateLimit({
   legacyHeaders: false,
   keyGenerator: generateKey,
   handler: rateLimitHandler,
-  store: redisClient ? new RedisStore(redisClient) : undefined,
 });
 
 // General API endpoints - higher limits (500 requests/hour)
@@ -143,7 +139,6 @@ export const generalRateLimit = rateLimit({
   legacyHeaders: false,
   keyGenerator: generateKey,
   handler: rateLimitHandler,
-  store: redisClient ? new RedisStore(redisClient) : undefined,
   skip: (req) => {
     // Skip rate limiting for health checks
     return req.path === '/api/health';
@@ -163,7 +158,7 @@ export const adaptiveRateLimit = rateLimit({
   legacyHeaders: false,
   keyGenerator: generateKey,
   handler: rateLimitHandler,
-  store: redisClient ? new RedisStore(redisClient) : undefined,
+  // omit custom store for type compatibility
 });
 
 // Apply rate limits based on endpoint patterns

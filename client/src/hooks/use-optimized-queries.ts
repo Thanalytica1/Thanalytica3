@@ -6,7 +6,7 @@ import type {
   Recommendation, 
   HealthTrend, 
   HealthInsight,
-  WearableData 
+  WearablesData 
 } from "@shared/schema";
 
 // Optimized Health Metrics Hook with Enhanced Caching
@@ -43,7 +43,7 @@ export function useOptimizedUserData(userId: string) {
 
 // Wearable Data with Batch Loading
 export function useWearableDataOptimized(userId: string, dataType?: string) {
-  return useQuery<WearableData[]>({
+  return useQuery<WearablesData[]>({
     queryKey: ['wearable-data', userId, dataType],
     enabled: !!userId,
     staleTime: 1 * 60 * 1000, // 1 minute for real-time data

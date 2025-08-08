@@ -22,18 +22,12 @@
       }
     ]
   },
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "runtime": "nodejs20",
-      "memory": 512,
-      "timeoutSeconds": 60,
-      "minInstances": 0,
-      "maxInstances": 10,
-      "concurrency": 80
-    }
-  ],
+  "functions": {
+    "source": "functions",
+    "codebase": "default",
+    "runtime": "nodejs20",
+    "timeoutSeconds": 60
+  },
   "emulators": {
     "ui": { "enabled": true, "port": 4000 },
     "hosting": { "port": 5000 },

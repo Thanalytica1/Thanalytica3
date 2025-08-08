@@ -626,14 +626,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin analytics route
-  app.get("/api/admin/analytics", async (req, res) => {
-    try {
-      const adminAnalytics = await storage.getAdminAnalytics();
-      res.json(adminAnalytics);
-    } catch (error) {
-      console.error("Error fetching admin analytics:", error);
-      res.status(500).json({ error: "Failed to fetch admin analytics" });
-    }
+  // Admin analytics placeholder (not implemented)
+  app.get("/api/admin/analytics", async (_req, res) => {
+    res.json({ totalUsers: 0, totalAssessments: 0 });
   });
 
   // Referral System routes

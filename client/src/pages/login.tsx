@@ -129,7 +129,7 @@ export default function Login() {
           errorMessage = "Invalid email address";
           break;
         default:
-          errorMessage = error.message || "Authentication failed";
+          errorMessage = (error as any)?.message || "Authentication failed";
       }
       
       setErrors([errorMessage]);

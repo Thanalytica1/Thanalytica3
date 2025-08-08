@@ -220,7 +220,7 @@ export function mergeWearableData(
   priority: "garmin" | "whoop" | "oura" | "apple" | "best" = "best"
 ): NormalizedHealthData {
   // If no sources available, return empty
-  const availableSources = [garminData, whoopData, ouraData, appleData].filter(Boolean);
+  const availableSources = [garminData, whoopData, ouraData, appleData].filter(Boolean) as NormalizedHealthData[];
   if (availableSources.length === 0) {
     return createEmptyNormalizedData(new Date().toISOString().split('T')[0]);
   }
@@ -235,22 +235,22 @@ export function mergeWearableData(
     return {
       ...garminData,
       // Fill in missing Garmin data with Whoop data
-      hrv: garminData.hrv ?? whoopData.hrv,
-      recoveryScore: garminData.recoveryScore ?? whoopData.recoveryScore,
+      hrv: garminData!.hrv ?? whoopData!.hrv,
+      recoveryScore: garminData!.recoveryScore ?? whoopData!.recoveryScore,
       source: "combined",
-      confidence: Math.max(garminData.confidence, whoopData.confidence)
-    };
+      confidence: Math.max(garminData!.confidence, whoopData!.confidence)
+    } as NormalizedHealthData;
   }
 
   if (priority === "whoop") {
     return {
       ...whoopData,
       // Fill in missing Whoop data with Garmin data
-      steps: whoopData.steps ?? garminData.steps,
-      stress: whoopData.stress ?? garminData.stress,
+      steps: whoopData!.steps ?? garminData!.steps,
+      stress: whoopData!.stress ?? garminData!.stress,
       source: "combined",
-      confidence: Math.max(garminData.confidence, whoopData.confidence)
-    };
+      confidence: Math.max(garminData!.confidence, whoopData!.confidence)
+    } as NormalizedHealthData;
   }
 
   // "best" priority - pick the most complete/reliable data for each field
@@ -268,7 +268,7 @@ export function mergeWearableData(
     stress: selectBestFromMultiple([garminData?.stress, whoopData?.stress, ouraData?.stress]),
     source: "combined",
     confidence: Math.max(...allData.map(d => d.confidence))
-  };
+  } as NormalizedHealthData;
 }
 
 /**

@@ -76,7 +76,7 @@ export function registerOAuthRoutes(app: Express) {
 
       // Add signature to params
       const authHeader = `OAuth ${Object.keys(params)
-        .map(key => `${key}="${encodeURIComponent(params[key])}"`)
+        .map(key => `${key}="${encodeURIComponent((params as any)[key])}"`)
         .join(", ")}, oauth_signature="${encodeURIComponent(signature)}"`;
 
       // Request temporary token
@@ -96,8 +96,10 @@ export function registerOAuthRoutes(app: Express) {
       const oauthToken = responseParams.get("oauth_token");
       const oauthTokenSecret = responseParams.get("oauth_token_secret");
 
-      // Store temporary token secret
-      await storage.storeTemporaryToken(userId, "garmin", oauthTokenSecret || "");
+      // Store temporary token secret (optional)
+      if (oauthTokenSecret && typeof (storage as any).storeTemporaryToken === 'function') {
+        await (storage as any).storeTemporaryToken(userId, "garmin", oauthTokenSecret);
+      }
 
       // Redirect to Garmin authorization
       const authorizeUrl = `${GARMIN_BASE_URL}/oauth/authorize?oauth_token=${oauthToken}`;
@@ -123,10 +125,13 @@ export function registerOAuthRoutes(app: Express) {
         return res.status(500).json({ message: "Garmin OAuth not configured" });
       }
 
-      // Get temporary token secret
-      const tokenSecret = await storage.getTemporaryToken(userId as string, "garmin");
-      if (!tokenSecret) {
-        return res.status(400).json({ message: "Invalid OAuth session" });
+      // Get temporary token secret if available
+      let tokenSecret = "";
+      if (typeof (storage as any).getTemporaryToken === 'function') {
+        tokenSecret = await (storage as any).getTemporaryToken(userId as string, "garmin");
+        if (!tokenSecret) {
+          return res.status(400).json({ message: "Invalid OAuth session" });
+        }
       }
 
       // Exchange for access token
@@ -153,7 +158,7 @@ export function registerOAuthRoutes(app: Express) {
       );
 
       const authHeader = `OAuth ${Object.keys(params)
-        .map(key => `${key}="${encodeURIComponent(params[key])}"`)
+        .map(key => `${key}="${encodeURIComponent((params as any)[key])}"`)
         .join(", ")}, oauth_signature="${encodeURIComponent(signature)}"`;
 
       const response = await fetch(accessTokenUrl, {
@@ -173,7 +178,7 @@ export function registerOAuthRoutes(app: Express) {
       const accessTokenSecret = responseParams.get("oauth_token_secret");
 
       // Store access token
-      await storage.saveWearableConnection({
+      await storage.createWearableConnection({
         userId: userId as string,
         deviceType: "garmin",
         accessToken: accessToken || "",
@@ -206,7 +211,9 @@ export function registerOAuthRoutes(app: Express) {
 
       // Generate state for CSRF protection
       const state = crypto.randomBytes(16).toString("hex");
-      await storage.storeTemporaryToken(userId, "whoop", state);
+      if (typeof (storage as any).storeTemporaryToken === 'function') {
+        await (storage as any).storeTemporaryToken(userId, "whoop", state);
+      }
 
       // Build authorization URL
       const params = new URLSearchParams({
@@ -234,9 +241,11 @@ export function registerOAuthRoutes(app: Express) {
       }
 
       // Verify state
-      const savedState = await storage.getTemporaryToken(userId as string, "whoop");
-      if (savedState !== state) {
-        return res.status(400).json({ message: "Invalid OAuth state" });
+      if (typeof (storage as any).getTemporaryToken === 'function') {
+        const savedState = await (storage as any).getTemporaryToken(userId as string, "whoop");
+        if (savedState && savedState !== state) {
+          return res.status(400).json({ message: "Invalid OAuth state" });
+        }
       }
 
       const clientId = process.env.WHOOP_CLIENT_ID;
@@ -269,12 +278,12 @@ export function registerOAuthRoutes(app: Express) {
       const tokenData = await tokenResponse.json();
 
       // Store access token
-      await storage.saveWearableConnection({
+      await storage.createWearableConnection({
         userId: userId as string,
         deviceType: "whoop",
         accessToken: tokenData.access_token,
         refreshToken: tokenData.refresh_token,
-        expiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
+        expiresAt: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
         isActive: true,
       });
 

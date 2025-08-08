@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import type { WearableConnection, WearableData, InsertWearableConnection } from "@shared/schema";
+import type { WearableConnection, WearablesData, InsertWearableConnection } from "@shared/schema";
 
 // Configuration constants
 const WEARABLE_REFETCH_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -27,9 +27,9 @@ export function useWearableConnections(
 export function useWearableData(
   userId: string, 
   dataType?: string,
-  options?: Omit<UseQueryOptions<WearableData[]>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<WearablesData[]>, 'queryKey' | 'queryFn'>
 ) {
-  return useQuery<WearableData[]>({
+  return useQuery<WearablesData[]>({
     queryKey: ["/api/wearable-data", userId, dataType],
     queryFn: async ({ signal }) => {
       const params = new URLSearchParams({ userId });

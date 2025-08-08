@@ -1,292 +1,305 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, boolean, timestamp, real, jsonb, date } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { nanoid } from "nanoid";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: text("email").notNull().unique(),
-  displayName: text("display_name"),
-  photoURL: text("photo_url"),
-  firebaseUid: text("firebase_uid").notNull().unique(),
-  referralCode: varchar("referral_code", { length: 10 }).unique(),
-  referredById: varchar("referred_by_id", { length: 255 }).references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+// Firestore-compatible data models and Zod schemas
+
+// Users
+export interface User {
+  id: string;
+  uid?: string; // for compatibility with places expecting Firebase user uid
+  email: string;
+  displayName?: string | null;
+  photoURL?: string | null;
+  firebaseUid: string;
+  referralCode?: string;
+  referredById?: string | null;
+  createdAt: string | Date; // allow Date for compatibility
+}
+
+export const insertUserSchema = z.object({
+  email: z.string().email(),
+  displayName: z.string().optional().nullable(),
+  photoURL: z.string().url().optional().nullable(),
+  firebaseUid: z.string().min(1),
+  referredById: z.string().optional().nullable(),
 });
-
-export const healthAssessments = pgTable("health_assessments", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
-  
-  // Basic Info
-  age: integer("age").notNull(),
-  gender: text("gender").notNull(),
-  height: integer("height"), // in cm
-  weight: real("weight"), // in kg
-  
-  // Lifestyle
-  sleepDuration: text("sleep_duration").notNull(),
-  sleepQuality: text("sleep_quality").notNull(),
-  dietPattern: text("diet_pattern").notNull(),
-  alcoholConsumption: text("alcohol_consumption").notNull(),
-  smokingStatus: text("smoking_status").notNull(),
-  
-  // Exercise
-  exerciseFrequency: text("exercise_frequency").notNull(),
-  exerciseTypes: text("exercise_types").array().notNull(),
-  exerciseIntensity: text("exercise_intensity").notNull(),
-  
-  // Medical History
-  chronicConditions: text("chronic_conditions").array(),
-  medications: text("medications").array(),
-  familyHistory: text("family_history").array(),
-  
-  // Goals and Vision
-  longevityGoals: text("longevity_goals").notNull(),
-  healthPriorities: text("health_priorities").array().notNull(),
-  
-  // Analysis Results
-  biologicalAge: real("biological_age"),
-  vitalityScore: integer("vitality_score"),
-  riskAssessment: text("risk_assessment"),
-  trajectoryRating: text("trajectory_rating"),
-  
-  // Metadata
-  completedAt: timestamp("completed_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-export const healthMetrics = pgTable("health_metrics", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
-  assessmentId: varchar("assessment_id").references(() => healthAssessments.id),
-  
-  // Individual Health Factors
-  sleepScore: integer("sleep_score"),
-  exerciseScore: integer("exercise_score"),
-  nutritionScore: integer("nutrition_score"),
-  stressScore: integer("stress_score"),
-  cognitiveScore: integer("cognitive_score"),
-  
-  // Risk Factors
-  cardiovascularRisk: text("cardiovascular_risk"),
-  metabolicRisk: text("metabolic_risk"),
-  cognitiveRisk: text("cognitive_risk"),
-  
-  // Projections
-  projectedLifespan: integer("projected_lifespan"),
-  optimizationPotential: integer("optimization_potential"),
-  
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const recommendations = pgTable("recommendations", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
-  assessmentId: varchar("assessment_id").notNull().references(() => healthAssessments.id),
-  
-  category: text("category").notNull(), // exercise, nutrition, sleep, stress, etc.
-  priority: text("priority").notNull(), // high, medium, low
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  actionItems: text("action_items").array().notNull(),
-  estimatedImpact: real("estimated_impact"), // years added to lifespan
-  
-  implemented: boolean("implemented").default(false),
-  implementedAt: timestamp("implemented_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// Zod schemas
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  referralCode: true,
-  createdAt: true,
-});
-
-export const insertHealthAssessmentSchema = createInsertSchema(healthAssessments).omit({
-  id: true,
-  userId: true,
-  biologicalAge: true,
-  vitalityScore: true,
-  riskAssessment: true,
-  trajectoryRating: true,
-  completedAt: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertHealthMetricsSchema = createInsertSchema(healthMetrics).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertRecommendationSchema = createInsertSchema(recommendations).omit({
-  id: true,
-  createdAt: true,
-});
-
-// Types
-export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type HealthAssessment = typeof healthAssessments.$inferSelect;
+
+// Health Assessments
+export interface HealthAssessment {
+  id: string;
+  userId: string;
+  age: number;
+  gender: string;
+  height?: number | null;
+  weight?: number | null;
+  sleepDuration: string;
+  sleepQuality: string;
+  dietPattern: string;
+  alcoholConsumption: string;
+  smokingStatus: string;
+  exerciseFrequency: string;
+  exerciseTypes: string[];
+  exerciseIntensity: string;
+  chronicConditions?: string[];
+  medications?: string[];
+  familyHistory?: string[];
+  longevityGoals: string;
+  healthPriorities: string[];
+  biologicalAge?: number | null;
+  vitalityScore?: number | null;
+  riskAssessment?: string | null;
+  trajectoryRating?: string | null;
+  completedAt?: string | Date | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
+
+export const insertHealthAssessmentSchema = z.object({
+  age: z.number().int().nonnegative(),
+  gender: z.string(),
+  height: z.number().int().positive().optional(),
+  weight: z.number().positive().optional(),
+  sleepDuration: z.string(),
+  sleepQuality: z.string(),
+  dietPattern: z.string(),
+  alcoholConsumption: z.string(),
+  smokingStatus: z.string(),
+  exerciseFrequency: z.string(),
+  exerciseTypes: z.array(z.string()),
+  exerciseIntensity: z.string(),
+  chronicConditions: z.array(z.string()).optional(),
+  medications: z.array(z.string()).optional(),
+  familyHistory: z.array(z.string()).optional(),
+  longevityGoals: z.string(),
+  healthPriorities: z.array(z.string()),
+});
 export type InsertHealthAssessment = z.infer<typeof insertHealthAssessmentSchema>;
-export type HealthMetrics = typeof healthMetrics.$inferSelect;
+
+// Health Metrics
+export interface HealthMetrics {
+  id: string;
+  userId: string;
+  assessmentId?: string | null;
+  sleepScore?: number | null;
+  exerciseScore?: number | null;
+  nutritionScore?: number | null;
+  stressScore?: number | null;
+  cognitiveScore?: number | null;
+  cardiovascularRisk?: string | null;
+  metabolicRisk?: string | null;
+  cognitiveRisk?: string | null;
+  projectedLifespan?: number | null;
+  optimizationPotential?: number | null;
+  createdAt: string | Date;
+}
+
+export const insertHealthMetricsSchema = z.object({
+  userId: z.string().min(1).optional(), // set by server in some flows
+  assessmentId: z.string().optional(),
+  sleepScore: z.number().int().min(0).max(100).optional(),
+  exerciseScore: z.number().int().min(0).max(100).optional(),
+  nutritionScore: z.number().int().min(0).max(100).optional(),
+  stressScore: z.number().int().min(0).max(100).optional(),
+  cognitiveScore: z.number().int().min(0).max(100).optional(),
+  cardiovascularRisk: z.string().optional(),
+  metabolicRisk: z.string().optional(),
+  cognitiveRisk: z.string().optional(),
+  projectedLifespan: z.number().int().positive().optional(),
+  optimizationPotential: z.number().int().min(0).optional(),
+});
 export type InsertHealthMetrics = z.infer<typeof insertHealthMetricsSchema>;
-export type Recommendation = typeof recommendations.$inferSelect;
+
+// Recommendations
+export interface Recommendation {
+  id: string;
+  userId: string;
+  assessmentId: string;
+  category: string;
+  priority: string;
+  title: string;
+  description: string;
+  actionItems: string[];
+  estimatedImpact?: number | null;
+  implemented?: boolean;
+  implementedAt?: string | Date | null;
+  createdAt: string | Date;
+}
+
+export const insertRecommendationSchema = z.object({
+  userId: z.string().min(1).optional(),
+  assessmentId: z.string().min(1),
+  category: z.string().min(1),
+  priority: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().min(1),
+  actionItems: z.array(z.string()),
+  estimatedImpact: z.number().positive().optional(),
+});
 export type InsertRecommendation = z.infer<typeof insertRecommendationSchema>;
 
 // Wearable device connections and data
-export const wearableConnections = pgTable("wearable_connections", {
-  id: varchar("id", { length: 255 }).primaryKey().$defaultFn(() => nanoid()),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id),
-  deviceType: varchar("device_type", { length: 50 }).notNull(), // 'garmin', 'whoop', 'oura', 'apple_health'
-  accessToken: text("access_token"), // encrypted token for API access
-  refreshToken: text("refresh_token"), // for token refresh
-  tokenSecret: text("token_secret"), // For OAuth 1.0a (Garmin)
-  isActive: boolean("is_active").default(true).notNull(),
-  lastSyncAt: timestamp("last_sync_at"),
-  expiresAt: timestamp("expires_at"), // Token expiration time
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export interface WearableConnection {
+  id: string;
+  userId: string;
+  deviceType: string; // 'garmin', 'whoop', 'oura', 'apple_health'
+  accessToken?: string | null;
+  refreshToken?: string | null;
+  tokenSecret?: string | null; // For OAuth 1.0a (Garmin)
+  isActive: boolean;
+  lastSyncAt?: string | Date | null;
+  expiresAt?: string | Date | null;
+  createdAt: string | Date;
+}
 
-export const wearablesData = pgTable("wearables_data", {
-  id: varchar("id", { length: 255 }).primaryKey().$defaultFn(() => nanoid()),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id),
-  device: varchar("device", { length: 50 }).notNull(), // 'garmin', 'whoop'
-  date: date("date").notNull(),
-  dataJson: jsonb("data_json").notNull(), // Raw data from the device API
-  syncedAt: timestamp("synced_at").defaultNow().notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+export const insertWearableConnectionSchema = z.object({
+  userId: z.string().min(1),
+  deviceType: z.string().min(1),
+  accessToken: z.string().optional(),
+  refreshToken: z.string().optional(),
+  tokenSecret: z.string().optional(),
+  isActive: z.boolean().optional(),
+  lastSyncAt: z.string().optional(),
+  expiresAt: z.string().optional(),
 });
-
-// Wearable schemas
-export const insertWearableConnectionSchema = createInsertSchema(wearableConnections).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertWearablesDataSchema = createInsertSchema(wearablesData).omit({
-  id: true,
-  syncedAt: true,
-  createdAt: true,
-});
-
-// Wearable types
-export type WearableConnection = typeof wearableConnections.$inferSelect;
 export type InsertWearableConnection = z.infer<typeof insertWearableConnectionSchema>;
-export type WearablesData = typeof wearablesData.$inferSelect;
+
+export interface WearablesData {
+  id: string;
+  userId: string;
+  device: string; // 'garmin', 'whoop'
+  date: string; // ISO date
+  dataJson: Record<string, any>;
+  syncedAt: string | Date;
+  createdAt: string | Date;
+}
+
+export const insertWearablesDataSchema = z.object({
+  userId: z.string().min(1),
+  device: z.string().min(1),
+  date: z.string().min(1),
+  dataJson: z.record(z.any()),
+});
 export type InsertWearablesData = z.infer<typeof insertWearablesDataSchema>;
 
 // Advanced Health Models and AI Schema
-export const healthModels = pgTable("health_models", {
-  id: varchar("id", { length: 255 }).primaryKey().$defaultFn(() => nanoid()),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id),
-  modelVersion: varchar("model_version", { length: 50 }).notNull(),
-  inputFeatures: jsonb("input_features").notNull(), // Array of health metrics used
-  predictions: jsonb("predictions").notNull(), // Biological age, disease risks, etc.
-  confidence: real("confidence").notNull(), // Model confidence score 0-1
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+export interface HealthModel {
+  id: string;
+  userId: string;
+  modelVersion: string;
+  inputFeatures: Record<string, any>;
+  predictions: HealthModelPredictions;
+  confidence: number; // 0-1
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
 
-export const healthInsights = pgTable("health_insights", {
-  id: varchar("id", { length: 255 }).primaryKey().$defaultFn(() => nanoid()),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id),
-  type: varchar("type", { length: 50 }).notNull(), // 'symptom_analysis', 'trend_prediction', 'intervention_suggestion'
-  query: text("query").notNull(), // Original user question or symptoms
-  response: text("response").notNull(), // AI-generated insight
-  confidence: real("confidence").notNull(),
-  sources: text("sources").array(), // Data sources used for insight
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+export const insertHealthModelSchema = z.object({
+  userId: z.string().min(1),
+  modelVersion: z.string().min(1),
+  inputFeatures: z.record(z.any()),
+  predictions: z.object({
+    biologicalAge: z.number(),
+    diseaseRisks: z.record(z.number()),
+    interventionImpact: z.record(z.number()),
+    lifeExpectancy: z.number(),
+    optimalInterventions: z.array(z.string()),
+  }),
+  confidence: z.number().min(0).max(1),
 });
-
-export const healthTrends = pgTable("health_trends", {
-  id: varchar("id", { length: 255 }).primaryKey().$defaultFn(() => nanoid()),
-  userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id),
-  metricType: varchar("metric_type", { length: 50 }).notNull(), // 'biological_age', 'vitality_score', etc.
-  date: date("date").notNull(),
-  value: real("value").notNull(),
-  trend: varchar("trend", { length: 20 }).notNull(), // 'improving', 'stable', 'declining'
-  dataSource: varchar("data_source", { length: 50 }).notNull(), // 'assessment', 'wearable', 'manual'
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-// Health Model schemas
-export const insertHealthModelSchema = createInsertSchema(healthModels).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertHealthInsightSchema = createInsertSchema(healthInsights).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertHealthTrendSchema = createInsertSchema(healthTrends).omit({
-  id: true,
-  createdAt: true,
-});
-
-// Health Model types
-export type HealthModel = typeof healthModels.$inferSelect;
 export type InsertHealthModel = z.infer<typeof insertHealthModelSchema>;
-export type HealthInsight = typeof healthInsights.$inferSelect;
+
+export interface HealthInsight {
+  id: string;
+  userId: string;
+  type: string; // 'symptom_analysis', 'trend_prediction', 'intervention_suggestion'
+  query: string;
+  response: string;
+  confidence: number;
+  sources?: string[];
+  createdAt: string | Date;
+}
+
+export const insertHealthInsightSchema = z.object({
+  userId: z.string().min(1),
+  type: z.string().min(1),
+  query: z.string().min(1),
+  response: z.string().min(1),
+  confidence: z.number().min(0).max(1),
+  sources: z.array(z.string()).optional(),
+});
 export type InsertHealthInsight = z.infer<typeof insertHealthInsightSchema>;
-export type HealthTrend = typeof healthTrends.$inferSelect;
+
+export interface HealthTrend {
+  id: string;
+  userId: string;
+  metricType: string; // 'biological_age', 'vitality_score', etc.
+  date: string; // ISO date
+  value: number;
+  trend: string; // 'improving', 'stable', 'declining'
+  dataSource: string; // 'assessment', 'wearable', 'manual'
+  createdAt: string | Date;
+}
+
+export const insertHealthTrendSchema = z.object({
+  userId: z.string().min(1),
+  metricType: z.string().min(1),
+  date: z.string().min(1),
+  value: z.number(),
+  trend: z.string().min(1),
+  dataSource: z.string().min(1),
+});
 export type InsertHealthTrend = z.infer<typeof insertHealthTrendSchema>;
 
-// Analytics Events Table
-export const analyticsEvents = pgTable("analytics_events", {
-  id: varchar("id", { length: 255 }).primaryKey().$defaultFn(() => nanoid()),
-  userId: varchar("user_id", { length: 255 }).references(() => users.id), // nullable for anonymous events
-  sessionId: varchar("session_id", { length: 255 }).notNull(), // Browser session identifier
-  eventName: varchar("event_name", { length: 100 }).notNull(), // e.g., "assessment_started", "dashboard_viewed"
-  eventCategory: varchar("event_category", { length: 50 }).notNull(), // e.g., "user_action", "page_view", "form_interaction"
-  eventData: jsonb("event_data"), // Additional event properties
-  userAgent: text("user_agent"), // Browser/device info
-  referrer: text("referrer"), // Where user came from
-  pathname: varchar("pathname", { length: 500 }).notNull(), // Current page path
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
-});
+// Analytics Events
+export interface AnalyticsEvent {
+  id: string;
+  userId?: string | null;
+  sessionId: string;
+  eventName: string;
+  eventCategory: string;
+  eventData?: Record<string, any>;
+  userAgent?: string;
+  referrer?: string;
+  pathname: string;
+  timestamp: string | Date;
+}
 
-// Analytics schema
-export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({
-  id: true,
-  timestamp: true,
+export const insertAnalyticsEventSchema = z.object({
+  userId: z.string().optional(),
+  sessionId: z.string().min(1),
+  eventName: z.string().min(1),
+  eventCategory: z.string().min(1),
+  eventData: z.record(z.any()).optional(),
+  userAgent: z.string().optional(),
+  referrer: z.string().optional(),
+  pathname: z.string().min(1),
 });
-
-// Analytics types
-export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
 
 // Referral System
-export const referrals = pgTable("referrals", {
-  id: varchar("id", { length: 255 }).primaryKey().$defaultFn(() => nanoid()),
-  referrerUserId: varchar("referrer_user_id", { length: 255 }).notNull().references(() => users.id),
-  referredUserId: varchar("referred_user_id", { length: 255 }).references(() => users.id), // null until signup
-  referralCode: varchar("referral_code", { length: 10 }).notNull(),
-  email: text("email"), // email of referred user (if provided before signup)
-  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, signed_up, converted
-  shareMethod: varchar("share_method", { length: 50 }), // email, link, social
-  clickedAt: timestamp("clicked_at"),
-  signedUpAt: timestamp("signed_up_at"),
-  convertedAt: timestamp("converted_at"), // when they completed first assessment
-  rewardGranted: boolean("reward_granted").default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export interface Referral {
+  id: string;
+  referrerUserId: string;
+  referredUserId?: string | null;
+  referralCode: string;
+  email?: string | null;
+  status: string; // pending, signed_up, converted
+  shareMethod?: string | null; // email, link, social
+  clickedAt?: string | null;
+  signedUpAt?: string | null;
+  convertedAt?: string | null;
+  rewardGranted?: boolean;
+  createdAt: string | Date;
+}
 
-// Referral schema
-export const insertReferralSchema = createInsertSchema(referrals).omit({
-  id: true,
-  createdAt: true,
+export const insertReferralSchema = z.object({
+  referrerUserId: z.string().min(1),
+  referredUserId: z.string().optional(),
+  referralCode: z.string().min(4).max(10),
+  email: z.string().email().optional(),
+  status: z.string().min(1).default("pending"),
+  shareMethod: z.string().optional(),
 });
-
-// Referral types
-export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = z.infer<typeof insertReferralSchema>;
 
 // Advanced Health Interfaces
@@ -305,7 +318,6 @@ export interface HealthAICapabilities {
   predictTrends: (historicalData: HealthTrend[]) => Promise<HealthTrend[]>;
 }
 
-// Referral Program Interface
 export interface ReferralProgram {
   shareableLink: string;
   rewardForReferrer: "Premium features for 1 month";

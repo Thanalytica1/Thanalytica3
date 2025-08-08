@@ -150,7 +150,7 @@ export class EncryptionService {
       const iv = crypto.randomBytes(IV_LENGTH);
       
       // Create cipher
-      const cipher = crypto.createCipher(ALGORITHM, key);
+      const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
       cipher.setAutoPadding(true);
       
       // Encrypt the data
@@ -183,11 +183,12 @@ export class EncryptionService {
       const key = keyManager.getKey(encryptedData.keyId);
       
       // Create decipher
-      const decipher = crypto.createDecipher(encryptedData.algorithm, key);
+      const iv = Buffer.from(encryptedData.iv, 'base64');
+      const decipher = crypto.createDecipheriv(encryptedData.algorithm, key, iv);
       
       // Set auth tag
-      const tag = Buffer.from(encryptedData.tag, 'base64');
-      decipher.setAuthTag(tag);
+      const authTag = Buffer.from(encryptedData.tag, 'base64');
+      (decipher as any).setAuthTag?.(authTag);
       
       // Decrypt the data
       let decrypted = decipher.update(encryptedData.encrypted, 'base64', 'utf8');
@@ -211,7 +212,7 @@ export class EncryptionService {
       if (ENCRYPTED_FIELDS.includes(key as EncryptedField) && value !== null && value !== undefined) {
         // Convert value to string for encryption
         const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
-        result[key] = this.encrypt(stringValue);
+        (result as any)[key] = this.encrypt(stringValue);
       }
     }
     
@@ -230,18 +231,18 @@ export class EncryptionService {
           typeof value === 'object' && 
           'encrypted' in value) {
         try {
-          const decryptedValue = this.decrypt(value as EncryptedData);
+           const decryptedValue = this.decrypt(value as EncryptedData);
           
           // Try to parse as JSON, fallback to string
           try {
-            result[key] = JSON.parse(decryptedValue);
+             (result as any)[key] = JSON.parse(decryptedValue);
           } catch {
-            result[key] = decryptedValue;
+            (result as any)[key] = decryptedValue;
           }
         } catch (error) {
           console.error(`Failed to decrypt field ${key}:`, error);
           // In production, this might require manual intervention
-          result[key] = '[DECRYPTION_FAILED]';
+          (result as any)[key] = '[DECRYPTION_FAILED]';
         }
       }
     }

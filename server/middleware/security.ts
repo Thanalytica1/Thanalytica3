@@ -1,6 +1,7 @@
 import helmet from 'helmet';
 import cors from 'cors';
 import type { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 
 // HIPAA-compliant Content Security Policy
 const cspConfig = {
@@ -84,17 +85,7 @@ export const securityHeaders = helmet({
   // Hide X-Powered-By header
   hidePoweredBy: true,
   
-  // Permissions Policy (formerly Feature Policy)
-  permissionsPolicy: {
-    features: {
-      geolocation: ["'self'"],
-      camera: ["'none'"],
-      microphone: ["'none'"],
-      payment: ["'none'"],
-      usb: ["'none'"],
-      fullscreen: ["'self'"],
-    },
-  },
+  // Note: Helmet v7 removed permissionsPolicy option. Configure via response headers if needed.
   
   // Cross-Origin policies
   crossOriginEmbedderPolicy: false, // Disable for compatibility
@@ -219,11 +210,12 @@ export const requestSecurity = (req: Request, res: Response, next: NextFunction)
   if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
     const contentType = req.headers['content-type'];
     if (!contentType || !contentType.includes('application/json')) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Invalid Content-Type',
         message: 'Expected application/json',
         correlationId,
       });
+      return;
     }
   }
   
@@ -250,11 +242,12 @@ export const requestSecurity = (req: Request, res: Response, next: NextFunction)
   // Rate limit based on request size for DoS protection
   const contentLength = parseInt(req.headers['content-length'] || '0', 10);
   if (contentLength > 10 * 1024 * 1024) { // 10MB limit
-    return res.status(413).json({
+    res.status(413).json({
       error: 'Payload Too Large',
       message: 'Request body exceeds maximum size',
       correlationId,
     });
+    return;
   }
   
   next();

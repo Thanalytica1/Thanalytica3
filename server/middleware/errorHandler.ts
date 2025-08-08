@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
+import crypto from 'crypto';
 
 // Healthcare-specific error types
 export enum HealthcareErrorType {
