@@ -1,19 +1,21 @@
 import { initializeApp, FirebaseApp } from "firebase/app";
-import { 
-  getAuth, 
-  connectAuthEmulator,
+import {
+  getAuth,
   Auth,
-  signInWithRedirect, 
-  GoogleAuthProvider, 
-  getRedirectResult, 
+  signInWithRedirect,
+  GoogleAuthProvider,
+  getRedirectResult,
   signOut,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  connectAuthEmulator
 } from "firebase/auth";
-import { getFirestore, Firestore, connectFirestoreEmulator } from "firebase/firestore";
+import {
+  getFirestore,
+  Firestore,
+  connectFirestoreEmulator
+} from "firebase/firestore";
 import { AuthError } from "@/utils/errorHandling";
-import { connectAuthEmulator } from "firebase/auth";
-import { connectFirestoreEmulator } from "firebase/firestore";
 
 /**
  * Validates Firebase environment variables
@@ -71,7 +73,7 @@ function validateFirebaseConfig(): {
     apiKey: requiredVars.apiKey,
     authDomain: `${requiredVars.projectId}.firebaseapp.com`,
     projectId: requiredVars.projectId,
-    storageBucket: `${requiredVars.projectId}.firebasestorage.app`,
+    storageBucket: `${requiredVars.projectId}.appspot.com`,
     appId: requiredVars.appId,
   };
 }
@@ -121,9 +123,7 @@ function initializeFirebase(): { app: FirebaseApp; auth: Auth; db: Firestore } {
     }
     
     if (import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true') {
-      // Auth emulator (default port 9099)
       connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
-      // Firestore emulator (default port 8080)
       connectFirestoreEmulator(db, "127.0.0.1", 8080);
     }
     
