@@ -111,20 +111,18 @@ function initializeFirebase(): { app: FirebaseApp; auth: Auth; db: Firestore } {
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Connect to emulators when enabled
-    if (import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true') {
+    // Connect to emulators when enabled (development only)
+    if (import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true' && import.meta.env.DEV) {
       try {
         connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
         connectFirestoreEmulator(db, "127.0.0.1", 8080);
-        console.log("Connected to Firebase emulators (auth/firestore)");
-      } catch (_) {
-        // ignore if already connected or in unsupported environment
+        console.log("🔧 Connected to Firebase emulators (auth/firestore)");
+      } catch (error) {
+        console.warn("Failed to connect to Firebase emulators:", error);
+        // Continue with production Firebase if emulators are not available
       }
-    }
-    
-    if (import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true') {
-      connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
-      connectFirestoreEmulator(db, "127.0.0.1", 8080);
+    } else if (import.meta.env.PROD) {
+      console.log("🚀 Using production Firebase services");
     }
     
     console.log("Firebase initialized successfully");

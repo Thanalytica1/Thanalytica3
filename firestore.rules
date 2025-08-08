@@ -1,0 +1,138 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions for validation
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(resource) {
+      return request.auth.uid == resource.data.firebaseUid;
+    }
+    
+    function isValidUser(data) {
+      return data.keys().hasAll(['firebaseUid', 'email', 'createdAt']) &&
+             data.firebaseUid == request.auth.uid &&
+             data.email == request.auth.token.email &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+    
+    function isValidHealthData(data) {
+      return data.keys().hasAll(['userId', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.createdAt is timestamp;
+    }
+    
+    // Users collection - users can only access their own data
+    match /users/{userId} {
+      allow read, write: if isAuthenticated() && 
+                           request.auth.uid == userId;
+      allow create: if isAuthenticated() && 
+                     request.auth.uid == userId &&
+                     isValidUser(request.resource.data);
+      allow update: if isAuthenticated() && 
+                     request.auth.uid == userId &&
+                     isValidUser(request.resource.data);
+    }
+    
+    // Health Assessments - tied to authenticated user
+    match /healthAssessments/{assessmentId} {
+      allow read, write: if isAuthenticated() && 
+                           isOwner(resource);
+      allow create: if isAuthenticated() && 
+                     isValidHealthData(request.resource.data);
+    }
+    
+    // Health Metrics - tied to authenticated user
+    match /healthMetrics/{metricId} {
+      allow read, write: if isAuthenticated() && 
+                           isOwner(resource);
+      allow create: if isAuthenticated() && 
+                     isValidHealthData(request.resource.data);
+    }
+    
+    // Recommendations - tied to authenticated user
+    match /recommendations/{recommendationId} {
+      allow read, write: if isAuthenticated() && 
+                           isOwner(resource);
+      allow create: if isAuthenticated() && 
+                     isValidHealthData(request.resource.data);
+    }
+    
+    // Wearable Connections - tied to authenticated user
+    match /wearableConnections/{connectionId} {
+      allow read, write: if isAuthenticated() && 
+                           isOwner(resource);
+      allow create: if isAuthenticated() && 
+                     isValidHealthData(request.resource.data) &&
+                     request.resource.data.keys().hasAll(['provider', 'status']);
+    }
+    
+    // Wearables Data - tied to authenticated user with size limits
+    match /wearablesData/{dataId} {
+      allow read, write: if isAuthenticated() && 
+                           isOwner(resource);
+      allow create: if isAuthenticated() && 
+                     isValidHealthData(request.resource.data) &&
+                     request.resource.data.size() < 1000000; // 1MB limit
+    }
+    
+    // Health Insights - tied to authenticated user
+    match /healthInsights/{insightId} {
+      allow read, write: if isAuthenticated() && 
+                           isOwner(resource);
+      allow create: if isAuthenticated() && 
+                     isValidHealthData(request.resource.data);
+    }
+    
+    // Health Trends - tied to authenticated user
+    match /healthTrends/{trendId} {
+      allow read, write: if isAuthenticated() && 
+                           isOwner(resource);
+      allow create: if isAuthenticated() && 
+                     isValidHealthData(request.resource.data);
+    }
+    
+    // Analytics Events - tied to authenticated user
+    match /analyticsEvents/{eventId} {
+      allow read, write: if isAuthenticated() && 
+                           isOwner(resource);
+      allow create: if isAuthenticated() && 
+                     isValidHealthData(request.resource.data) &&
+                     request.resource.data.keys().hasAll(['eventType', 'eventData']);
+    }
+    
+    // Referrals - users can only access their own referrals
+    match /referrals/{referralId} {
+      allow read, write: if isAuthenticated() && 
+                           (isOwner(resource) || 
+                            resource.data.referredUserId == request.auth.uid);
+      allow create: if isAuthenticated() && 
+                     isValidHealthData(request.resource.data) &&
+                     request.resource.data.keys().hasAll(['referralCode', 'status']);
+    }
+    
+    // Temporary Tokens - only accessible by the user who created them
+    match /temporaryTokens/{tokenId} {
+      allow read, write: if isAuthenticated() && 
+                           isOwner(resource);
+      allow create: if isAuthenticated() && 
+                     isValidHealthData(request.resource.data) &&
+                     request.resource.data.keys().hasAll(['token', 'expiresAt']);
+    }
+    
+    // Admin Analytics - only accessible by admin users
+    match /adminAnalytics/{analyticsId} {
+      allow read: if isAuthenticated() && 
+                    request.auth.token.admin == true;
+      allow write: if false; // Admin analytics are read-only from client
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

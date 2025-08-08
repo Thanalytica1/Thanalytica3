@@ -1,0 +1,65 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isValidFileSize(maxSizeInMB) {
+      return request.resource.size < maxSizeInMB * 1024 * 1024;
+    }
+    
+    function isValidImageType() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    function isValidHealthDataType() {
+      return request.resource.contentType.matches('application/json') ||
+             request.resource.contentType.matches('text/csv') ||
+             request.resource.contentType.matches('application/pdf');
+    }
+    
+    // User profile images - max 5MB
+    match /users/{userId}/profile/{imageId} {
+      allow read, write: if isAuthenticated() && 
+                           isOwner(userId) &&
+                           isValidImageType() &&
+                           isValidFileSize(5);
+    }
+    
+    // Health data exports - max 50MB per file
+    match /users/{userId}/exports/{exportId} {
+      allow read, write: if isAuthenticated() && 
+                           isOwner(userId) &&
+                           isValidHealthDataType() &&
+                           isValidFileSize(50);
+    }
+    
+    // Wearable data imports - max 25MB per file
+    match /users/{userId}/wearable-imports/{importId} {
+      allow read, write: if isAuthenticated() && 
+                           isOwner(userId) &&
+                           isValidHealthDataType() &&
+                           isValidFileSize(25);
+    }
+    
+    // Health assessment attachments - max 10MB per file
+    match /users/{userId}/assessments/{assessmentId}/{attachmentId} {
+      allow read, write: if isAuthenticated() && 
+                           isOwner(userId) &&
+                           (isValidImageType() || isValidHealthDataType()) &&
+                           isValidFileSize(10);
+    }
+    
+    // Deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

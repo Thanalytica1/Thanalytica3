@@ -7,7 +7,7 @@ import { Navigation } from "@/components/navigation";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { AppFooter } from "@/components/app-footer";
 import Home from "@/pages/home";
-import Assessment from "@/pages/assessment";
+import GuidedAssessment from "@/pages/guided-assessment";
 import Dashboard from "@/pages/dashboard";
 import Recommendations from "@/pages/recommendations";
 import Wearables from "@/pages/wearables";
@@ -29,7 +29,7 @@ function Router() {
       <Route path="/assessment">
         <ErrorBoundary>
           <ProtectedRoute>
-            <Assessment />
+            <GuidedAssessment />
           </ProtectedRoute>
         </ErrorBoundary>
       </Route>

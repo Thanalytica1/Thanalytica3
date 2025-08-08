@@ -19,12 +19,18 @@ import { useAuth } from "@/hooks/use-auth";
 import { useHealthAssessment, useHealthMetrics } from "@/hooks/use-health-data";
 import { MoodStressCheckin } from "@/components/mood-stress-checkin";
 import { WearableDashboard } from "@/components/wearable-dashboard";
+import Day1Dashboard from "@/components/day1-dashboard";
 // Analytics removed for resource optimization
 
 export default function Dashboard() {
   const { firebaseUser, user } = useAuth();
   const { data: assessment, isLoading: assessmentLoading, error: assessmentError } = useHealthAssessment(user?.id || "");
   const { data: metrics, isLoading: metricsLoading, error: metricsError } = useHealthMetrics(user?.id || "");
+  
+  // Detect new user from URL params or assessment completion time
+  const urlParams = new URLSearchParams(window.location.search);
+  const isNewUser = urlParams.get('newUser') === 'true' || 
+    (assessment && new Date(assessment.createdAt).getTime() > Date.now() - 24 * 60 * 60 * 1000);
   
   // Page tracking removed for resource optimization
 
@@ -76,6 +82,11 @@ export default function Dashboard() {
   const biologicalAge = assessment?.biologicalAge || assessment?.age || 35;
   const vitalityScore = assessment?.vitalityScore || 75;
   const projectedLifespan = metrics?.projectedLifespan || 120;
+
+  // Show Day 1 experience for new users
+  if (isNewUser && assessment && user) {
+    return <Day1Dashboard user={user} assessment={assessment} />;
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
