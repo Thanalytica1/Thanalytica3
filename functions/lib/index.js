@@ -9,6 +9,7 @@ const cors_1 = __importDefault(require("cors"));
 const https_1 = require("firebase-functions/v2/https");
 const app_1 = require("firebase-admin/app");
 const firestore_1 = require("firebase-admin/firestore");
+const url_1 = require("url");
 if (!(0, app_1.getApps)().length)
     (0, app_1.initializeApp)();
 const db = (0, firestore_1.getFirestore)();
@@ -17,9 +18,72 @@ app.disable("x-powered-by");
 app.use((0, cors_1.default)({ origin: true }));
 app.use(express_1.default.json({ limit: "10mb" }));
 app.use(express_1.default.urlencoded({ extended: false, limit: "10mb" }));
+// Server-side Google API proxy configuration
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY ||
+    process.env.GOOGLE_MAPS_API_KEY ||
+    process.env.GCP_API_KEY ||
+    process.env.GCLOUD_API_KEY ||
+    "";
+const ALLOWED_GOOGLE_HOSTS = new Set([
+    "maps.googleapis.com",
+    "maps.google.com",
+    "generativelanguage.googleapis.com",
+    "vision.googleapis.com",
+    "language.googleapis.com",
+    "youtube.googleapis.com",
+    "www.googleapis.com",
+]);
 // Health
 app.get("/api/health", (_req, res) => {
     res.status(200).json({ status: "healthy", runtime: "firebase-functions" });
+});
+// Generic Google API proxy (GET only). Appends the server-side API key.
+// Usage: /api/google/proxy?host=maps.googleapis.com&path=/maps/api/geocode/json&address=...&components=...
+app.get("/api/google/proxy", async (req, res) => {
+    try {
+        if (!GOOGLE_API_KEY) {
+            return res.status(500).json({ message: "Google API key not configured on server" });
+        }
+        const host = String(req.query.host || "").trim();
+        const path = String(req.query.path || "").trim();
+        if (!host || !ALLOWED_GOOGLE_HOSTS.has(host)) {
+            return res.status(400).json({ message: "Invalid or unsupported host" });
+        }
+        if (!path || !path.startsWith("/")) {
+            return res.status(400).json({ message: "Invalid path" });
+        }
+        const url = new url_1.URL(`https://${host}${path}`);
+        // Forward all other query params
+        Object.entries(req.query).forEach(([key, value]) => {
+            if (key === "host" || key === "path")
+                return;
+            if (Array.isArray(value)) {
+                value.forEach((v) => url.searchParams.append(key, String(v)));
+            }
+            else if (value != null) {
+                url.searchParams.append(key, String(value));
+            }
+        });
+        // Inject API key (overrides any client-provided key)
+        url.searchParams.set("key", GOOGLE_API_KEY);
+        const upstream = await fetch(url.toString(), {
+            method: "GET",
+            headers: { "accept": "application/json" },
+        });
+        const contentType = upstream.headers.get("content-type") || "";
+        res.status(upstream.status);
+        if (contentType.includes("application/json")) {
+            const data = await upstream.json();
+            res.json(data);
+        }
+        else {
+            const text = await upstream.text();
+            res.send(text);
+        }
+    }
+    catch (error) {
+        res.status(500).json({ message: "Google proxy error" });
+    }
 });
 // Get user by Firebase UID
 app.get("/api/user/:firebaseUid", async (req, res) => {
