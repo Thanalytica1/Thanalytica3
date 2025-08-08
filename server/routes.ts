@@ -254,10 +254,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify ownership - ensure the connection belongs to the user
-      const existingConnection = await storage.getWearableConnection(userId, '');
       const allUserConnections = await storage.getWearableConnections(userId);
-      const connectionToDelete = allUserConnections.find(conn => conn.id === id);
-      
+      const connectionToDelete = allUserConnections.find((conn: { id: string }) => conn.id === id);
+
       if (!connectionToDelete) {
         return res.status(404).json({ message: "Wearable connection not found or access denied" });
       }

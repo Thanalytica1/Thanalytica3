@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import crypto from "crypto";
-import { storage } from "./storage";
+import { storage } from "./storage.js";
 import { z } from "zod";
 
 // OAuth configuration
