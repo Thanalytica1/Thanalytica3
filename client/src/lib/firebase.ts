@@ -1,6 +1,7 @@
 import { initializeApp, FirebaseApp } from "firebase/app";
 import { 
   getAuth, 
+  connectAuthEmulator,
   Auth,
   signInWithRedirect, 
   GoogleAuthProvider, 
@@ -9,7 +10,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword
 } from "firebase/auth";
-import { getFirestore, Firestore } from "firebase/firestore";
+import { getFirestore, Firestore, connectFirestoreEmulator } from "firebase/firestore";
 import { AuthError } from "@/utils/errorHandling";
 import { connectAuthEmulator } from "firebase/auth";
 import { connectFirestoreEmulator } from "firebase/firestore";
@@ -107,6 +108,17 @@ function initializeFirebase(): { app: FirebaseApp; auth: Auth; db: Firestore } {
     // Initialize services
     const auth = getAuth(app);
     const db = getFirestore(app);
+
+    // Connect to emulators when enabled
+    if (import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true') {
+      try {
+        connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+        connectFirestoreEmulator(db, "127.0.0.1", 8080);
+        console.log("Connected to Firebase emulators (auth/firestore)");
+      } catch (_) {
+        // ignore if already connected or in unsupported environment
+      }
+    }
     
     if (import.meta.env.VITE_USE_FIREBASE_EMULATORS === 'true') {
       // Auth emulator (default port 9099)
