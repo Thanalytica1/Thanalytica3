@@ -1,0 +1,136 @@
+[debug] [2025-08-09T02:31:41.108Z] ----------------------------------------------------------------------
+[debug] [2025-08-09T02:31:41.112Z] Command:       /Users/jdapeman/.nvm/versions/node/v22.18.0/bin/node /Users/jdapeman/.nvm/versions/node/v22.18.0/bin/firebase emulators:start --only hosting,functions,auth,firestore
+[debug] [2025-08-09T02:31:41.113Z] CLI Version:   14.12.0
+[debug] [2025-08-09T02:31:41.113Z] Platform:      darwin
+[debug] [2025-08-09T02:31:41.113Z] Node Version:  v22.18.0
+[debug] [2025-08-09T02:31:41.114Z] Time:          Fri Aug 08 2025 22:31:41 GMT-0400 (Eastern Daylight Time)
+[debug] [2025-08-09T02:31:41.114Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-08-09T02:31:41.498Z] Object "/functions" in "firebase.json" has unknown property: {"additionalProperty":"timeoutSeconds"}
+[debug] [2025-08-09T02:31:41.499Z] Field "/functions" in "firebase.json" is possibly invalid: must be array
+[debug] [2025-08-09T02:31:41.499Z] Field "/functions" in "firebase.json" is possibly invalid: must match a schema in anyOf
+[debug] [2025-08-09T02:31:41.506Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-08-09T02:31:41.507Z] > authorizing via signed-in user (jonahdevoy@gmail.com)
+[debug] [2025-08-09T02:31:41.634Z] java version "21.0.1" 2023-10-17 LTS
+Java(TM) SE Runtime Environment (build 21.0.1+12-LTS-29)
+Java HotSpot(TM) 64-Bit Server VM (build 21.0.1+12-LTS-29, mixed mode, sharing)
+
+[debug] [2025-08-09T02:31:41.644Z] Parsed Java major version: 21
+[info] i  emulators: Starting emulators: auth, functions, firestore, hosting {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth, functions, firestore, hosting"}}
+[debug] [2025-08-09T02:31:43.567Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-08-09T02:31:43.567Z] [auth] Authentication Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-08-09T02:31:43.567Z] [firestore] Firestore Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-08-09T02:31:43.567Z] [firestore.websocket] websocket server for firestore only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-08-09T02:31:43.567Z] [hosting] Hosting Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-08-09T02:31:43.568Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4040},{"address":"::1","family":"IPv6","port":4040}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}],"hosting":[{"address":"127.0.0.1","family":"IPv4","port":5050}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2025-08-09T02:31:43.573Z] [hub] writing locator at /var/folders/yd/tybxdv4901xbv_l8x4p1g7tm0000gn/T/hub-thanalytica-60a73.json
+[debug] [2025-08-09T02:31:44.317Z] [functions] Functions Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-08-09T02:31:44.317Z] [eventarc] Eventarc Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-08-09T02:31:44.317Z] [tasks] Cloud Tasks Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-08-09T02:31:44.317Z] late-assigned ports for functions and eventarc emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4040},{"address":"::1","family":"IPv6","port":4040}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}],"hosting":[{"address":"127.0.0.1","family":"IPv4","port":5050}],"functions":[{"address":"127.0.0.1","family":"IPv4","port":5051}],"eventarc":[{"address":"127.0.0.1","family":"IPv4","port":9299}],"tasks":[{"address":"127.0.0.1","family":"IPv4","port":9499}]},"metadata":{"message":"late-assigned ports for functions and eventarc emulators"}}
+[warn] ⚠  functions: The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, database, pubsub, storage, dataconnect {"metadata":{"emulator":{"name":"functions"},"message":"The following emulators are not running, calls to these services from the Functions emulator will affect production: \u001b[1mapphosting, database, pubsub, storage, dataconnect\u001b[22m"}}
+[debug] [2025-08-09T02:31:44.331Z] defaultcredentials: writing to file /Users/jdapeman/.config/firebase/jonahdevoy_gmail_com_application_default_credentials.json
+[debug] [2025-08-09T02:31:44.335Z] Setting GAC to /Users/jdapeman/.config/firebase/jonahdevoy_gmail_com_application_default_credentials.json {"metadata":{"emulator":{"name":"functions"},"message":"Setting GAC to /Users/jdapeman/.config/firebase/jonahdevoy_gmail_com_application_default_credentials.json"}}
+[debug] [2025-08-09T02:31:44.336Z] Checked if tokens are valid: true, expires at: 1754707974185
+[debug] [2025-08-09T02:31:44.336Z] Checked if tokens are valid: true, expires at: 1754707974185
+[debug] [2025-08-09T02:31:44.337Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73/adminSdkConfig [none]
+[debug] [2025-08-09T02:31:44.725Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73/adminSdkConfig 200
+[debug] [2025-08-09T02:31:44.726Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73/adminSdkConfig {"projectId":"thanalytica-60a73","storageBucket":"thanalytica-60a73.firebasestorage.app"}
+[debug] [2025-08-09T02:31:44.771Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-08-09T02:31:44.771Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
+[debug] [2025-08-09T02:31:44.772Z] Starting Firestore Emulator with command {"binary":"java","args":["-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","/Users/jdapeman/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar","--host","127.0.0.1","--port",8080,"--websocket_port",9150,"--project_id","thanalytica-60a73","--rules","/Users/jdapeman/Downloads/thanalytica3/Thanalytica3/firestore.rules","--single_project_mode",true,"--functions_emulator","127.0.0.1:5051"],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"/Users/jdapeman/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar\",\"--host\",\"127.0.0.1\",\"--port\",8080,\"--websocket_port\",9150,\"--project_id\",\"thanalytica-60a73\",\"--rules\",\"/Users/jdapeman/Downloads/thanalytica3/Thanalytica3/firestore.rules\",\"--single_project_mode\",true,\"--functions_emulator\",\"127.0.0.1:5051\"],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to \u001b[1mfirestore-debug.log\u001b[22m"}}
+[debug] [2025-08-09T02:31:46.230Z] Aug 08, 2025 10:31:46 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
+INFO: Started WebSocket server on ws://127.0.0.1:9150
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Aug 08, 2025 10:31:46 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start\nINFO: Started WebSocket server on ws://127.0.0.1:9150\n"}}
+[debug] [2025-08-09T02:31:46.263Z] API endpoint: http:// {"metadata":{"emulator":{"name":"firestore"},"message":"API endpoint: http://"}}
+[debug] [2025-08-09T02:31:46.264Z] 127.0.0.1:8080
+If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:
+
+   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+
+If you are running a Firestore in Datastore Mode project, run:
+
+   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"127.0.0.1:8080\nIf you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:\n\n   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080\n\nIf you are running a Firestore in Datastore Mode project, run:\n\n   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080\n\n"}}
+[debug] [2025-08-09T02:31:46.264Z] Note: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.
+Dev App Server is now running.
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Note: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.\nDev App Server is now running.\n\n"}}
+[info] ✔  firestore: Firestore Emulator UI websocket is running on 9150. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 9150."}}
+[debug] [2025-08-09T02:31:55.054Z] Checked if tokens are valid: true, expires at: 1754707974185
+[debug] [2025-08-09T02:31:55.054Z] Checked if tokens are valid: true, expires at: 1754707974185
+[debug] [2025-08-09T02:31:55.054Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/thanalytica-60a73/sites 
+[debug] [2025-08-09T02:31:55.517Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/thanalytica-60a73/sites 200
+[debug] [2025-08-09T02:31:55.517Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/thanalytica-60a73/sites {"sites":[{"name":"projects/thanalytica-60a73/sites/thanalytica-60a73","defaultUrl":"https://thanalytica-60a73.web.app","appId":"1:206038502995:web:2d4b16077e7cfd454f00a6","type":"DEFAULT_SITE"}]}
+[debug] [2025-08-09T02:31:55.518Z] Checked if tokens are valid: true, expires at: 1754707974185
+[debug] [2025-08-09T02:31:55.518Z] Checked if tokens are valid: true, expires at: 1754707974185
+[debug] [2025-08-09T02:31:55.518Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73/webApps/1:206038502995:web:2d4b16077e7cfd454f00a6/config [none]
+[debug] [2025-08-09T02:31:55.888Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73/webApps/1:206038502995:web:2d4b16077e7cfd454f00a6/config 200
+[debug] [2025-08-09T02:31:55.888Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73/webApps/1:206038502995:web:2d4b16077e7cfd454f00a6/config {"projectId":"thanalytica-60a73","appId":"1:206038502995:web:2d4b16077e7cfd454f00a6","storageBucket":"thanalytica-60a73.firebasestorage.app","apiKey":"AIzaSyCOuJaKo575dllDLMt6sYSQvHuIbG76i_o","authDomain":"thanalytica-60a73.firebaseapp.com","messagingSenderId":"206038502995","measurementId":"G-8ZGT85CRW9"}
+[debug] [2025-08-09T02:31:55.914Z] Checked if tokens are valid: true, expires at: 1754707974185
+[debug] [2025-08-09T02:31:55.914Z] Checked if tokens are valid: true, expires at: 1754707974185
+[debug] [2025-08-09T02:31:55.914Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73 [none]
+[debug] [2025-08-09T02:31:56.112Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73 200
+[debug] [2025-08-09T02:31:56.112Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73 {"projectId":"thanalytica-60a73","projectNumber":"206038502995","displayName":"Thanalytica","name":"projects/thanalytica-60a73","resources":{"hostingSite":"thanalytica-60a73"},"state":"ACTIVE","etag":"1_b476d933-3719-43a3-9487-bfdcaf789ef8"}
+[info] i  hosting[thanalytica-60a73]: Serving hosting files from: dist/public {"metadata":{"emulator":{"name":"hosting"},"message":"Serving hosting files from: \u001b[1mdist/public\u001b[22m"}}
+[info] ✔  hosting[thanalytica-60a73]: Local server: http://127.0.0.1:5050 {"metadata":{"emulator":{"name":"hosting"},"message":"Local server: \u001b[4m\u001b[1mhttp://127.0.0.1:5050\u001b[22m\u001b[24m"}}
+[info] i  functions: Watching "/Users/jdapeman/Downloads/thanalytica3/Thanalytica3/functions" for Cloud Functions... {"metadata":{"emulator":{"name":"functions"},"message":"Watching \"/Users/jdapeman/Downloads/thanalytica3/Thanalytica3/functions\" for Cloud Functions..."}}
+[debug] [2025-08-09T02:31:56.249Z] Validating nodejs source
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] ⚠  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2025-08-09T02:31:57.175Z] > [functions] package.json contents: {
+  "name": "thanalytica-functions",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^5.0.1"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3"
+  }
+}
+[debug] [2025-08-09T02:31:57.175Z] Building nodejs source
+[debug] [2025-08-09T02:31:57.176Z] Failed to find version of module node: reached end of search path /Users/jdapeman/Downloads/thanalytica3/Thanalytica3/functions/node_modules
+[warn] ⚠  functions: Your requested "node" version "20" doesn't match your global version "22". Using node@22 from host. 
+[debug] [2025-08-09T02:31:57.178Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-08-09T02:31:57.191Z] Found firebase-functions binary at '/Users/jdapeman/Downloads/thanalytica3/Thanalytica3/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8556
+
+[debug] [2025-08-09T02:31:57.714Z] Got response from /__/functions.yaml {"endpoints":{"api":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","region":["us-central1"],"labels":{},"httpsTrigger":{},"entryPoint":"api"}},"specVersion":"v1alpha1","requiredAPIs":[],"extensions":{}}
+[info] ✔  functions: Loaded functions definitions from source: api. {"metadata":{"emulator":{"name":"functions"},"message":"Loaded functions definitions from source: api."}}
+[info] ✔  functions[us-central1-api]: http function initialized (http://127.0.0.1:5051/thanalytica-60a73/us-central1/api). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5051/thanalytica-60a73/us-central1/api)."}}
+[debug] [2025-08-09T02:32:01.757Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:4040/               │
+└─────────────────────────────────────────────────────────────┘
+
+┌────────────────┬────────────────┬─────────────────────────────────┐
+│ Emulator       │ Host:Port      │ View in Emulator UI             │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Authentication │ 127.0.0.1:9099 │ http://127.0.0.1:4040/auth      │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Functions      │ 127.0.0.1:5051 │ http://127.0.0.1:4040/functions │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Firestore      │ 127.0.0.1:8080 │ http://127.0.0.1:4040/firestore │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Hosting        │ 127.0.0.1:5050 │ n/a                             │
+└────────────────┴────────────────┴─────────────────────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500, 9150
+
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
