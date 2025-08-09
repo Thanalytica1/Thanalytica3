@@ -5,8 +5,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "cd client && npm run build",
-    "build:client": "cd client && npm run build",
+    "build": "vite build",
+    "build:client": "vite build",
     "build:functions": "cd functions && npm run build",
     "build:all": "npm run build:client && npm run build:functions",
     "check": "tsc",
