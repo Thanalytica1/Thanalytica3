@@ -26,6 +26,7 @@ export const COLLECTIONS = {
   HEALTH_TRENDS: 'health_trends',
   ANALYTICS_EVENTS: 'analytics_events',
   REFERRALS: 'referrals',
+  CACHE: 'cache', // Cache collection for cost optimization
 } as const;
 
 /**
