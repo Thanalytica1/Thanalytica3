@@ -14,17 +14,37 @@
       "**/node_modules/**"
     ],
     "rewrites": [
+      { "source": "/api/health/**", "function": "healthMetrics" },
+      { "source": "/api/assessments/**", "function": "assessments" },
+      { "source": "/api/users/**", "function": "userManagement" },
+      { "source": "/api/data/**", "function": "dataExport" },
+      { "source": "/api/reports/**", "function": "reports" },
+      { "source": "/api/wearables/**", "function": "wearableSync" },
       { "source": "/api/**", "function": "api" },
       { "source": "**", "destination": "/index.html" }
     ],
     "headers": [
       {
-        "source": "**/*.@(js|css)",
+        "source": "**/*.@(js|css|woff|woff2|ttf|eot)",
         "headers": [
           {
             "key": "Cache-Control",
-            "value": "max-age=31536000"
-          },
+            "value": "max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(html|json)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=0, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "**",
+        "headers": [
           {
             "key": "X-Content-Type-Options",
             "value": "nosniff"
@@ -42,8 +62,16 @@
             "value": "strict-origin-when-cross-origin"
           },
           {
+            "key": "Strict-Transport-Security",
+            "value": "max-age=31536000; includeSubDomains"
+          },
+          {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.ouraring.com https://connectapi.garmin.com https://api.whoop.com https://firebaseapp.com https://*.firebaseapp.com https://*.cloudfunctions.net"
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://maps.googleapis.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; media-src 'self' blob:; connect-src 'self' https://api.ouraring.com https://connectapi.garmin.com https://api.whoop.com https://api.fitbit.com https://firebaseapp.com https://*.firebaseapp.com https://*.cloudfunctions.net https://*.googleapis.com wss://*.firebaseio.com; worker-src 'self' blob:; child-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+          },
+          {
+            "key": "Permissions-Policy",
+            "value": "camera=(), microphone=(), geolocation=(self), payment=(), usb=()"
           }
         ]
       },
@@ -52,32 +80,79 @@
         "headers": [
           {
             "key": "Access-Control-Allow-Origin",
-            "value": "https://thanalytica.web.app"
+            "value": "*"
           },
           {
             "key": "Access-Control-Allow-Methods",
-            "value": "GET, POST, PUT, DELETE, OPTIONS"
+            "value": "GET, POST, PUT, DELETE, OPTIONS, PATCH"
           },
           {
             "key": "Access-Control-Allow-Headers",
-            "value": "Content-Type, Authorization"
+            "value": "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+          },
+          {
+            "key": "Access-Control-Max-Age",
+            "value": "86400"
           }
         ]
       }
     ]
   },
-  "functions": {
-    "source": "functions",
-    "codebase": "default",
-    "runtime": "nodejs20",
-    "timeoutSeconds": 60
-  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs20",
+      "memory": "1GB",
+      "timeoutSeconds": 60,
+      "minInstances": 0,
+      "maxInstances": 100,
+      "concurrency": 1000,
+      "cpu": 1,
+      "invoker": "public"
+    }
+  ],
   "emulators": {
-    "ui": { "enabled": true, "port": 4041 },
-    "hosting": { "port": 5051 },
-    "functions": { "port": 5052 },
-    "auth": { "port": 9100 },
-    "firestore": { "port": 8081 },
-    "storage": { "port": 9200 }
+    "ui": { 
+      "enabled": true, 
+      "port": 4040,
+      "host": "0.0.0.0"
+    },
+    "hosting": { 
+      "port": 5050,
+      "host": "0.0.0.0"
+    },
+    "functions": { 
+      "port": 5051,
+      "host": "0.0.0.0"
+    },
+    "auth": { 
+      "port": 9099,
+      "host": "0.0.0.0"
+    },
+    "firestore": { 
+      "port": 8080,
+      "host": "0.0.0.0"
+    },
+    "storage": { 
+      "port": 9199,
+      "host": "0.0.0.0"
+    },
+    "pubsub": {
+      "port": 8085,
+      "host": "0.0.0.0"
+    },
+    "eventarc": {
+      "port": 9299,
+      "host": "0.0.0.0"
+    },
+    "singleProjectMode": true,
+    "logging": {
+      "level": "INFO"
+    }
+  },
+  "extensions": {},
+  "database": {
+    "rules": "database.rules.json"
   }
 }

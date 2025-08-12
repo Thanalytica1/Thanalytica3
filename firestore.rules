@@ -2,135 +2,229 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions for validation
+    
+    // Helper functions for validation and security
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    function isOwner(resource) {
-      return request.auth.uid == resource.data.firebaseUid;
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
     }
     
-    function isValidUser(data) {
+    function isValidUserData(data) {
       return data.keys().hasAll(['firebaseUid', 'email', 'createdAt']) &&
              data.firebaseUid == request.auth.uid &&
-             data.email == request.auth.token.email &&
-             data.createdAt is timestamp &&
-             data.updatedAt is timestamp;
+             data.email == request.auth.token.email;
     }
     
     function isValidHealthData(data) {
       return data.keys().hasAll(['userId', 'createdAt']) &&
+             data.userId == request.auth.uid;
+    }
+    
+    function isValidTimestamp(timestamp) {
+      return timestamp is timestamp;
+    }
+    
+    function hasValidDataSize(data) {
+      return data.size() < 1000000; // 1MB limit for health data
+    }
+    
+    function validateAssessmentData(data) {
+      return data.keys().hasAll(['userId', 'type', 'status', 'startedAt']) &&
              data.userId == request.auth.uid &&
-             data.createdAt is timestamp;
+             data.type in ['comprehensive', 'quick', 'focused', 'follow_up'] &&
+             data.status in ['draft', 'in_progress', 'completed', 'archived'];
     }
     
-    // Users collection - users can only access their own data
+    function validateMetricData(data) {
+      return data.keys().hasAll(['userId', 'type', 'value', 'source', 'recordedAt']) &&
+             data.userId == request.auth.uid &&
+             data.source in ['manual', 'wearable', 'assessment', 'lab_test', 'provider'];
+    }
+    
+    function validateGoalData(data) {
+      return data.keys().hasAll(['userId', 'category', 'type', 'title', 'targetDate']) &&
+             data.userId == request.auth.uid &&
+             data.category in ['weight_management', 'fitness', 'sleep', 'nutrition', 'stress', 'longevity', 'preventive_care', 'mental_health'] &&
+             data.type in ['increase', 'decrease', 'maintain', 'achieve'];
+    }
+    
+    // User profiles - users can only access their own profile
     match /users/{userId} {
-      allow read, write: if isAuthenticated() && 
-                           request.auth.uid == userId;
+      allow read, write: if isOwner(userId);
       allow create: if isAuthenticated() && 
-                     request.auth.uid == userId &&
-                     isValidUser(request.resource.data);
+                     isOwner(userId) && 
+                     isValidUserData(request.resource.data);
       allow update: if isAuthenticated() && 
-                     request.auth.uid == userId &&
-                     isValidUser(request.resource.data);
+                     isOwner(userId) && 
+                     isValidUserData(request.resource.data);
+      
+      // Health Metrics subcollection
+      match /healthMetrics/{metricId} {
+        allow read, write: if isOwner(userId);
+        allow create: if isAuthenticated() && 
+                       isOwner(userId) && 
+                       validateMetricData(request.resource.data) &&
+                       hasValidDataSize(request.resource.data);
+        
+        // Individual metric readings
+        match /readings/{readingId} {
+          allow read, write: if isOwner(userId);
+          allow create: if isAuthenticated() && 
+                         isOwner(userId) && 
+                         isValidHealthData(request.resource.data);
+        }
+      }
+      
+      // Health Assessments subcollection
+      match /assessments/{assessmentId} {
+        allow read, write: if isOwner(userId);
+        allow create: if isAuthenticated() && 
+                       isOwner(userId) && 
+                       validateAssessmentData(request.resource.data);
+        
+        // Assessment responses
+        match /responses/{questionId} {
+          allow read, write: if isOwner(userId);
+          allow create: if isAuthenticated() && 
+                         isOwner(userId) && 
+                         isValidHealthData(request.resource.data);
+        }
+      }
+      
+      // Health Goals subcollection
+      match /goals/{goalId} {
+        allow read, write: if isOwner(userId);
+        allow create: if isAuthenticated() && 
+                       isOwner(userId) && 
+                       validateGoalData(request.resource.data);
+      }
+      
+      // Activities subcollection
+      match /activities/{activityId} {
+        allow read, write: if isOwner(userId);
+        allow create: if isAuthenticated() && 
+                       isOwner(userId) && 
+                       isValidHealthData(request.resource.data);
+      }
+      
+      // Reports subcollection
+      match /reports/{reportId} {
+        allow read: if isOwner(userId);
+        allow write: if false; // Reports are generated server-side only
+        allow create: if false; // Reports are created by Cloud Functions
+      }
+      
+      // Wearable devices subcollection
+      match /wearables/{deviceId} {
+        allow read, write: if isOwner(userId);
+        allow create: if isAuthenticated() && 
+                       isOwner(userId) && 
+                       isValidHealthData(request.resource.data);
+        
+        // Wearable data subcollection
+        match /data/{dataId} {
+          allow read: if isOwner(userId);
+          allow write: if false; // Wearable data is synced server-side only
+          allow create: if false; // Created by sync functions
+        }
+      }
+      
+      // User notifications subcollection
+      match /notifications/{notificationId} {
+        allow read, update: if isOwner(userId);
+        allow create, delete: if false; // Managed server-side
+      }
+      
+      // User sessions subcollection (for analytics)
+      match /sessions/{sessionId} {
+        allow read, write: if isOwner(userId);
+        allow create: if isAuthenticated() && 
+                       isOwner(userId) && 
+                       isValidHealthData(request.resource.data);
+      }
     }
     
-    // Health Assessments - tied to authenticated user
-    match /healthAssessments/{assessmentId} {
-      allow read, write: if isAuthenticated() && 
-                           isOwner(resource);
-      allow create: if isAuthenticated() && 
-                     isValidHealthData(request.resource.data);
+    // Public health data (read-only reference data)
+    match /publicHealth/{document} {
+      allow read: if true;
+      allow write: if false; // Only admins can write via Cloud Functions
     }
     
-    // Health Metrics - tied to authenticated user
-    match /healthMetrics/{metricId} {
-      allow read, write: if isAuthenticated() && 
-                           isOwner(resource);
-      allow create: if isAuthenticated() && 
-                     isValidHealthData(request.resource.data);
+    // Health education content (public read-only)
+    match /healthEducation/{contentId} {
+      allow read: if true;
+      allow write: if false; // Content managed by admins
     }
     
-    // Recommendations - tied to authenticated user
-    match /recommendations/{recommendationId} {
-      allow read, write: if isAuthenticated() && 
-                           isOwner(resource);
-      allow create: if isAuthenticated() && 
-                     isValidHealthData(request.resource.data);
+    // Research data (aggregated, anonymized)
+    match /research/{studyId} {
+      allow read: if isAuthenticated(); // Authenticated users can view research
+      allow write: if false; // Research data is generated server-side
     }
     
-    // Wearable Connections - tied to authenticated user
-    match /wearableConnections/{connectionId} {
-      allow read, write: if isAuthenticated() && 
-                           isOwner(resource);
-      allow create: if isAuthenticated() && 
-                     isValidHealthData(request.resource.data) &&
-                     request.resource.data.keys().hasAll(['provider', 'status']);
+    // System configuration (admin only)
+    match /system/{configId} {
+      allow read: if isAuthenticated() && 
+                    request.auth.token.admin == true;
+      allow write: if false; // System config is managed server-side
     }
     
-    // Wearables Data - tied to authenticated user with size limits
-    match /wearablesData/{dataId} {
-      allow read, write: if isAuthenticated() && 
-                           isOwner(resource);
-      allow create: if isAuthenticated() && 
-                     isValidHealthData(request.resource.data) &&
-                     request.resource.data.size() < 1000000; // 1MB limit
-    }
-    
-    // Health Insights - tied to authenticated user
-    match /healthInsights/{insightId} {
-      allow read, write: if isAuthenticated() && 
-                           isOwner(resource);
-      allow create: if isAuthenticated() && 
-                     isValidHealthData(request.resource.data);
-    }
-    
-    // Health Trends - tied to authenticated user
-    match /healthTrends/{trendId} {
-      allow read, write: if isAuthenticated() && 
-                           isOwner(resource);
-      allow create: if isAuthenticated() && 
-                     isValidHealthData(request.resource.data);
-    }
-    
-    // Analytics Events - tied to authenticated user
-    match /analyticsEvents/{eventId} {
-      allow read, write: if isAuthenticated() && 
-                           isOwner(resource);
-      allow create: if isAuthenticated() && 
-                     isValidHealthData(request.resource.data) &&
-                     request.resource.data.keys().hasAll(['eventType', 'eventData']);
-    }
-    
-    // Referrals - users can only access their own referrals
+    // Referral system
     match /referrals/{referralId} {
-      allow read, write: if isAuthenticated() && 
-                           (isOwner(resource) || 
-                            resource.data.referredUserId == request.auth.uid);
+      allow read: if isAuthenticated() && 
+                    (resource.data.referrerUserId == request.auth.uid || 
+                     resource.data.referredUserId == request.auth.uid);
       allow create: if isAuthenticated() && 
                      isValidHealthData(request.resource.data) &&
                      request.resource.data.keys().hasAll(['referralCode', 'status']);
+      allow update: if isAuthenticated() && 
+                     (resource.data.referrerUserId == request.auth.uid || 
+                      resource.data.referredUserId == request.auth.uid);
     }
     
-    // Temporary Tokens - only accessible by the user who created them
-    match /temporaryTokens/{tokenId} {
+    // Analytics events (user can only access their own)
+    match /analytics/{eventId} {
       allow read, write: if isAuthenticated() && 
-                           isOwner(resource);
+                           resource.data.userId == request.auth.uid;
       allow create: if isAuthenticated() && 
                      isValidHealthData(request.resource.data) &&
-                     request.resource.data.keys().hasAll(['token', 'expiresAt']);
+                     request.resource.data.keys().hasAll(['eventType', 'timestamp']);
     }
     
-    // Admin Analytics - only accessible by admin users
+    // Admin analytics (admin access only)
     match /adminAnalytics/{analyticsId} {
       allow read: if isAuthenticated() && 
                     request.auth.token.admin == true;
-      allow write: if false; // Admin analytics are read-only from client
+      allow write: if false; // Admin analytics are computed server-side
     }
     
-    // Deny all other access
+    // Temporary data (24h TTL, user access only)
+    match /temporary/{tempId} {
+      allow read, write: if isAuthenticated() && 
+                           resource.data.userId == request.auth.uid &&
+                           resource.data.expiresAt > request.time;
+      allow create: if isAuthenticated() && 
+                     isValidHealthData(request.resource.data) &&
+                     request.resource.data.keys().hasAll(['expiresAt']) &&
+                     request.resource.data.expiresAt > request.time;
+    }
+    
+    // Audit logs (read-only for users, their own data only)
+    match /auditLogs/{logId} {
+      allow read: if isAuthenticated() && 
+                    resource.data.userId == request.auth.uid;
+      allow write: if false; // Audit logs are system-generated only
+    }
+    
+    // API rate limiting (internal use only)
+    match /rateLimits/{limitId} {
+      allow read, write: if false; // Internal system use only
+    }
+    
+    // Deny all other access by default
     match /{document=**} {
       allow read, write: if false;
     }

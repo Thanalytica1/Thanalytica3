@@ -1,7 +1,9 @@
 import { z } from "zod";
 
-// Firestore-compatible data models and Zod schemas
+// Re-export health schema types for compatibility
+export * from "./health-schema";
 
+// Legacy compatibility interfaces (deprecated - use health-schema.ts)
 // Users
 export interface User {
   id: string;

@@ -2,7 +2,7 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    // Helper functions
+    // Helper functions for validation and security
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -16,48 +16,162 @@ service firebase.storage {
     }
     
     function isValidImageType() {
-      return request.resource.contentType.matches('image/.*');
+      return request.resource.contentType.matches('image/(jpeg|png|gif|webp)');
     }
     
     function isValidHealthDataType() {
       return request.resource.contentType.matches('application/json') ||
              request.resource.contentType.matches('text/csv') ||
-             request.resource.contentType.matches('application/pdf');
+             request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('text/plain');
     }
     
-    // User profile images - max 5MB
-    match /users/{userId}/profile/{imageId} {
-      allow read, write: if isAuthenticated() && 
-                           isOwner(userId) &&
-                           isValidImageType() &&
-                           isValidFileSize(5);
+    function isValidDocumentType() {
+      return request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('image/(jpeg|png)') ||
+             request.resource.contentType.matches('application/msword') ||
+             request.resource.contentType.matches('application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     }
     
-    // Health data exports - max 50MB per file
-    match /users/{userId}/exports/{exportId} {
-      allow read, write: if isAuthenticated() && 
-                           isOwner(userId) &&
-                           isValidHealthDataType() &&
-                           isValidFileSize(50);
+    function isValidVideoType() {
+      return request.resource.contentType.matches('video/(mp4|webm|mov)');
     }
     
-    // Wearable data imports - max 25MB per file
-    match /users/{userId}/wearable-imports/{importId} {
-      allow read, write: if isAuthenticated() && 
-                           isOwner(userId) &&
-                           isValidHealthDataType() &&
-                           isValidFileSize(25);
+    function hasValidFileName() {
+      return resource.name.size() < 255 && // Reasonable filename length
+             !resource.name.matches('.*[<>:"/\\|?*].*'); // No invalid characters
     }
     
-    // Health assessment attachments - max 10MB per file
-    match /users/{userId}/assessments/{assessmentId}/{attachmentId} {
-      allow read, write: if isAuthenticated() && 
-                           isOwner(userId) &&
-                           (isValidImageType() || isValidHealthDataType()) &&
-                           isValidFileSize(10);
+    // User profile data structure
+    match /users/{userId} {
+      // Profile photos - max 5MB, common image formats
+      match /profile-photos/{photoId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if isAuthenticated() && 
+                      isOwner(userId) &&
+                      isValidImageType() &&
+                      isValidFileSize(5) &&
+                      hasValidFileName();
+      }
+      
+      // Health documents (lab results, prescriptions, etc.) - max 25MB
+      match /health-documents/{documentId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if isAuthenticated() && 
+                      isOwner(userId) &&
+                      isValidDocumentType() &&
+                      isValidFileSize(25) &&
+                      hasValidFileName();
+      }
+      
+      // Generated health reports - max 50MB (read-only for users)
+      match /reports/{reportId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if false; // Reports are generated server-side only
+      }
+      
+      // Data exports (JSON, CSV format) - max 100MB
+      match /exports/{exportId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if false; // Exports are generated server-side only
+      }
+      
+      // Assessment media (photos, videos from assessments) - max 50MB
+      match /assessments/{assessmentId}/{mediaId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if isAuthenticated() && 
+                      isOwner(userId) &&
+                      (isValidImageType() || isValidVideoType()) &&
+                      isValidFileSize(50) &&
+                      hasValidFileName();
+      }
+      
+      // Wearable data imports (temporary staging) - max 25MB
+      match /wearable-imports/{importId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if isAuthenticated() && 
+                      isOwner(userId) &&
+                      isValidHealthDataType() &&
+                      isValidFileSize(25) &&
+                      hasValidFileName();
+        // Auto-delete after 24 hours (handled by Cloud Functions)
+      }
+      
+      // Backup data (encrypted) - max 500MB
+      match /backups/{backupId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if false; // Backups are created server-side only
+      }
+      
+      // Activity media (workout photos/videos) - max 25MB
+      match /activities/{activityId}/{mediaId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if isAuthenticated() && 
+                      isOwner(userId) &&
+                      (isValidImageType() || isValidVideoType()) &&
+                      isValidFileSize(25) &&
+                      hasValidFileName();
+      }
+      
+      // Goal progress media - max 10MB
+      match /goals/{goalId}/{mediaId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if isAuthenticated() && 
+                      isOwner(userId) &&
+                      isValidImageType() &&
+                      isValidFileSize(10) &&
+                      hasValidFileName();
+      }
     }
     
-    // Deny all other access
+    // Public health resources (read-only for all authenticated users)
+    match /public/health-resources/{resourceId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only admins can write via Cloud Functions
+    }
+    
+    // Educational content (videos, PDFs, images)
+    match /public/education/{contentId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Content managed by admins
+    }
+    
+    // System assets (app images, logos, etc.) - public read
+    match /public/assets/{assetId} {
+      allow read: if true; // Public assets
+      allow write: if false; // System managed
+    }
+    
+    // Research data (anonymized, aggregated) - restricted access
+    match /research/{studyId}/{dataId} {
+      allow read: if isAuthenticated() && 
+                    request.auth.token.researcher == true;
+      allow write: if false; // Research data is system-generated
+    }
+    
+    // System backups and exports (admin access only)
+    match /system/{dataType}/{fileId} {
+      allow read: if isAuthenticated() && 
+                    request.auth.token.admin == true;
+      allow write: if false; // System files are managed server-side
+    }
+    
+    // Temporary upload staging (auto-cleanup after 1 hour)
+    match /temp/{uploadId} {
+      allow read, write: if isAuthenticated() &&
+                           isValidFileSize(100) &&
+                           hasValidFileName();
+      // Note: Temporary files are cleaned up by scheduled Cloud Functions
+    }
+    
+    // Audit trail media (system screenshots, logs) - admin only
+    match /audit/{auditId}/{mediaId} {
+      allow read: if isAuthenticated() && 
+                    request.auth.token.admin == true;
+      allow write: if false; // Audit media is system-generated
+    }
+    
+    // Deny all other access by default
     match /{allPaths=**} {
       allow read, write: if false;
     }

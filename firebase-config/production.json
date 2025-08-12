@@ -1,0 +1,21 @@
+{
+  "projects": {
+    "default": "thanalytica-prod"
+  },
+  "targets": {
+    "thanalytica-prod": {
+      "hosting": {
+        "thanalytica-prod": [
+          "thanalytica-prod"
+        ]
+      },
+      "storage": {
+        "thanalytica-prod": [
+          "thanalytica-prod.appspot.com"
+        ]
+      }
+    }
+  },
+  "etags": {},
+  "dataconnectEmulatorConfig": {}
+}
