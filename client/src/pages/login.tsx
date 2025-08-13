@@ -38,7 +38,7 @@ export default function Login() {
       if (justSignedUp || isNewUser) {
         setLocation("/assessment");
       } else {
-        // Otherwise, redirect to dashboard
+        // Otherwise, redirect to enhanced dashboard
         setLocation("/dashboard");
       }
     }

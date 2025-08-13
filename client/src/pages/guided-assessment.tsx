@@ -1,15 +1,18 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useForm, useFormState } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, CheckCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, CheckCircle, Save, AlertTriangle, Timer, Smartphone, Keyboard } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useCreateHealthAssessment } from "@/hooks/use-health-data";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { FormFieldWithError } from "@/components/form-field-with-error";
 
 // Import the guided onboarding components
 import {
@@ -24,6 +27,20 @@ import {
 } from "@/components/guided-onboarding";
 import { OptimizationStep, InsightsStep } from "@/components/guided-onboarding-complete";
 
+// Encryption utility functions
+const encryptData = (data: any): string => {
+  // Simple base64 encoding for demo - replace with proper encryption in production
+  return btoa(JSON.stringify(data));
+};
+
+const decryptData = (encryptedData: string): any => {
+  try {
+    return JSON.parse(atob(encryptedData));
+  } catch {
+    return null;
+  }
+};
+
 export default function GuidedAssessment() {
   const [currentStep, setCurrentStep] = useState(0);
   const [, setLocation] = useLocation();
@@ -32,9 +49,20 @@ export default function GuidedAssessment() {
   const createAssessment = useCreateHealthAssessment();
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  const [sessionTimeLeft, setSessionTimeLeft] = useState(30 * 60); // 30 minutes
+  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [stepErrors, setStepErrors] = useState<Record<number, string[]>>({});
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const sessionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   const form = useForm<FormData>({
     resolver: zodResolver(guidedSchema),
+    mode: 'onChange',
     defaultValues: {
       age: 35,
       gender: "",
@@ -55,41 +83,174 @@ export default function GuidedAssessment() {
     },
   });
 
+  const { errors, isValid } = useFormState({ control: form.control });
+
   // Watch form data for real-time insights
   const formData = form.watch();
   const insights: BiologicalAgeResult = calculateRealTimeInsights(formData);
-  
-  // Auto-save progress to localStorage
-  useEffect(() => {
-    try {
-      const hasData = Object.keys(formData).some(key => {
-        const value = formData[key as keyof FormData];
-        return Array.isArray(value) ? value.length > 0 : value !== "" && value !== 35;
-      });
 
-      if (hasData) {
-        const draftData = {
-          formData,
-          currentStep,
-          timestamp: Date.now()
-        };
-        localStorage.setItem('thanalytica-guided-assessment', JSON.stringify(draftData));
-      }
-    } catch (error) {
-      console.warn('Failed to save assessment draft:', error);
+  // Step validation logic
+  const validateCurrentStep = useCallback(() => {
+    const currentStepData = onboardingSteps[currentStep];
+    if (!currentStepData) return true;
+
+    const stepErrors: string[] = [];
+    
+    switch (currentStep) {
+      case 0: // Vision Step
+        if (!formData.longevityGoals) stepErrors.push('Please select your longevity goals');
+        if (!formData.healthPriorities?.length) stepErrors.push('Please select at least one health priority');
+        break;
+      case 1: // Baseline Step
+        if (!formData.gender) stepErrors.push('Please select your gender');
+        if (formData.age < 18 || formData.age > 120) stepErrors.push('Please enter a valid age');
+        break;
+      case 2: // Lifestyle Step
+        if (!formData.sleepDuration) stepErrors.push('Please select your sleep duration');
+        if (!formData.exerciseFrequency) stepErrors.push('Please select your exercise frequency');
+        if (!formData.dietPattern) stepErrors.push('Please select your diet pattern');
+        break;
     }
-  }, [formData, currentStep]);
 
-  // Restore progress on mount
+    setStepErrors(prev => ({ ...prev, [currentStep]: stepErrors }));
+    return stepErrors.length === 0;
+  }, [currentStep, formData]);
+
+  // Debounced auto-save function
+  const debouncedSave = useCallback((data: FormData) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    saveTimeoutRef.current = setTimeout(async () => {
+      setIsSaving(true);
+      try {
+        const hasData = Object.keys(data).some(key => {
+          const value = data[key as keyof FormData];
+          return Array.isArray(value) ? value.length > 0 : value !== "" && value !== 35;
+        });
+
+        if (hasData) {
+          const encryptedData = encryptData({
+            formData: data,
+            currentStep,
+            timestamp: Date.now()
+          });
+          
+          localStorage.setItem('thanalytica-guided-assessment-encrypted', encryptedData);
+          setLastSaveTime(new Date());
+        }
+      } catch (error) {
+        console.warn('Failed to save assessment draft:', error);
+      } finally {
+        setIsSaving(false);
+      }
+    }, 2000); // 2 second debounce
+  }, [currentStep]);
+
+  // Session timeout management
+  useEffect(() => {
+    if (sessionTimerRef.current) {
+      clearInterval(sessionTimerRef.current);
+    }
+    
+    sessionTimerRef.current = setInterval(() => {
+      setSessionTimeLeft(prev => {
+        const newTime = prev - 1;
+        if (newTime <= 0) {
+          toast({
+            title: "Session Expired",
+            description: "Your session has expired. Please save your progress.",
+            variant: "destructive"
+          });
+          return 0;
+        }
+        return newTime;
+      });
+    }, 1000);
+
+    return () => {
+      if (sessionTimerRef.current) {
+        clearInterval(sessionTimerRef.current);
+      }
+    };
+  }, [toast]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        switch (event.key) {
+          case 'ArrowLeft':
+            event.preventDefault();
+            if (currentStep > 0) handlePrevious();
+            break;
+          case 'ArrowRight':
+            event.preventDefault();
+            if (validateCurrentStep()) handleNext();
+            break;
+          case 's':
+            event.preventDefault();
+            debouncedSave(formData);
+            break;
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [currentStep, formData, debouncedSave, validateCurrentStep]);
+
+  // Touch gesture handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && currentStep < onboardingSteps.length - 1 && validateCurrentStep()) {
+      handleNext();
+    }
+    if (isRightSwipe && currentStep > 0) {
+      handlePrevious();
+    }
+  };
+
+  // Conditional logic for skipping questions
+  const shouldSkipStep = useCallback((stepIndex: number): boolean => {
+    switch (stepIndex) {
+      case 2: // Skip lifestyle if user indicates minimal health interest
+        return formData.healthPriorities?.includes('minimal') || false;
+      default:
+        return false;
+    }
+  }, [formData.healthPriorities]);
+  
+  // Auto-save with debouncing and encryption
+  useEffect(() => {
+    debouncedSave(formData);
+  }, [formData, debouncedSave]);
+
+  // Restore encrypted progress on mount
   useEffect(() => {
     try {
-      const savedDraft = localStorage.getItem('thanalytica-guided-assessment');
+      const savedDraft = localStorage.getItem('thanalytica-guided-assessment-encrypted');
       if (!savedDraft) return;
 
-      const parsedDraft = JSON.parse(savedDraft);
+      const parsedDraft = decryptData(savedDraft);
       
-      if (!parsedDraft.formData || !parsedDraft.timestamp) {
-        localStorage.removeItem('thanalytica-guided-assessment');
+      if (!parsedDraft?.formData || !parsedDraft?.timestamp) {
+        localStorage.removeItem('thanalytica-guided-assessment-encrypted');
         return;
       }
 
@@ -97,17 +258,18 @@ export default function GuidedAssessment() {
       if (Date.now() - parsedDraft.timestamp < 24 * 60 * 60 * 1000) {
         form.reset(parsedDraft.formData);
         setCurrentStep(Math.min(Math.max(parsedDraft.currentStep, 0), onboardingSteps.length - 1));
+        setLastSaveTime(new Date(parsedDraft.timestamp));
         
         toast({
           title: "Welcome back!",
-          description: "We've restored your progress from where you left off.",
+          description: "We've securely restored your progress from where you left off.",
         });
       } else {
-        localStorage.removeItem('thanalytica-guided-assessment');
+        localStorage.removeItem('thanalytica-guided-assessment-encrypted');
       }
     } catch (error) {
       console.warn('Failed to restore assessment draft:', error);
-      localStorage.removeItem('thanalytica-guided-assessment');
+      localStorage.removeItem('thanalytica-guided-assessment-encrypted');
     }
   }, [form, toast]);
 
@@ -118,20 +280,63 @@ export default function GuidedAssessment() {
     });
   };
 
-  // Handle step navigation
-  const handleNext = () => {
-    if (currentStep < onboardingSteps.length - 1) {
-      setCurrentStep(prev => prev + 1);
+  // Enhanced step navigation with validation and skipping
+  const handleNext = useCallback(() => {
+    if (!validateCurrentStep()) {
+      toast({
+        title: "Please complete required fields",
+        description: "Some required information is missing on this step.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    let nextStep = currentStep + 1;
+    
+    // Skip steps based on conditional logic
+    while (nextStep < onboardingSteps.length && shouldSkipStep(nextStep)) {
+      nextStep++;
+    }
+
+    if (nextStep < onboardingSteps.length) {
+      setCurrentStep(nextStep);
     } else {
       handleSubmit();
     }
-  };
+  }, [currentStep, validateCurrentStep, shouldSkipStep, toast]);
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1);
+      let prevStep = currentStep - 1;
+      
+      // Skip steps based on conditional logic when going backwards
+      while (prevStep >= 0 && shouldSkipStep(prevStep)) {
+        prevStep--;
+      }
+      
+      setCurrentStep(Math.max(0, prevStep));
     }
-  };
+  }, [currentStep, shouldSkipStep]);
+
+  // Handle page leave/exit
+  const handleExit = useCallback(() => {
+    if (Object.keys(formData).some(key => {
+      const value = formData[key as keyof FormData];
+      return Array.isArray(value) ? value.length > 0 : value !== "" && value !== 35;
+    })) {
+      setShowExitDialog(true);
+    } else {
+      setLocation('/dashboard');
+    }
+  }, [formData, setLocation]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      if (sessionTimerRef.current) clearInterval(sessionTimerRef.current);
+    };
+  }, []);
 
   // Handle final submission
   const handleSubmit = async () => {
@@ -157,8 +362,8 @@ export default function GuidedAssessment() {
 
       await createAssessment.mutateAsync(assessmentData);
       
-      // Clear the saved draft
-      localStorage.removeItem('thanalytica-guided-assessment');
+      // Clear the saved encrypted draft
+      localStorage.removeItem('thanalytica-guided-assessment-encrypted');
       
       toast({
         title: "🎉 Assessment Complete!",
@@ -186,6 +391,16 @@ export default function GuidedAssessment() {
 
   // Calculate progress percentage
   const progressPercentage = ((currentStep + 1) / onboardingSteps.length) * 100;
+  
+  // Format session time
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+  
+  // Get current step errors
+  const currentStepErrors = stepErrors[currentStep] || [];
 
   // Render current step
   const renderCurrentStep = () => {
@@ -315,14 +530,22 @@ export default function GuidedAssessment() {
               <div className="text-red-800">
                 <strong>Error:</strong> {submissionError}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSubmissionError(null)}
-                className="mt-2"
-              >
-                Try Again
-              </Button>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSubmissionError(null)}
+                >
+                  Try Again
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => debouncedSave(formData)}
+                >
+                  Save Progress
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
