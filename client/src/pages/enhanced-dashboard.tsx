@@ -109,16 +109,72 @@ export default function EnhancedDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [retryCount, setRetryCount] = useState(0);
   
-  // Memoized URL params check
-  const isNewUser = useMemo(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('newUser') === 'true';
-  }, []);
-  
   // Data fetching with new optimized hooks
   const { data: assessment, isLoading: assessmentLoading, error: assessmentError } = useLatestAssessment();
   const { data: metrics, isLoading: metricsLoading, error: metricsError } = useNewHealthMetrics('weight', 30);
   const { data: analytics, isLoading: analyticsLoading } = useHealthAnalytics(timeRange);
+  
+  // Memoized URL params check and recent assessment check
+  const isNewUser = useMemo(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasNewUserParam = urlParams.get('newUser') === 'true';
+    
+    // Check URL completion timestamp as fallback
+    let hasRecentUrlCompletion = false;
+    const completedParam = urlParams.get('completed');
+    if (completedParam) {
+      try {
+        const completedTime = parseInt(completedParam);
+        const hoursSinceUrlCompletion = (Date.now() - completedTime) / (1000 * 60 * 60);
+        hasRecentUrlCompletion = hoursSinceUrlCompletion < 24 && hoursSinceUrlCompletion >= 0;
+        
+        if (hasRecentUrlCompletion) {
+          console.log(`URL completion timestamp ${hoursSinceUrlCompletion.toFixed(1)} hours ago - showing Day1Dashboard`);
+        }
+      } catch (error) {
+        console.warn('Error parsing URL completion timestamp:', error);
+      }
+    }
+    
+    // Also check if assessment was completed within last 24 hours
+    let hasRecentAssessment = false;
+    if (assessment) {
+      try {
+        // Check completedAt first, then fall back to createdAt
+        const dateToCheck = assessment.completedAt || assessment.createdAt;
+        
+        if (dateToCheck) {
+          const checkDate = dateToCheck instanceof Date 
+            ? dateToCheck 
+            : new Date(dateToCheck);
+          const hoursSinceCompletion = (Date.now() - checkDate.getTime()) / (1000 * 60 * 60);
+          hasRecentAssessment = hoursSinceCompletion < 24 && hoursSinceCompletion >= 0;
+          
+          // Debug logging (remove in production)
+          if (hasRecentAssessment) {
+            console.log(`Assessment ${assessment.completedAt ? 'completed' : 'created'} ${hoursSinceCompletion.toFixed(1)} hours ago - showing Day1Dashboard`);
+          }
+        }
+      } catch (error) {
+        console.warn('Error parsing assessment date:', error);
+        hasRecentAssessment = false;
+      }
+    }
+    
+    const shouldShowDay1 = hasNewUserParam || hasRecentAssessment || hasRecentUrlCompletion;
+    
+    // Debug logging (remove in production)
+    console.log('Dashboard display logic:', {
+      hasNewUserParam,
+      hasRecentAssessment,
+      hasRecentUrlCompletion,
+      shouldShowDay1,
+      completedAt: assessment?.completedAt,
+      urlCompletedParam: completedParam
+    });
+    
+    return shouldShowDay1;
+  }, [assessment?.completedAt, assessment?.createdAt]);
   
   // Retry function
   const handleRetry = useCallback(() => {
@@ -255,7 +311,7 @@ export default function EnhancedDashboard() {
     );
   }
   
-  // Show Day 1 experience for new users
+  // Show Day 1 experience for new users (URL param ?newUser=true OR assessment completed within 24 hours)
   if (isNewUser && assessment && user) {
     return (
       <Suspense fallback={<DashboardLoadingSkeleton />}>

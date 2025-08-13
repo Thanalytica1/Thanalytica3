@@ -370,8 +370,9 @@ export default function GuidedAssessment() {
         description: "Your personalized health profile has been created. Welcome to your longevity journey!",
       });
 
-      // Redirect to dashboard with day 1 experience
-      setLocation("/dashboard?newUser=true");
+      // Redirect to dashboard with day 1 experience and completion timestamp
+      const completionTime = Date.now();
+      setLocation(`/dashboard?newUser=true&completed=${completionTime}`);
       
     } catch (error: any) {
       console.error("Assessment submission error:", error);
