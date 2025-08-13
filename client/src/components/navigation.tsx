@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Heart, User, Info, Watch, Brain, Share2 } from "lucide-react";
+import { Heart, User, Info, Watch, Brain, Share2, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { signInWithGoogle, signOutUser } from "@/lib/firebase";
 
@@ -47,6 +47,15 @@ export function Navigation() {
                   className="text-professional-slate hover:text-medical-green"
                 >
                   Dashboard
+                </Button>
+              </Link>
+              <Link href="/daily-log">
+                <Button 
+                  variant={location === "/daily-log" ? "default" : "ghost"}
+                  className="text-professional-slate hover:text-medical-green"
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Daily Log
                 </Button>
               </Link>
               <Link href="/assessment">

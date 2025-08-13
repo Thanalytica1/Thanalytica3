@@ -9,6 +9,7 @@ import { AppFooter } from "@/components/app-footer";
 import Home from "@/pages/home";
 import GuidedAssessment from "@/pages/guided-assessment";
 import Dashboard from "@/pages/dashboard";
+import DailyLog from "@/pages/daily-log";
 import Recommendations from "@/pages/recommendations";
 import Wearables from "@/pages/wearables";
 import Referrals from "@/pages/referrals";
@@ -37,6 +38,13 @@ function Router() {
         <ErrorBoundary>
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        </ErrorBoundary>
+      </Route>
+      <Route path="/daily-log">
+        <ErrorBoundary>
+          <ProtectedRoute>
+            <DailyLog />
           </ProtectedRoute>
         </ErrorBoundary>
       </Route>

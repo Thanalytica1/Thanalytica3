@@ -39,6 +39,7 @@ import { validateHealthData, calculateBiologicalAgeStatus } from '@/utils/health
 const WearableDashboard = lazy(() => import('@/components/wearable-dashboard'));
 const Day1Dashboard = lazy(() => import('@/components/day1-dashboard'));
 const AdvancedAnalytics = lazy(() => import('@/components/advanced-analytics'));
+const DailyLogDashboard = lazy(() => import('@/components/daily-log-dashboard'));
 
 // Error Boundary Component
 const ErrorBoundary = ({ 
@@ -433,6 +434,11 @@ export default function EnhancedDashboard() {
         
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
+          {/* Daily Log Section */}
+          <Suspense fallback={<div>Loading daily log...</div>}>
+            <DailyLogDashboard />
+          </Suspense>
+          
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Health Factor Analysis */}
             <div className="lg:col-span-2">
