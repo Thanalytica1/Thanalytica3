@@ -155,15 +155,11 @@ export const apiLightweight: HttpsFunction = onRequest({
   memory: "256MiB", // Minimum memory for cost efficiency
   timeoutSeconds: 10, // Short timeout for API endpoints
   maxInstances: 100, // Prevent cost explosions
-  cors: {
-    origin: [
-      "https://thanalytica.web.app",
-      "https://thanalytica.firebaseapp.com",
-      "http://localhost:5050" // Development
-    ],
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-  }
+  cors: [
+    "https://thanalytica.web.app",
+    "https://thanalytica.firebaseapp.com",
+    "http://localhost:5050" // Development
+  ]
 }, lightweightApp);
 
 // =============================================================================
@@ -371,18 +367,4 @@ export const onUserCreated = onDocumentCreated({
   }
 });
 
-// Export all functions
-export {
-  // Lightweight APIs
-  apiLightweight,
-  
-  // Batch processors
-  dailyMetricsProcessor,
-  weeklyCorrelationAnalysis,
-  cacheCleanup,
-  
-  // Minimal triggers
-  onAssessmentCreated,
-  onWearableDataCreated,
-  onUserCreated
-};
+// Functions are already exported individually above

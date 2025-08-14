@@ -306,7 +306,7 @@ export class MetricsCalculationEngine {
   // Score calculation methods
   private calculateSleepScore(data: WearablesData[]): number {
     // Extract sleep data and calculate score
-    const sleepData = data.filter(d => d.dataType?.includes('sleep'));
+    const sleepData = data.filter(d => (d as any).dataType?.includes('sleep'));
     if (sleepData.length === 0) return 75; // Default score
     
     // Simple calculation - would be more sophisticated in production
@@ -323,7 +323,7 @@ export class MetricsCalculationEngine {
   }
 
   private calculateActivityScore(data: WearablesData[]): number {
-    const activityData = data.filter(d => d.dataType?.includes('activity'));
+    const activityData = data.filter(d => (d as any).dataType?.includes('activity'));
     if (activityData.length === 0) return 75;
     
     // Calculate based on steps and active minutes
@@ -344,7 +344,7 @@ export class MetricsCalculationEngine {
   }
 
   private calculateStressScore(data: WearablesData[]): number {
-    const stressData = data.filter(d => d.dataType?.includes('stress'));
+    const stressData = data.filter(d => (d as any).dataType?.includes('stress'));
     if (stressData.length === 0) return 75;
     
     // Calculate based on HRV and other stress indicators

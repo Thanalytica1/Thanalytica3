@@ -4,7 +4,7 @@ import { getFirestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import express from "express";
 import cors from "cors";
-import { UserProfile, userProfileSchema } from "../../../shared/health-schema";
+import { UserProfile, userProfileSchema } from "@shared/health-schema";
 
 const db = getFirestore();
 const auth = getAuth();

@@ -3,7 +3,7 @@ import { onRequest } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
 import express from "express";
 import cors from "cors";
-import { HealthMetric, healthMetricSchema } from "../../../shared/health-schema";
+import { HealthMetric, healthMetricSchema } from "@shared/health-schema";
 
 const db = getFirestore();
 const app = express();
