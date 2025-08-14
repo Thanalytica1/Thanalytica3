@@ -1,0 +1,155 @@
+[debug] [2025-08-14T22:11:31.439Z] ----------------------------------------------------------------------
+[debug] [2025-08-14T22:11:31.443Z] Command:       /Users/jdapeman/.nvm/versions/node/v22.18.0/bin/node /Users/jdapeman/.nvm/versions/node/v22.18.0/bin/firebase emulators:start --only hosting,functions,auth,firestore
+[debug] [2025-08-14T22:11:31.444Z] CLI Version:   14.12.0
+[debug] [2025-08-14T22:11:31.444Z] Platform:      darwin
+[debug] [2025-08-14T22:11:31.444Z] Node Version:  v22.18.0
+[debug] [2025-08-14T22:11:31.444Z] Time:          Thu Aug 14 2025 18:11:31 GMT-0400 (Eastern Daylight Time)
+[debug] [2025-08-14T22:11:31.445Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-08-14T22:11:31.775Z] Object "/emulators/logging" in "firebase.json" has unknown property: {"additionalProperty":"level"}
+[debug] [2025-08-14T22:11:31.785Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-08-14T22:11:31.785Z] > authorizing via signed-in user (jonahdevoy@gmail.com)
+[debug] [2025-08-14T22:11:32.074Z] java version "21.0.1" 2023-10-17 LTS
+
+[debug] [2025-08-14T22:11:32.074Z] Java(TM) SE Runtime Environment (build 21.0.1+12-LTS-29)
+Java HotSpot(TM) 64-Bit Server VM (build 21.0.1+12-LTS-29, mixed mode, sharing)
+
+[debug] [2025-08-14T22:11:32.088Z] Parsed Java major version: 21
+[info] i  emulators: Starting emulators: auth, functions, firestore, hosting {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth, functions, firestore, hosting"}}
+[debug] [2025-08-14T22:11:33.268Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-08-14T22:11:33.269Z] assigned listening specs for emulators {"user":{"ui":[{"address":"0.0.0.0","family":"IPv4","port":4040}],"auth":[{"address":"0.0.0.0","family":"IPv4","port":9099}],"firestore":[{"address":"0.0.0.0","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"0.0.0.0","family":"IPv4","port":9150}],"hosting":[{"address":"0.0.0.0","family":"IPv4","port":5050}],"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2025-08-14T22:11:33.276Z] [hub] writing locator at /var/folders/yd/tybxdv4901xbv_l8x4p1g7tm0000gn/T/hub-thanalytica-60a73.json
+[debug] [2025-08-14T22:11:33.764Z] [tasks] Cloud Tasks Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-08-14T22:11:33.764Z] late-assigned ports for functions and eventarc emulators {"user":{"ui":[{"address":"0.0.0.0","family":"IPv4","port":4040}],"auth":[{"address":"0.0.0.0","family":"IPv4","port":9099}],"firestore":[{"address":"0.0.0.0","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"0.0.0.0","family":"IPv4","port":9150}],"hosting":[{"address":"0.0.0.0","family":"IPv4","port":5050}],"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"functions":[{"address":"0.0.0.0","family":"IPv4","port":5051}],"eventarc":[{"address":"0.0.0.0","family":"IPv4","port":9299}],"tasks":[{"address":"127.0.0.1","family":"IPv4","port":9499}]},"metadata":{"message":"late-assigned ports for functions and eventarc emulators"}}
+[warn] ⚠  functions: The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, database, pubsub, storage, dataconnect {"metadata":{"emulator":{"name":"functions"},"message":"The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, database, pubsub, storage, dataconnect"}}
+[debug] [2025-08-14T22:11:33.807Z] defaultcredentials: writing to file /Users/jdapeman/.config/firebase/jonahdevoy_gmail_com_application_default_credentials.json
+[debug] [2025-08-14T22:11:33.808Z] Setting GAC to /Users/jdapeman/.config/firebase/jonahdevoy_gmail_com_application_default_credentials.json {"metadata":{"emulator":{"name":"functions"},"message":"Setting GAC to /Users/jdapeman/.config/firebase/jonahdevoy_gmail_com_application_default_credentials.json"}}
+[debug] [2025-08-14T22:11:33.809Z] Checked if tokens are valid: true, expires at: 1755211399018
+[debug] [2025-08-14T22:11:33.809Z] Checked if tokens are valid: true, expires at: 1755211399018
+[debug] [2025-08-14T22:11:33.810Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73/adminSdkConfig [none]
+[debug] [2025-08-14T22:11:34.366Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73/adminSdkConfig 200
+[debug] [2025-08-14T22:11:34.366Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73/adminSdkConfig {"projectId":"thanalytica-60a73","storageBucket":"thanalytica-60a73.firebasestorage.app"}
+[debug] [2025-08-14T22:11:34.414Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-08-14T22:11:34.414Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
+[debug] [2025-08-14T22:11:34.414Z] Starting Firestore Emulator with command {"binary":"java","args":["-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","/Users/jdapeman/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar","--host","0.0.0.0","--port",8080,"--websocket_port",9150,"--project_id","thanalytica-60a73","--rules","/Users/jdapeman/Downloads/thanalytica3/Thanalytica3/firestore.rules","--single_project_mode",true,"--functions_emulator","127.0.0.1:5051"],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"/Users/jdapeman/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar\",\"--host\",\"0.0.0.0\",\"--port\",8080,\"--websocket_port\",9150,\"--project_id\",\"thanalytica-60a73\",\"--rules\",\"/Users/jdapeman/Downloads/thanalytica3/Thanalytica3/firestore.rules\",\"--single_project_mode\",true,\"--functions_emulator\",\"127.0.0.1:5051\"],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to firestore-debug.log"}}
+[debug] [2025-08-14T22:11:36.419Z] Aug 14, 2025 6:11:36 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
+INFO: Started WebSocket server on ws://0.0.0.0:9150
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Aug 14, 2025 6:11:36 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start\nINFO: Started WebSocket server on ws://0.0.0.0:9150\n"}}
+[debug] [2025-08-14T22:11:36.466Z] API endpoint: http://0.0.0.0:8080 {"metadata":{"emulator":{"name":"firestore"},"message":"API endpoint: http://0.0.0.0:8080"}}
+[debug] [2025-08-14T22:11:36.466Z] 
+If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:
+
+   export FIRESTORE_EMULATOR_HOST=0.0.0.0:8080
+
+If you are running a Firestore in Datastore Mode project, run:
+
+   export DATASTORE_EMULATOR_HOST=0.0.0.0:8080
+
+Note: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.
+Dev App Server is now running.
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"\nIf you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:\n\n   export FIRESTORE_EMULATOR_HOST=0.0.0.0:8080\n\nIf you are running a Firestore in Datastore Mode project, run:\n\n   export DATASTORE_EMULATOR_HOST=0.0.0.0:8080\n\nNote: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.\nDev App Server is now running.\n\n"}}
+[info] ✔  firestore: Firestore Emulator UI websocket is running on 9150. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 9150."}}
+[debug] [2025-08-14T22:11:45.261Z] Checked if tokens are valid: true, expires at: 1755211399018
+[debug] [2025-08-14T22:11:45.262Z] Checked if tokens are valid: true, expires at: 1755211399018
+[debug] [2025-08-14T22:11:45.262Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/thanalytica-60a73/sites 
+[debug] [2025-08-14T22:11:45.815Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/thanalytica-60a73/sites 200
+[debug] [2025-08-14T22:11:45.815Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/thanalytica-60a73/sites {"sites":[{"name":"projects/thanalytica-60a73/sites/thanalytica-60a73","defaultUrl":"https://thanalytica-60a73.web.app","appId":"1:206038502995:web:2d4b16077e7cfd454f00a6","type":"DEFAULT_SITE"}]}
+[debug] [2025-08-14T22:11:45.815Z] Checked if tokens are valid: true, expires at: 1755211399018
+[debug] [2025-08-14T22:11:45.815Z] Checked if tokens are valid: true, expires at: 1755211399018
+[debug] [2025-08-14T22:11:45.815Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73/webApps/1:206038502995:web:2d4b16077e7cfd454f00a6/config [none]
+[debug] [2025-08-14T22:11:46.308Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73/webApps/1:206038502995:web:2d4b16077e7cfd454f00a6/config 200
+[debug] [2025-08-14T22:11:46.308Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73/webApps/1:206038502995:web:2d4b16077e7cfd454f00a6/config {"projectId":"thanalytica-60a73","appId":"1:206038502995:web:2d4b16077e7cfd454f00a6","storageBucket":"thanalytica-60a73.firebasestorage.app","apiKey":"AIzaSyCOuJaKo575dllDLMt6sYSQvHuIbG76i_o","authDomain":"thanalytica-60a73.firebaseapp.com","messagingSenderId":"206038502995","measurementId":"G-8ZGT85CRW9"}
+[debug] [2025-08-14T22:11:46.339Z] Checked if tokens are valid: true, expires at: 1755211399018
+[debug] [2025-08-14T22:11:46.339Z] Checked if tokens are valid: true, expires at: 1755211399018
+[debug] [2025-08-14T22:11:46.340Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73 [none]
+[debug] [2025-08-14T22:11:46.624Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73 200
+[debug] [2025-08-14T22:11:46.625Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/thanalytica-60a73 {"projectId":"thanalytica-60a73","projectNumber":"206038502995","displayName":"Thanalytica","name":"projects/thanalytica-60a73","resources":{"hostingSite":"thanalytica-60a73"},"state":"ACTIVE","etag":"1_b476d933-3719-43a3-9487-bfdcaf789ef8"}
+[info] i  hosting[thanalytica-60a73]: Serving hosting files from: dist/public {"metadata":{"emulator":{"name":"hosting"},"message":"Serving hosting files from: dist/public"}}
+[info] ✔  hosting[thanalytica-60a73]: Local server: http://0.0.0.0:5050 {"metadata":{"emulator":{"name":"hosting"},"message":"Local server: http://0.0.0.0:5050"}}
+[info] i  functions: Watching "/Users/jdapeman/Downloads/thanalytica3/Thanalytica3/functions" for Cloud Functions... {"metadata":{"emulator":{"name":"functions"},"message":"Watching \"/Users/jdapeman/Downloads/thanalytica3/Thanalytica3/functions\" for Cloud Functions..."}}
+[debug] [2025-08-14T22:11:46.772Z] Validating nodejs source
+[warn] ⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
+[warn] ⚠  functions: Please note that there will be breaking changes when you upgrade. 
+[debug] [2025-08-14T22:11:47.753Z] > [functions] package.json contents: {
+  "name": "thanalytica-functions",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@types/compression": "^1.8.1",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^5.0.1"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3"
+  }
+}
+[debug] [2025-08-14T22:11:47.753Z] Building nodejs source
+[debug] [2025-08-14T22:11:47.754Z] Failed to find version of module node: reached end of search path /Users/jdapeman/Downloads/thanalytica3/Thanalytica3/functions/node_modules
+[warn] ⚠  functions: Your requested "node" version "20" doesn't match your global version "22". Using node@22 from host. 
+[debug] [2025-08-14T22:11:47.756Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-08-14T22:11:47.766Z] Found firebase-functions binary at '/Users/jdapeman/Downloads/thanalytica3/Thanalytica3/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8353
+
+[error] ReferenceError: exports is not defined in ES module scope
+This file is being treated as an ES module because it has a '.js' file extension and '/Users/jdapeman/Downloads/thanalytica3/Thanalytica3/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+    at file:///Users/jdapeman/Downloads/thanalytica3/Thanalytica3/shared/health-schema.js:2:23
+    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:450:37)
+    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:429:47)
+    at loadESMFromCJS (node:internal/modules/cjs/loader:1519:24)
+    at Module._compile (node:internal/modules/cjs/loader:1670:5)
+    at Object..js (node:internal/modules/cjs/loader:1820:10)
+    at Module.load (node:internal/modules/cjs/loader:1423:32)
+    at Function._load (node:internal/modules/cjs/loader:1246:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+
+[debug] [2025-08-14T22:11:48.619Z] Got response code 400; body Failed to generate manifest from function source: ReferenceError: exports is not defined in ES module scope
+This file is being treated as an ES module because it has a '.js' file extension and '/Users/jdapeman/Downloads/thanalytica3/Thanalytica3/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+[error] ⬢  functions: Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error {"metadata":{"emulator":{"name":"functions"},"message":"Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error"}}
+[debug] [2025-08-14T22:11:52.641Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:4040/               │
+└─────────────────────────────────────────────────────────────┘
+
+┌────────────────┬──────────────┬─────────────────────────────────┐
+│ Emulator       │ Host:Port    │ View in Emulator UI             │
+├────────────────┼──────────────┼─────────────────────────────────┤
+│ Authentication │ 0.0.0.0:9099 │ http://127.0.0.1:4040/auth      │
+├────────────────┼──────────────┼─────────────────────────────────┤
+│ Functions      │ 0.0.0.0:5051 │ http://127.0.0.1:4040/functions │
+├────────────────┼──────────────┼─────────────────────────────────┤
+│ Firestore      │ 0.0.0.0:8080 │ http://127.0.0.1:4040/firestore │
+├────────────────┼──────────────┼─────────────────────────────────┤
+│ Hosting        │ 0.0.0.0:5050 │ n/a                             │
+└────────────────┴──────────────┴─────────────────────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500, 9150
+
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
+[info] i  hosting: 127.0.0.1 - - [14/Aug/2025:22:11:56 +0000] "GET / HTTP/1.1" 200 1163 "-" "curl/8.7.1" {"metadata":{"emulator":{"name":"hosting"},"message":"127.0.0.1 - - [14/Aug/2025:22:11:56 +0000] \"GET / HTTP/1.1\" 200 1163 \"-\" \"curl/8.7.1\""}}
+[info] i  hosting: 127.0.0.1 - - [14/Aug/2025:22:12:28 +0000] "GET /assets/index-CqRT9MFX.js HTTP/1.1" 200 1246859 "-" "curl/8.7.1" {"metadata":{"emulator":{"name":"hosting"},"message":"127.0.0.1 - - [14/Aug/2025:22:12:28 +0000] \"GET /assets/index-CqRT9MFX.js HTTP/1.1\" 200 1246859 \"-\" \"curl/8.7.1\""}}
+[info] i  hosting: 127.0.0.1 - - [14/Aug/2025:22:12:42 +0000] "GET / HTTP/1.1" 200 - "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36" {"metadata":{"emulator":{"name":"hosting"},"message":"127.0.0.1 - - [14/Aug/2025:22:12:42 +0000] \"GET / HTTP/1.1\" 200 - \"-\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36\""}}
+[info] i  hosting: 127.0.0.1 - - [14/Aug/2025:22:12:42 +0000] "GET /assets/index-C0g0x2Az.css HTTP/1.1" 200 - "http://localhost:5050/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36" {"metadata":{"emulator":{"name":"hosting"},"message":"127.0.0.1 - - [14/Aug/2025:22:12:42 +0000] \"GET /assets/index-C0g0x2Az.css HTTP/1.1\" 200 - \"http://localhost:5050/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36\""}}
+[info] i  hosting: 127.0.0.1 - - [14/Aug/2025:22:12:42 +0000] "GET /assets/index-CqRT9MFX.js HTTP/1.1" 200 - "http://localhost:5050/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36" {"metadata":{"emulator":{"name":"hosting"},"message":"127.0.0.1 - - [14/Aug/2025:22:12:42 +0000] \"GET /assets/index-CqRT9MFX.js HTTP/1.1\" 200 - \"http://localhost:5050/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36\""}}
+[info] i  hosting: 127.0.0.1 - - [14/Aug/2025:22:12:43 +0000] "GET /favicon.ico HTTP/1.1" 200 - "http://localhost:5050/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36" {"metadata":{"emulator":{"name":"hosting"},"message":"127.0.0.1 - - [14/Aug/2025:22:12:43 +0000] \"GET /favicon.ico HTTP/1.1\" 200 - \"http://localhost:5050/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36\""}}
+[info] i  hosting: 127.0.0.1 - - [14/Aug/2025:22:13:10 +0000] "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 187 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36" {"metadata":{"emulator":{"name":"hosting"},"message":"127.0.0.1 - - [14/Aug/2025:22:13:10 +0000] \"GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1\" 404 187 \"-\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36\""}}
+[info] i  hosting: 127.0.0.1 - - [14/Aug/2025:22:13:56 +0000] "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 187 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36" {"metadata":{"emulator":{"name":"hosting"},"message":"127.0.0.1 - - [14/Aug/2025:22:13:56 +0000] \"GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1\" 404 187 \"-\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36\""}}
+[info] i  hosting: 127.0.0.1 - - [14/Aug/2025:22:16:15 +0000] "GET / HTTP/1.1" 200 919 "-" "curl/8.7.1" {"metadata":{"emulator":{"name":"hosting"},"message":"127.0.0.1 - - [14/Aug/2025:22:16:15 +0000] \"GET / HTTP/1.1\" 200 919 \"-\" \"curl/8.7.1\""}}
+[info] i  hosting: 127.0.0.1 - - [14/Aug/2025:22:16:24 +0000] "GET / HTTP/1.1" 200 919 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36" {"metadata":{"emulator":{"name":"hosting"},"message":"127.0.0.1 - - [14/Aug/2025:22:16:24 +0000] \"GET / HTTP/1.1\" 200 919 \"-\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36\""}}
+[info] i  hosting: 127.0.0.1 - - [14/Aug/2025:22:16:24 +0000] "GET /assets/index-DylKQJnT.js HTTP/1.1" 200 - "http://localhost:5050/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36" {"metadata":{"emulator":{"name":"hosting"},"message":"127.0.0.1 - - [14/Aug/2025:22:16:24 +0000] \"GET /assets/index-DylKQJnT.js HTTP/1.1\" 200 - \"http://localhost:5050/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36\""}}
+[info] i  hosting: 127.0.0.1 - - [14/Aug/2025:22:16:24 +0000] "GET /favicon.ico HTTP/1.1" 304 - "http://localhost:5050/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36" {"metadata":{"emulator":{"name":"hosting"},"message":"127.0.0.1 - - [14/Aug/2025:22:16:24 +0000] \"GET /favicon.ico HTTP/1.1\" 304 - \"http://localhost:5050/\" \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36\""}}
