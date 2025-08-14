@@ -1,10 +1,9 @@
-// Health assessments hook using new hierarchical structure
+// Health assessments hook using Firestore
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { auth } from "@/lib/firebase";
 import { HealthAssessment, AssessmentResponse } from "@shared/health-schema";
-
-const API_BASE = "/api/health/assessments";
+import { FirestoreAssessmentsService } from "@/services/firestore-assessments";
 
 // Fetch health assessments for current user
 export function useHealthAssessments(limit = 10, status?: string) {
@@ -15,14 +14,7 @@ export function useHealthAssessments(limit = 10, status?: string) {
     queryFn: async (): Promise<HealthAssessment[]> => {
       if (!user?.uid) throw new Error("User not authenticated");
       
-      const params = new URLSearchParams();
-      params.append("limit", limit.toString());
-      if (status) params.append("status", status);
-      
-      const response = await fetch(`${API_BASE}/${user.uid}?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch health assessments");
-      
-      return response.json();
+      return await FirestoreAssessmentsService.getHealthAssessments(user.uid, limit, status);
     },
     enabled: !!user?.uid,
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -38,11 +30,7 @@ export function useLatestAssessment() {
     queryFn: async (): Promise<HealthAssessment | null> => {
       if (!user?.uid) throw new Error("User not authenticated");
       
-      const response = await fetch(`${API_BASE}/${user.uid}?limit=1&status=completed`);
-      if (!response.ok) throw new Error("Failed to fetch latest assessment");
-      
-      const assessments = await response.json();
-      return assessments.length > 0 ? assessments[0] : null;
+      return await FirestoreAssessmentsService.getLatestAssessment(user.uid);
     },
     enabled: !!user?.uid,
     staleTime: 5 * 60 * 1000,
@@ -58,14 +46,7 @@ export function useCreateAssessment() {
     mutationFn: async (data: Partial<HealthAssessment>): Promise<HealthAssessment> => {
       if (!user?.uid) throw new Error("User not authenticated");
       
-      const response = await fetch(`${API_BASE}/${user.uid}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) throw new Error("Failed to create assessment");
-      return response.json();
+      return await FirestoreAssessmentsService.createAssessment(user.uid, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["healthAssessments", user?.uid] });
@@ -88,14 +69,7 @@ export function useUpdateAssessment() {
     }): Promise<HealthAssessment> => {
       if (!user?.uid) throw new Error("User not authenticated");
       
-      const response = await fetch(`${API_BASE}/${user.uid}/${assessmentId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) throw new Error("Failed to update assessment");
-      return response.json();
+      return await FirestoreAssessmentsService.updateAssessment(user.uid, assessmentId, data);
     },
     onSuccess: (updatedAssessment) => {
       queryClient.invalidateQueries({ queryKey: ["healthAssessments", user?.uid] });
@@ -130,14 +104,7 @@ export function useSubmitResponse() {
     }): Promise<AssessmentResponse> => {
       if (!user?.uid) throw new Error("User not authenticated");
       
-      const responseData = await fetch(`${API_BASE}/${user.uid}/${assessmentId}/responses`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(response),
-      });
-      
-      if (!responseData.ok) throw new Error("Failed to submit response");
-      return responseData.json();
+      return await FirestoreAssessmentsService.submitResponse(user.uid, assessmentId, response);
     },
     onSuccess: (_, { assessmentId }) => {
       // Invalidate responses for this assessment
@@ -157,10 +124,7 @@ export function useAssessmentResponses(assessmentId: string) {
     queryFn: async (): Promise<AssessmentResponse[]> => {
       if (!user?.uid) throw new Error("User not authenticated");
       
-      const response = await fetch(`${API_BASE}/${user.uid}/${assessmentId}/responses`);
-      if (!response.ok) throw new Error("Failed to fetch responses");
-      
-      return response.json();
+      return await FirestoreAssessmentsService.getAssessmentResponses(user.uid, assessmentId);
     },
     enabled: !!user?.uid && !!assessmentId,
     staleTime: 5 * 60 * 1000,
@@ -194,10 +158,7 @@ export function useAssessmentInsights(assessmentId?: string) {
     queryFn: async () => {
       if (!user?.uid || !assessmentId) throw new Error("Missing required parameters");
       
-      const response = await fetch(`${API_BASE}/${user.uid}/${assessmentId}/insights`);
-      if (!response.ok) throw new Error("Failed to fetch insights");
-      
-      return response.json();
+      return await FirestoreAssessmentsService.getAssessmentInsights(user.uid, assessmentId);
     },
     enabled: !!user?.uid && !!assessmentId,
     staleTime: 30 * 60 * 1000, // 30 minutes
@@ -213,14 +174,7 @@ export function useAssessmentComparison(assessmentIds: string[]) {
     queryFn: async () => {
       if (!user?.uid) throw new Error("User not authenticated");
       
-      const response = await fetch(`${API_BASE}/${user.uid}/compare`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ assessmentIds }),
-      });
-      
-      if (!response.ok) throw new Error("Failed to compare assessments");
-      return response.json();
+      return await FirestoreAssessmentsService.compareAssessments(user.uid, assessmentIds);
     },
     enabled: !!user?.uid && assessmentIds.length > 1,
     staleTime: 15 * 60 * 1000,

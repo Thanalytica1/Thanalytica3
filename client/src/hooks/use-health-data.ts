@@ -1,10 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import type { HealthAssessment, HealthMetrics, Recommendation, InsertHealthAssessment } from "@shared/schema";
+import type { HealthAssessment, Recommendation, InsertHealthAssessment } from "@shared/schema";
+import { FirestoreAssessmentsService } from "@/services/firestore-assessments";
+import { FirestoreMetricsService } from "@/services/firestore-metrics";
 
 export function useHealthAssessment(userId: string) {
-  return useQuery<HealthAssessment>({
-    queryKey: ["/api/health-assessment", userId],
+  return useQuery<any>({
+    queryKey: ["health-assessment", userId],
+    queryFn: async () => {
+      return await FirestoreAssessmentsService.getLatestAssessment(userId);
+    },
     enabled: !!userId,
     // Health assessments don't change frequently - cache longer
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -14,8 +18,11 @@ export function useHealthAssessment(userId: string) {
 }
 
 export function useHealthMetrics(userId: string) {
-  return useQuery<HealthMetrics>({
-    queryKey: ["/api/health-metrics", userId],
+  return useQuery<any>({
+    queryKey: ["health-metrics", userId],
+    queryFn: async () => {
+      return await FirestoreMetricsService.getHealthAnalytics(userId, '30d');
+    },
     enabled: !!userId,
     // Metrics update periodically but not constantly
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -27,7 +34,16 @@ export function useHealthMetrics(userId: string) {
 
 export function useRecommendations(userId: string) {
   return useQuery<Recommendation[]>({
-    queryKey: ["/api/recommendations", userId],
+    queryKey: ["recommendations", userId],
+    queryFn: async () => {
+      // Get latest assessment and generate recommendations from it
+      const assessment = await FirestoreAssessmentsService.getLatestAssessment(userId);
+      if (assessment?.id) {
+        const insights = await FirestoreAssessmentsService.getAssessmentInsights(userId, assessment.id);
+        return insights.recommendations || [];
+      }
+      return [];
+    },
     enabled: !!userId,
     // Recommendations are relatively static
     staleTime: 15 * 60 * 1000, // 15 minutes
@@ -41,14 +57,15 @@ export function useCreateHealthAssessment() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: InsertHealthAssessment & { userId: string }) => {
-      const response = await apiRequest("POST", "/api/health-assessment", data);
-      return response.json();
+    mutationFn: async (data: any & { userId: string }) => {
+      const { userId, ...assessmentData } = data;
+      return await FirestoreAssessmentsService.createAssessment(userId, assessmentData);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/health-assessment"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/health-metrics"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/recommendations"] });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["health-assessment", variables.userId] });
+      queryClient.invalidateQueries({ queryKey: ["health-metrics", variables.userId] });
+      queryClient.invalidateQueries({ queryKey: ["recommendations", variables.userId] });
+      queryClient.invalidateQueries({ queryKey: ["healthAssessments", variables.userId] });
     },
   });
 }

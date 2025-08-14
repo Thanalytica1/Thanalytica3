@@ -1,10 +1,9 @@
-// Updated health metrics hook using new hierarchical structure
+// Updated health metrics hook using Firestore
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { auth } from "@/lib/firebase";
 import { HealthMetric, InsertHealthMetric } from "@shared/health-schema";
-
-const API_BASE = "/api/health/metrics";
+import { FirestoreMetricsService } from "@/services/firestore-metrics";
 
 // Fetch health metrics for current user
 export function useHealthMetrics(type?: string, limit = 100) {
@@ -15,14 +14,7 @@ export function useHealthMetrics(type?: string, limit = 100) {
     queryFn: async (): Promise<HealthMetric[]> => {
       if (!user?.uid) throw new Error("User not authenticated");
       
-      const params = new URLSearchParams();
-      if (type) params.append("type", type);
-      params.append("limit", limit.toString());
-      
-      const response = await fetch(`${API_BASE}/${user.uid}?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch health metrics");
-      
-      return response.json();
+      return await FirestoreMetricsService.getHealthMetrics(user.uid, type, limit);
     },
     enabled: !!user?.uid,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -38,14 +30,7 @@ export function useCreateHealthMetric() {
     mutationFn: async (data: InsertHealthMetric): Promise<HealthMetric> => {
       if (!user?.uid) throw new Error("User not authenticated");
       
-      const response = await fetch(`${API_BASE}/${user.uid}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) throw new Error("Failed to create health metric");
-      return response.json();
+      return await FirestoreMetricsService.createHealthMetric(user.uid, data);
     },
     onSuccess: (newMetric) => {
       // Invalidate and refetch metrics
@@ -72,14 +57,7 @@ export function useHealthAnalytics(period = "30d", type?: string) {
     queryFn: async () => {
       if (!user?.uid) throw new Error("User not authenticated");
       
-      const params = new URLSearchParams();
-      params.append("period", period);
-      if (type) params.append("type", type);
-      
-      const response = await fetch(`${API_BASE}/analytics/${user.uid}?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch health analytics");
-      
-      return response.json();
+      return await FirestoreMetricsService.getHealthAnalytics(user.uid, period, type);
     },
     enabled: !!user?.uid,
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -95,21 +73,7 @@ export function useMetricsByType(type: string, days = 30) {
     queryFn: async (): Promise<HealthMetric[]> => {
       if (!user?.uid) throw new Error("User not authenticated");
       
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(endDate.getDate() - days);
-      
-      const params = new URLSearchParams({
-        type,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        limit: "1000",
-      });
-      
-      const response = await fetch(`${API_BASE}/${user.uid}?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch metrics");
-      
-      return response.json();
+      return await FirestoreMetricsService.getMetricsByType(user.uid, type, days);
     },
     enabled: !!user?.uid && !!type,
     staleTime: 5 * 60 * 1000,
@@ -125,14 +89,7 @@ export function useBulkCreateMetrics() {
     mutationFn: async (metrics: InsertHealthMetric[]): Promise<HealthMetric[]> => {
       if (!user?.uid) throw new Error("User not authenticated");
       
-      const response = await fetch(`${API_BASE}/${user.uid}/bulk`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ metrics }),
-      });
-      
-      if (!response.ok) throw new Error("Failed to create metrics");
-      return response.json();
+      return await FirestoreMetricsService.bulkCreateMetrics(user.uid, metrics);
     },
     onSuccess: () => {
       // Invalidate all health metrics queries
@@ -154,19 +111,8 @@ export function useRealtimeMetrics() {
     // For now, we'll poll every 30 seconds for demo purposes
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`${API_BASE}/${user.uid}?limit=50`);
-        if (response.ok) {
-          const latestMetrics = await response.json();
-          
-          // Group by type
-          const grouped = latestMetrics.reduce((acc: Record<string, HealthMetric[]>, metric: HealthMetric) => {
-            if (!acc[metric.type]) acc[metric.type] = [];
-            acc[metric.type].push(metric);
-            return acc;
-          }, {});
-          
-          setMetrics(grouped);
-        }
+        const latestMetrics = await FirestoreMetricsService.getRealtimeMetrics(user.uid);
+        setMetrics(latestMetrics);
       } catch (error) {
         console.error("Error fetching realtime metrics:", error);
       }
